@@ -121,7 +121,7 @@ void AP_BoardConfig::board_setup_drivers(void)
     }
 }
 
-#define SPI_PROBE_DEBUG 0
+#define SPI_PROBE_DEBUG 1
 
 /*
   check a SPI device for a register value
@@ -131,7 +131,8 @@ bool AP_BoardConfig::spi_check_register(const char *devname, uint8_t regnum, uin
     auto dev = hal.spi->get_device(devname);
     if (!dev) {
 #if SPI_PROBE_DEBUG
-        hal.console->printf("%s: no device\n", devname);
+        //hal.console->printf("%s: no device\n", devname);
+        printf("%s: no device\r\n", devname);
 #endif
         return false;
     }
@@ -142,14 +143,16 @@ bool AP_BoardConfig::spi_check_register(const char *devname, uint8_t regnum, uin
     uint8_t v;
     if (!dev->read_registers(regnum, &v, 1)) {
 #if SPI_PROBE_DEBUG
-        hal.console->printf("%s: reg %02x read fail\n", devname, (unsigned)regnum);
+        //hal.console->printf("%s: reg %02x read fail\n", devname, (unsigned)regnum);
+        printf("%s: reg %02x read fail\r\n", devname, (unsigned)regnum);
 #endif
         dev->get_semaphore()->give();
         return false;
     }
     dev->get_semaphore()->give();
 #if SPI_PROBE_DEBUG
-    hal.console->printf("%s: reg %02x expected:%02x got:%02x\n", devname, (unsigned)regnum, (unsigned)value, (unsigned)v);
+    //hal.console->printf("%s: reg %02x expected:%02x got:%02x\n", devname, (unsigned)regnum, (unsigned)value, (unsigned)v);
+    printf("%s: reg %02x expected:%02x got:%02x\r\n", devname, (unsigned)regnum, (unsigned)value, (unsigned)v);
 #endif
     return v == value;
 }
@@ -310,18 +313,18 @@ void AP_BoardConfig::board_autodetect(void)
     hal.console->printf("Detected PX4v1\n");
 
 #elif defined(CONFIG_ARCH_BOARD_PX4FMU_V2) || defined(HAL_CHIBIOS_ARCH_FMUV3)
-    if ((spi_check_register("mpu6000_ext", MPUREG_WHOAMI, MPU_WHOAMI_MPU60X0) ||
+    if (spi_check_register("mpu6000", MPUREG_WHOAMI, MPU_WHOAMI_MPU60X0) ||
          spi_check_register("mpu6000_ext", MPUREG_WHOAMI, MPU_WHOAMI_MPU60X0) ||
          spi_check_register("mpu9250_ext", MPUREG_WHOAMI, MPU_WHOAMI_MPU60X0) ||
          spi_check_register("mpu9250_ext", MPUREG_WHOAMI, MPU_WHOAMI_MPU9250) ||
          spi_check_register("icm20608_ext", MPUREG_WHOAMI, MPU_WHOAMI_ICM20608) ||
          spi_check_register("icm20608_ext", MPUREG_WHOAMI, MPU_WHOAMI_ICM20602) ||
-         spi_check_register("icm20602_ext", MPUREG_WHOAMI, MPU_WHOAMI_ICM20602)) &&
-        (spi_check_register("lsm9ds0_ext_am", LSMREG_WHOAMI, LSM_WHOAMI_LSM303D) ||
-         spi_check_register("icm20948_ext", INV2REG_WHOAMI, INV2_WHOAMI_ICM20948))) {
+         spi_check_register("icm20602_ext", MPUREG_WHOAMI, MPU_WHOAMI_ICM20602)) {
         // Pixhawk2 has LSM303D and MPUxxxx on external bus
         state.board_type.set(PX4_BOARD_PIXHAWK2);
         hal.console->printf("Detected PIXHAWK2\n");
+        printf("Detected PIXHAWK2\r\n");
+#if 0
     } else if ((spi_check_register("icm20608-am", MPUREG_WHOAMI, MPU_WHOAMI_ICM20608) ||
                 spi_check_register("icm20608-am", MPUREG_WHOAMI, MPU_WHOAMI_ICM20602)) &&
                spi_check_register("mpu9250", MPUREG_WHOAMI, MPU_WHOAMI_MPU9250)) {
@@ -337,6 +340,7 @@ void AP_BoardConfig::board_autodetect(void)
         // classic or upgraded Pixhawk1
         state.board_type.set(PX4_BOARD_PIXHAWK);
         hal.console->printf("Detected Pixhawk\n");
+#endif
     } else {
         config_error("Unable to detect board type");
     }
