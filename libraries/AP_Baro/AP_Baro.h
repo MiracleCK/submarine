@@ -22,6 +22,7 @@ class AP_Baro
 {
     friend class AP_Baro_Backend;
     friend class AP_Baro_SITL; // for access to sensors[]
+    friend class AP_Baro_Mock;
 
 public:
     AP_Baro();

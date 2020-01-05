@@ -42,6 +42,7 @@
 #include "AP_Baro_FBM320.h"
 #include "AP_Baro_DPS280.h"
 #include "AP_Baro_BMP388.h"
+#include "AP_Baro_Mock.h"
 #if HAL_WITH_UAVCAN
 #include "AP_Baro_UAVCAN.h"
 #endif
@@ -466,6 +467,12 @@ void AP_Baro::init(void)
         _num_drivers = 1;
         return;
     }
+
+#if defined(HAL_BARO_ALLOW_INIT_NO_BARO)
+    drivers[0] = new AP_Baro_Mock(*this);
+    _num_drivers = 1;
+    return;
+#endif
 
 #if HAL_WITH_UAVCAN
     // Detect UAVCAN Modules, try as many times as there are driver slots
