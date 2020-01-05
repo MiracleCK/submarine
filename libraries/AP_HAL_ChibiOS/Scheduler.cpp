@@ -42,6 +42,7 @@
 #include <AP_IOMCU/AP_IOMCU.h>
 extern AP_IOMCU iomcu;
 #endif
+#include "shell.h"
 
 using namespace ChibiOS;
 
@@ -61,6 +62,19 @@ THD_WORKING_AREA(_storage_thread_wa, STORAGE_THD_WA_SIZE);
 #ifndef HAL_NO_MONITOR_THREAD
 THD_WORKING_AREA(_monitor_thread_wa, MONITOR_THD_WA_SIZE);
 #endif
+#ifndef HAL_NO_SHELL_THREAD
+THD_WORKING_AREA(_shell_thread_wa, SHELL_THD_WA_SIZE);
+#endif
+
+static ShellCommand commands[] = {
+  {NULL, NULL}
+};
+
+static ShellConfig shell_cfg1 = {
+  (BaseSequentialStream *)&SD8,
+  commands
+};
+
 
 Scheduler::Scheduler()
 {
@@ -115,6 +129,15 @@ void Scheduler::init()
                      this);                  /* Thread parameter.      */
 #endif
 
+#ifndef HAL_NO_SHELL_THREAD
+// the storage thread runs at just above IO priority
+    _shell_thread_ctx = chThdCreateStatic(_shell_thread_wa,
+                     sizeof(_shell_thread_wa),
+                     APM_SHELL_PRIORITY,        /* Initial priority.      */
+                     _shell_thread,             /* Thread function.       */
+                     &shell_cfg1);                  /* Thread parameter.      */
+
+#endif
 }
 
 
@@ -373,6 +396,15 @@ void Scheduler::_monitor_thread(void *arg)
     }
 }
 #endif // HAL_NO_MONITOR_THREAD
+
+#ifndef HAL_NO_SHELL_THREAD
+void Scheduler::_shell_thread(void *arg)
+{
+    chRegSetThreadName("shell");
+    shellThread(arg);
+}
+
+#endif
 
 void Scheduler::_rcin_thread(void *arg)
 {

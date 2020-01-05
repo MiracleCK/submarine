@@ -25,6 +25,7 @@
 #define APM_MONITOR_PRIORITY    183
 #define APM_MAIN_PRIORITY       180
 #define APM_TIMER_PRIORITY      181
+#define APM_SHELL_PRIORITY      179
 #define APM_RCIN_PRIORITY       177
 #define APM_UART_PRIORITY        60
 #define APM_STORAGE_PRIORITY     59
@@ -71,6 +72,10 @@
 
 #ifndef MONITOR_THD_WA_SIZE
 #define MONITOR_THD_WA_SIZE 512
+#endif
+
+#ifndef SHELL_THD_WA_SIZE
+#define SHELL_THD_WA_SIZE   2048
 #endif
 
 /* Scheduler implementation: */
@@ -149,6 +154,7 @@ private:
     thread_t* _io_thread_ctx;
     thread_t* _storage_thread_ctx;
     thread_t* _monitor_thread_ctx;
+    thread_t* _shell_thread_ctx;
 
 #if CH_CFG_USE_SEMAPHORES == TRUE
     binary_semaphore_t _timer_semaphore;
@@ -160,7 +166,8 @@ private:
     static void _storage_thread(void *arg);
     static void _uart_thread(void *arg);
     static void _monitor_thread(void *arg);
-
+    static void _shell_thread(void *arg);
+    
     void _run_timers();
     void _run_io(void);
     static void thread_create_trampoline(void *ctx);

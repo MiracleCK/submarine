@@ -34,6 +34,7 @@
 #endif
 
 #include <hwdef.h>
+#include "shell.h"
 
 #ifndef HAL_NO_UARTDRIVER
 static HAL_UARTA_DRIVER;
@@ -283,6 +284,11 @@ void HAL_ChibiOS::run(int argc, char * const argv[], Callbacks* callbacks) const
   setup_usb_strings();
 #endif
 
+  /*
+   * Shell manager initialization.
+   */
+  shellInit();
+    
 #ifdef HAL_STDOUT_SERIAL
     //STDOUT Initialistion
     SerialConfig stdoutcfg =
