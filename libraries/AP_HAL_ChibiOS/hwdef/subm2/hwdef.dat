@@ -144,7 +144,7 @@ I2C_ORDER I2C2 I2C1
 # 6) SERIAL5: extra UART (usually RTOS debug console)
 
 # order of UARTs (and USB)
-UART_ORDER OTG1 UART4 EMPTY EMPTY EMPTY UART8
+UART_ORDER OTG1 USART6 EMPTY EMPTY EMPTY UART8
 
 # If the board has an IOMCU connected via a UART then this defines the
 # UART to talk to that MCU. Leave it out for boards with no IOMCU.
@@ -182,14 +182,14 @@ UART_ORDER OTG1 UART4 EMPTY EMPTY EMPTY UART8
 # using the SCALE(x) modifier. See the examples below for more
 # modifiers, or read the python code in chibios_hwdef.py.
 
-# Now we define UART4 which is for the GPS. Be careful
+# Now we define USART6 which is for the GPS. Be careful
 # of the difference between USART and UART. Check the STM32F427xx.py
 # if unsure which it is. For a UART we need to specify at least TX and
 # RX pins.
 
 # UART4 serial GPS
-PA0 UART4_TX UART4
-PA1 UART4_RX UART4
+PG14 USART6_TX USART6
+PG9 USART6_RX USART6
 
 # Now define the primary battery connectors. The labels we choose here
 # are used to create defines for pins in the various drivers, so
