@@ -25,7 +25,6 @@ void AP_Baro_Mock::update(void)
 {
     WITH_SEMAPHORE(_sem);
     _copy_to_frontend(_instance, 0, 0);
-    printf("update baro from mock\r\n");
 }
 
 #endif  // CONFIG_HAL_BOARD
