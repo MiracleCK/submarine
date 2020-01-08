@@ -128,7 +128,7 @@ USB_STRING_SERIAL  "%SERIAL%"
 # drivers expect.
 
 # order of I2C buses
-I2C_ORDER I2C2 I2C1
+I2C_ORDER I2C1 I2C2
 
 # Now the UART order. These map to the hal.uartA to hal.uartF
 # objects. If you use a shorter list then HAL_Empty::UARTDriver
@@ -187,7 +187,7 @@ UART_ORDER OTG1 USART6 EMPTY EMPTY EMPTY UART8
 # if unsure which it is. For a UART we need to specify at least TX and
 # RX pins.
 
-# UART4 serial GPS
+# USART6 serial GPS
 PG14 USART6_TX USART6
 PG9 USART6_RX USART6
 
@@ -509,4 +509,4 @@ define HAL_USE_ADC FALSE
 define STM32_ADC_USE_ADC1 FALSE
 define HAL_DISABLE_ADC_DRIVER TRUE
 
-define HAL_BARO_ALLOW_INIT_NO_BARO TRUE
+#define HAL_BARO_ALLOW_INIT_NO_BARO TRUE
