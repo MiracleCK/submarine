@@ -27,7 +27,7 @@
 #include "AP_Compass_RM3100.h"
 #include "AP_Compass.h"
 #include "Compass_learn.h"
-
+#include <stdio.h>
 extern const AP_HAL::HAL& hal;
 
 #ifndef COMPASS_LEARN_DEFAULT
@@ -964,6 +964,7 @@ void Compass::_detect_backends(void)
     if (_backend_count == 0 ||
         _compass_count == 0) {
         hal.console->printf("No Compass backends available\n");
+        printf("No Compass backends available\n");
     }
 }
 
