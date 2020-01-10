@@ -2,12 +2,12 @@
 
 void Sub::init_rc_in()
 {
-    channel_pitch    = RC_Channels::rc_channel(0);
-    channel_roll     = RC_Channels::rc_channel(1);
-    channel_throttle = RC_Channels::rc_channel(2);
-    channel_yaw      = RC_Channels::rc_channel(3);
-    channel_forward  = RC_Channels::rc_channel(4);
-    channel_lateral  = RC_Channels::rc_channel(5);
+    channel_pitch    = RC_Channels::rc_channel(RC_IN_CHANNEL_PITCH);
+    channel_roll     = RC_Channels::rc_channel(RC_IN_CHANNEL_ROLL);
+    channel_throttle = RC_Channels::rc_channel(RC_IN_CHANNEL_THROTTLE);
+    channel_yaw      = RC_Channels::rc_channel(RC_IN_CHANNEL_YAW);
+    channel_forward  = RC_Channels::rc_channel(RC_IN_CHANNEL_FORWARD);
+    channel_lateral  = RC_Channels::rc_channel(RC_IN_CHANNEL_LATERAL);
 
     // set rc channel ranges
     channel_roll->set_angle(ROLL_PITCH_INPUT_MAX);
