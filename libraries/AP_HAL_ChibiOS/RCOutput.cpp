@@ -994,12 +994,24 @@ void RCOutput::dshot_send(pwm_group &group, bool blocking)
                     // mid-throttle is off
                     value = 0;
                 }
+            } else {
+                // DShot 
+                //   0 means off
+                //   1 ~ 47 reserved
+                //   48 ~ 1047 is low to high
+                //   1048 ~ 2047 is low to high
+                // this map 1100 ~ 1900 to DShot valules
+                if (value < 1000) {
+                    value = 1000 - value;
+                } else if (value == 1000) {
+                    value = 0;
+                }
             }
             if (value != 0) {
                 // dshot values are from 48 to 2047. Zero means off.
                 value += 47;
             }
-
+            
             bool request_telemetry = (telem_request_mask & chan_mask)?true:false;
             uint16_t packet = create_dshot_packet(value, request_telemetry);
             if (request_telemetry) {
