@@ -220,7 +220,7 @@ void CompassCalibrator::update(bool &failure)
         }
     } else if (_status == Status::RUNNING_STEP_TWO) {
         if (_fit_step >= 35) {
-            if (fit_acceptable() && fix_radius() && calculate_orientation()) {
+            if (fit_acceptable() && fix_radius()){// && calculate_orientation()) {
                 set_status(Status::SUCCESS);
             } else {
                 set_status(Status::FAILED);
