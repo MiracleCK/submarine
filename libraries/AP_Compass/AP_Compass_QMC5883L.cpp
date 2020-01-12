@@ -192,7 +192,9 @@ void AP_Compass_QMC5883L::timer()
 
     // rotate to the desired orientation
     if (is_external(_instance)) {
-        field.rotate(ROTATION_YAW_90);
+        // only use once unique rotate
+        // and do it with sensor
+        // field.rotate(ROTATION_YAW_90);
     }
 
     accumulate_sample(field, _instance, 20);

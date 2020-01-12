@@ -75,6 +75,8 @@ enum Rotation : uint8_t {
     ///////////////////////////////////////////////////////////////////////
     ROTATION_MAX,
     ROTATION_CUSTOM              = 100,
+    ROTATION_CUSTOM_IMU,
+    ROTATION_CUSTOM_MAG,
 };
 
 // maximum rotation that will be used for auto-detection

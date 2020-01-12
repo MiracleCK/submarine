@@ -699,8 +699,8 @@ void Compass::_probe_external_i2c_compasses(void)
         // only probe QMC5883L on internal if we are treating internals as externals
         FOREACH_I2C_INTERNAL(i) {
             ADD_BACKEND(DRIVER_QMC5883L, AP_Compass_QMC5883L::probe(GET_I2C_DEVICE(i, HAL_COMPASS_QMC5883L_I2C_ADDR),
-                                                                    all_external,
-                                                                    all_external?HAL_COMPASS_QMC5883L_ORIENTATION_EXTERNAL:HAL_COMPASS_QMC5883L_ORIENTATION_INTERNAL));
+                                                                    all_external, ROTATION_CUSTOM_MAG));
+                                                                    // all_external?HAL_COMPASS_QMC5883L_ORIENTATION_EXTERNAL:HAL_COMPASS_QMC5883L_ORIENTATION_INTERNAL));
         }
     }
 

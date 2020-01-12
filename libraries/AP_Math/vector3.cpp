@@ -255,6 +255,16 @@ void Vector3<T>::rotate(enum Rotation rotation)
     }
     case ROTATION_CUSTOM: // no-op; caller should perform custom rotations via matrix multiplication
         return;
+    
+    case ROTATION_CUSTOM_IMU:{
+        // donot know why data had been roated, so remove the rotation
+        tmp = x; x = -y; y = -tmp;
+    }
+    case ROTATION_CUSTOM_MAG:{
+        // align to body frame
+        tmp = x; x = z; z = y; y = -tmp;
+        return;
+    }
     }
 }
 
