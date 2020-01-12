@@ -701,7 +701,8 @@ void Sub::load_parameters()
     AP_Param::set_default_by_name("FRAME_CONFIG", AP_Motors6DOF::SUB_FRAME_CUSTOM);
     
     AP_Param::set_default_by_name("MOT_PWM_TYPE", 4); // DShot150
-
+    
+    // should define in hwdef
     AP_Param::set_default_by_name("RC1_TRIM", 1100);
     AP_Param::set_default_by_name("RC3_TRIM", 1500);
 }
