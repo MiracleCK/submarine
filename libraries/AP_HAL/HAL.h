@@ -40,6 +40,7 @@ public:
         AP_HAL::Util*       _util,
         AP_HAL::OpticalFlow *_opticalflow,
         AP_HAL::Flash *_flash,
+        AP_HAL::Shell *_shell,
 #if HAL_WITH_UAVCAN
         AP_HAL::CANManager* _can_mgr[MAX_NUMBER_OF_CAN_DRIVERS])
 #else
@@ -65,7 +66,8 @@ public:
         scheduler(_scheduler),
         util(_util),
         opticalflow(_opticalflow),
-        flash(_flash)
+        flash(_flash),
+        shell(_shell)
     {
 #if HAL_WITH_UAVCAN
         if (_can_mgr == nullptr) {
@@ -118,6 +120,7 @@ public:
     AP_HAL::Util        *util;
     AP_HAL::OpticalFlow *opticalflow;
     AP_HAL::Flash       *flash;
+    AP_HAL::Shell       *shell;
 #if HAL_WITH_UAVCAN
     AP_HAL::CANManager* can_mgr[MAX_NUMBER_OF_CAN_DRIVERS];
 #else

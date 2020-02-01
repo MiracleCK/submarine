@@ -98,6 +98,8 @@ static ChibiOS::Flash flashDriver;
 static Empty::Flash flashDriver;
 #endif
 
+static ChibiOS::Shell chibiShell;
+
 
 #if HAL_WITH_IO_MCU
 HAL_UART_IO_DRIVER;
@@ -127,6 +129,7 @@ HAL_ChibiOS::HAL_ChibiOS() :
         &utilInstance,
         &opticalFlowDriver,
         &flashDriver,
+        &chibiShell,
         nullptr
         )
 {}

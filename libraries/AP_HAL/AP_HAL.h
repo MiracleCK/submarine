@@ -19,6 +19,7 @@
 #include "Util.h"
 #include "OpticalFlow.h"
 #include "Flash.h"
+#include "Shell.h"
 
 #if HAL_WITH_UAVCAN
 #include "CAN.h"

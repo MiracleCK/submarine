@@ -66,15 +66,7 @@ THD_WORKING_AREA(_monitor_thread_wa, MONITOR_THD_WA_SIZE);
 THD_WORKING_AREA(_shell_thread_wa, SHELL_THD_WA_SIZE);
 #endif
 
-static ShellCommand commands[] = {
-  {NULL, NULL}
-};
-
-static ShellConfig shell_cfg1 = {
-  (BaseSequentialStream *)&SD8,
-  commands
-};
-
+extern ShellConfig shell_cfg;
 
 Scheduler::Scheduler()
 {
@@ -135,7 +127,7 @@ void Scheduler::init()
                      sizeof(_shell_thread_wa),
                      APM_SHELL_PRIORITY,        /* Initial priority.      */
                      _shell_thread,             /* Thread function.       */
-                     &shell_cfg1);                  /* Thread parameter.      */
+                     this);                  /* Thread parameter.      */
 
 #endif
 }
@@ -400,8 +392,14 @@ void Scheduler::_monitor_thread(void *arg)
 #ifndef HAL_NO_SHELL_THREAD
 void Scheduler::_shell_thread(void *arg)
 {
+    Scheduler *sched = (Scheduler *)arg;
     chRegSetThreadName("shell");
-    shellThread(arg);
+
+    while (!sched->_hal_initialized) {
+        sched->delay_microseconds(20000);
+    }    
+    
+    shellThread(&shell_cfg);
 }
 
 #endif

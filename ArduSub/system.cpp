@@ -7,6 +7,8 @@
 *
 *****************************************************************************/
 
+extern AP_HAL::Shell::ShellCommand shell_commands[];
+
 static void mavlink_delay_cb_static()
 {
     sub.mavlink_delay_cb();
@@ -209,6 +211,8 @@ void Sub::init_ardupilot()
 
     // disable safety if requested
     BoardConfig.init_safety();    
+
+    hal.shell->register_commands(shell_commands);
     
     hal.console->print("\nInit complete");
 
