@@ -72,6 +72,7 @@ void cmd_param(int argc, char *argv[])
         for (i = 0; i < params_cnt; i++) {
             if (!strcmp(argv[1], params[i].param_short_name)){
                 cmd_param_set(params[i].param_name, strtod(argv[2], NULL));
+                break;
             }
         }
 
