@@ -49,7 +49,7 @@ void cmd_param(int argc, char *argv[])
     float value;
 
     if (argc < 2) {
-        hal.shell->printf("should be param [set|show] [param_short_name]\r\n");
+        hal.shell->printf("should be param set|show [param_short_name]\r\n");
         return;
     }
     
