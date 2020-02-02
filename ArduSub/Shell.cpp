@@ -44,37 +44,39 @@ AP_HAL::Shell::ShellCommand shell_commands[] = {
     {NULL, NULL} // this is the end of commands
 };
 
+// Notice: argc not inlcude the command string, only params
+
+// param     set     xxx   value
+//       argv[0] argv[1] argv[2]
 void cmd_param(int argc, char *argv[]) 
 {
-    float value;
-
-    if (argc < 2) {
-        hal.shell->printf("should be param set|show [param_short_name]\r\n");
+    if (argc < 1) { // at least should be param show
+        hal.shell->printf("usage: param set|show [param_short_name value]\r\n");
         return;
     }
     
-    if (!strcmp(argv[1], "show")) 
+    if (!strcmp(argv[0], "show")) // param show
     {
         cmd_param_show();
         return;
     }
 
-    if (!strcmp(argv[1], "set"))
-    {
-        if (argc < 3) {
-            hal.shell->printf("not support: need param name\r\n");
-        }
+    if (argc < 3) {
+        hal.shell->printf("usage: param set param_short_name value\r\n");
+        return;
+    }
 
-        value = strtod(argv[3], NULL);
+    if (!strcmp(argv[0], "set")) // param set
+    {
         int i;
         for (i = 0; i < params_cnt; i++) {
-            if (!strcmp(argv[2], params[i].param_short_name)){
-                cmd_param_set(params[i].param_name, value);
+            if (!strcmp(argv[1], params[i].param_short_name)){
+                cmd_param_set(params[i].param_name, strtod(argv[2], NULL));
             }
         }
 
         if (i == params_cnt) {
-            hal.shell->printf("not support: param %s\r\n", argv[2]);
+            hal.shell->printf("not support: param [%s]\r\n", argv[1]);
         }
 
         return;
