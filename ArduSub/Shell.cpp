@@ -142,7 +142,7 @@ int cmd_param_show(void)
         vp = AP_Param::find((const char*)key, &var_type);
         if (vp == NULL) {
             hal.shell->printf("param name %s does not exist.\r\n", key);
-            return -1;
+            continue;
         }
 
         float value = vp->cast_to_float(var_type);
