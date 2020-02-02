@@ -8,8 +8,8 @@
 extern const AP_HAL::HAL& hal;
 
 typedef struct {
-    char* param_short_name;
-    char* param_name;
+    const char* param_short_name;
+    const char* param_name;
 }param_name_t;
 
 const param_name_t params[] = {

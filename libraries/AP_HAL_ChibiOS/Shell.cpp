@@ -13,7 +13,7 @@ using namespace ChibiOS;
 extern const AP_HAL::HAL & hal;
 
 static void cmd_param(BaseSequentialStream *chp, int argc, char *argv[]);
-static void cmd_commands(char* name, BaseSequentialStream *chp, int argc, char *argv[]);
+static void cmd_commands(const char* name, BaseSequentialStream *chp, int argc, char *argv[]);
 static AP_HAL::Shell::ShellCommand* _shell_commands = NULL;
 
 static ShellCommand chibi_shell_commands[] = {
@@ -47,7 +47,7 @@ void cmd_param(BaseSequentialStream *chp, int argc, char *argv[]) {
     cmd_commands("param", chp, argc, argv);
 }
 
-void cmd_commands(char* name, BaseSequentialStream *chp, int argc, char *argv[]) {
+void cmd_commands(const char* name, BaseSequentialStream *chp, int argc, char *argv[]) {
     AP_HAL::Shell::ShellCommand* scp = _shell_commands;
     if (_shell_commands == NULL) {
         chprintf(chp, "commands is empty\r\n");
