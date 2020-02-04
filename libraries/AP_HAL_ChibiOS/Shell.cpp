@@ -37,7 +37,7 @@ int Shell::printf(const char *fmt, ...)
     int formatted_bytes;
 
     va_start(ap, fmt);
-    formatted_bytes = chprintf(shell_cfg.sc_channel, fmt, ap);
+    formatted_bytes = chvprintf(shell_cfg.sc_channel, fmt, ap);
     va_end(ap);
 
     return formatted_bytes;
