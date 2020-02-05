@@ -5,7 +5,7 @@
 * use hwdef to describe M2 hardware, first version @816a19b846d20d0e5507b4f8153260bdf5f9448d
 * johnson fixed spi driver issue @2bb744387f261a5dd3beec0f628cc9a07c9f5e5e
 * support a mock baro @f94a0b8f391c951c9a30e80aeea9f2c24e5a5fdb
-    + can be configed at hwdef
+    + can be configed at hwdef, `define HAL_BARO_ALLOW_INIT_NO_BARO TRUE`
 * change `chibios_board.mk` to support shell @0cdf35ffae6f570ea3b992d86e681521d43c1c4a
     + but still cannot build with test
 * use `AP_Param::set_default_by_name` to set changed params as default when startup
@@ -19,3 +19,4 @@
     + chibios not support change shell command at runtime, only can add new commands when thread created
         - this is the reason `const ShellCommand *scp = scfg->sc_commands;`
     + add a `AP_HAL::Shell`, and then implement chibi shell in `AP_HAL_ChibiOS`
+* use `SUB_FRAME_CUSTOM` as the frame type
