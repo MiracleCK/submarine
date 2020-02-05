@@ -30,7 +30,15 @@ const param_name_t params[] = {
     {"ayp", "ATC_ANG_YAW_P"},
     {"arfe", "ATC_RATE_FF_ENAB"},
     {"azi", "ACCEL_Z_I"},
-    {"azd", "ACCEL_Z_D"}
+    {"azd", "ACCEL_Z_D"},
+    {"m1d", "MOT_1_DIRECTION"},
+    {"m2d", "MOT_2_DIRECTION"},
+    {"m3d", "MOT_3_DIRECTION"},
+    {"m4d", "MOT_4_DIRECTION"},
+    {"m5d", "MOT_5_DIRECTION"},
+    {"m6d", "MOT_6_DIRECTION"},
+    {"m7d", "MOT_7_DIRECTION"},
+    {"m8d", "MOT_8_DIRECTION"}
 };
 
 static int params_cnt = sizeof(params) / sizeof(params[0]);
