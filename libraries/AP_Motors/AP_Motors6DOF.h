@@ -51,6 +51,9 @@ public:
 
     // var_info for holding Parameter information
     static const struct AP_Param::GroupInfo        var_info[];
+   
+    //
+    void set_roll_pitch_thr(float roll, float pitch) { _roll_thr = roll; _pitch_thr = pitch; }
 
 protected:
     // return current_limit as a number from 0 ~ 1 in the range throttle_min to throttle_max
@@ -74,4 +77,8 @@ protected:
     // current limiting
     float _output_limited = 1.0f;
     float _batt_current_last = 0.0f;
+
+    float               _pitch_thr;
+    float               _roll_thr;
+
 };

@@ -17,6 +17,8 @@
  *       AP_Motors6DOF.cpp - ArduSub motors library
  */
 
+#include <math.h>
+
 #include <AP_BattMonitor/AP_BattMonitor.h>
 #include <AP_HAL/AP_HAL.h>
 #include "AP_Motors6DOF.h"
@@ -310,6 +312,12 @@ void AP_Motors6DOF::output_armed_stabilizing()
         throttle_thrust = get_throttle_bidirectional();
         forward_thrust = _forward_in;
         lateral_thrust = _lateral_in;
+
+        forward_thrust = forward_thrust * cosf(_pitch_thr) + throttle_thrust * sinf(_pitch_thr);
+        lateral_thrust = lateral_thrust * cosf(_roll_thr) + throttle_thrust * sinf(_roll_thr);
+        throttle_thrust = throttle_thrust * cosf(_pitch_thr) * cosf(_roll_thr) 
+                        - _forward_in * sinf(_pitch_thr) 
+                        - _lateral_in * sinf(_roll_thr);
 
         float rpy_out[AP_MOTORS_MAX_NUM_MOTORS]; // buffer so we don't have to multiply coefficients multiple times.
         float linear_out[AP_MOTORS_MAX_NUM_MOTORS]; // 3 linear DOF mix for each motor
