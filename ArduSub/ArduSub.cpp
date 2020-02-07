@@ -17,6 +17,8 @@
 
 #include "Sub.h"
 
+extern void param_debug_tick(void);
+
 #define SCHED_TASK(func, rate_hz, max_time_micros) SCHED_TASK_CLASS(Sub, &sub, func, rate_hz, max_time_micros)
 
 /*
@@ -144,6 +146,8 @@ void Sub::fast_loop()
     if (should_log(MASK_LOG_ANY)) {
         Log_Sensor_Health();
     }
+
+    param_debug_tick();
 }
 
 // 50 Hz tasks

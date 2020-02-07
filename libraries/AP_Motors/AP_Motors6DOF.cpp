@@ -18,6 +18,7 @@
  */
 
 #include <math.h>
+#include <stdio.h>
 
 #include <AP_BattMonitor/AP_BattMonitor.h>
 #include <AP_HAL/AP_HAL.h>
@@ -291,6 +292,8 @@ float AP_Motors6DOF::get_current_limit_max_throttle()
 // includes new scaling stability patch
 // TODO pull code that is common to output_armed_not_stabilizing into helper functions
 // ToDo calculate headroom for rpy to be added for stabilization during full throttle/forward/lateral commands
+extern bool is_param_print(void);
+extern bool is_dbg_motor;
 void AP_Motors6DOF::output_armed_stabilizing()
 {
     if ((sub_frame_t)_last_frame_class == SUB_FRAME_VECTORED) {
@@ -318,6 +321,11 @@ void AP_Motors6DOF::output_armed_stabilizing()
         throttle_thrust = throttle_thrust * cosf(_pitch_thr) * cosf(_roll_thr) 
                         - _forward_in * sinf(_pitch_thr) 
                         - _lateral_in * sinf(_roll_thr);
+
+        if (is_param_print() && is_dbg_motor) {
+            printf("pitch = %2.2f roll = %2.2f\r\n", _pitch_thr, _roll_thr);
+            printf("forward = %1.3f lateral = %1.3f throttle = %1.3f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
+        }
 
         float rpy_out[AP_MOTORS_MAX_NUM_MOTORS]; // buffer so we don't have to multiply coefficients multiple times.
         float linear_out[AP_MOTORS_MAX_NUM_MOTORS]; // 3 linear DOF mix for each motor
