@@ -366,6 +366,7 @@ void AP_Motors6DOF::output_armed_stabilizing()
         // calculate linear command for each motor
         // linear factors should be 0.0 or 1.0 for now
         if (is_param_print() && is_dbg_motor) {
+            printf("\r\n");
             printf("linear_out:\r\n");
         }
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
@@ -381,6 +382,7 @@ void AP_Motors6DOF::output_armed_stabilizing()
 
         // Calculate final output for each motor
         if (is_param_print() && is_dbg_motor) {
+            printf("\r\n");
             printf("_thrust_rpyt_out:\r\n");
         }
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
@@ -391,6 +393,10 @@ void AP_Motors6DOF::output_armed_stabilizing()
                 }
             }
         }
+
+        if (is_param_print() && is_dbg_motor) {
+            printf("\r\n\r\n");
+        }
     }
 
     const AP_BattMonitor &battery = AP::battery();
@@ -398,7 +404,16 @@ void AP_Motors6DOF::output_armed_stabilizing()
 	// Current limiting
     float _batt_current;
     if (_batt_current_max <= 0.0f || !battery.current_amps(_batt_current)) {
+        if (is_param_print() && is_dbg_motor) {
+            printf("not used battery motor output limit\r\n");
+            printf("\r\n\r\n");
+        }
         return;
+    }
+
+    if (is_param_print() && is_dbg_motor) {
+        printf("do battery motor output limit\r\n");
+        printf("\r\n\r\n");
     }
 
     float _batt_current_delta = _batt_current - _batt_current_last;
