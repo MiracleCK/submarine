@@ -13,11 +13,13 @@ using namespace ChibiOS;
 extern const AP_HAL::HAL & hal;
 
 static void cmd_param(BaseSequentialStream *chp, int argc, char *argv[]);
+static void cmd_version(BaseSequentialStream *chp, int argc, char *argv[]);
 static void cmd_commands(const char* name, BaseSequentialStream *chp, int argc, char *argv[]);
 static AP_HAL::Shell::ShellCommand* _shell_commands = NULL;
 
 static ShellCommand chibi_shell_commands[] = {
   {"param", cmd_param},
+  {"version", cmd_version},
   {NULL, NULL} // this is the end of commands
 };
 
@@ -47,15 +49,19 @@ void cmd_param(BaseSequentialStream *chp, int argc, char *argv[]) {
     cmd_commands("param", chp, argc, argv);
 }
 
+void cmd_version(BaseSequentialStream *chp, int argc, char *argv[]) {
+    cmd_commands("version", chp, argc, argv);
+}
+
 void cmd_commands(const char* name, BaseSequentialStream *chp, int argc, char *argv[]) {
     AP_HAL::Shell::ShellCommand* scp = _shell_commands;
-    if (_shell_commands == NULL) {
+    if (scp == NULL) {
         chprintf(chp, "commands is empty\r\n");
         return;
     }
 
     while (scp->sc_name != NULL) {
-        if (strcmp(scp->sc_name, "param") == 0) {
+        if (strcmp(scp->sc_name, name) == 0) {
             scp->sc_function(argc, argv);
             return;
         }

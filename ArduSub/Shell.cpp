@@ -4,6 +4,7 @@
 #include <AP_Param/AP_Param.h>
 #include <AP_Math/AP_Math.h>
 #include <AP_HAL/AP_HAL.h>
+#include <AP_Common/AP_FWVersion.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -50,14 +51,20 @@ uint32_t dbg_print_cnt = 20;
 uint32_t dbg_print_timeinterval = 1000;
 bool is_dbg_bprintf;
 
+void param_debug_tick(void);
+bool is_param_print(void);
+
 static int cmd_param_set(const char *name, float value);
 static int cmd_param_show(void);
 static void cmd_param(int argc, char *argv[]);
 static int cmd_param_reset(void);
 static void cmd_param_dbg(int argc, char *argv[]);
 
+static void cmd_version(int argc, char *argv[]);
+
 AP_HAL::Shell::ShellCommand shell_commands[] = {
     {"param", cmd_param},
+    {"version", cmd_version},
     {NULL, NULL} // this is the end of commands
 };
 
@@ -113,6 +120,12 @@ void cmd_param(int argc, char *argv[])
     }  
 
     hal.shell->printf("not support this command\r\n");
+}
+
+void cmd_version(int argc, char *argv[]) {
+    AP_FWVersion ver = AP_FWVersion::get_fwverz();
+
+    hal.shell->printf("%s\r\n", ver.fw_string);
 }
 
 // param dbg motor|atti|ctrl on|[off] [print_cnt]
