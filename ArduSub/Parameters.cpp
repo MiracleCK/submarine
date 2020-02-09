@@ -698,13 +698,20 @@ void Sub::load_parameters()
     AP_Param::set_by_name("MNT_RC_IN_TILT", 8);
     AP_Param::set_default_by_name("RNGFND1_TYPE", (uint8_t)RangeFinder::Type::MAVLink);
 
+    // below is user define
+    //
     AP_Param::set_default_by_name("FRAME_CONFIG", AP_Motors6DOF::SUB_FRAME_CUSTOM);
     
     AP_Param::set_default_by_name("MOT_PWM_TYPE", 4); // DShot150
     
-    // should define in hwdef
-    AP_Param::set_default_by_name("RC1_TRIM", 1100);
-    AP_Param::set_default_by_name("RC3_TRIM", 1500);
+    if (RC_IN_CHANNEL_THROTTLE != 2 && RC_IN_CHANNEL_THROTTLE < 8) {
+        char rc_trim_name[9];
+        memset(rc_trim_name, 0, sizeof(rc_trim_name));
+        snprintf(rc_trim_name, 9, "RC%d_TRIM", RC_IN_CHANNEL_THROTTLE+1);
+        AP_Param::set_default_by_name(rc_trim_name, 1100);
+        
+        AP_Param::set_default_by_name("RC3_TRIM", 1500); // default throttle is RC3
+    }
 }
 
 void Sub::convert_old_parameters()
