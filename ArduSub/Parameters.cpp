@@ -704,13 +704,26 @@ void Sub::load_parameters()
     
     AP_Param::set_default_by_name("MOT_PWM_TYPE", 4); // DShot150
     
+    char rc_param_name[13]; // len is the max_size of below param name
+    int rc_param_buf_len = sizeof(rc_param_name);
+
+    // exchange throttle channel according to hwdef
     if (RC_IN_CHANNEL_THROTTLE != 2 && RC_IN_CHANNEL_THROTTLE < 8) {
-        char rc_trim_name[9];
-        memset(rc_trim_name, 0, sizeof(rc_trim_name));
-        snprintf(rc_trim_name, 9, "RC%d_TRIM", RC_IN_CHANNEL_THROTTLE+1);
-        AP_Param::set_default_by_name(rc_trim_name, 1100);
-        
+        snprintf(rc_param_name, rc_param_buf_len, "RC%d_TRIM", RC_IN_CHANNEL_THROTTLE+1);
+        AP_Param::set_default_by_name(rc_param_name, 1100);
+
         AP_Param::set_default_by_name("RC3_TRIM", 1500); // default throttle is RC3
+    }
+
+    // to consistent with algorithm output, reverse input channl
+    if (RC_IN_CHANNEL_ROLL < 8) {
+        snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", RC_IN_CHANNEL_ROLL+1);
+        AP_Param::set_default_by_name(rc_param_name, 1);
+    }
+
+    if (RC_IN_CHANNEL_PITCH < 8) {
+        snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", RC_IN_CHANNEL_PITCH+1);
+        AP_Param::set_default_by_name(rc_param_name, 1);
     }
 }
 
