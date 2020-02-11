@@ -23,15 +23,15 @@ const param_name_t params[] = {
     {"yp", "ATC_RAT_YAW_P"},
     {"yi", "ATC_RAT_YAW_I"},
     {"yd", "ATC_RAT_YAW_D"},
-    {"pzp", "POS_Z_P"},
-    {"vzp", "VEL_Z_P"},
-    {"azp", "ACCEL_Z_P"},
+    {"pzp", "PSC_POSZ_P"},
+    {"vzp", "PSC_VELZ_P"},
+    {"azp", "PSC_ACCZ_P"},
+    {"azi", "PSC_ACCZ_I"},
+    {"azd", "PSC_ACCZ_D"},
     {"arp", "ATC_ANG_RLL_P"},
     {"app", "ATC_ANG_PIT_P"},
     {"ayp", "ATC_ANG_YAW_P"},
     {"arfe", "ATC_RATE_FF_ENAB"},
-    {"azi", "ACCEL_Z_I"},
-    {"azd", "ACCEL_Z_D"},
     {"m1d", "MOT_1_DIRECTION"},
     {"m2d", "MOT_2_DIRECTION"},
     {"m3d", "MOT_3_DIRECTION"},
@@ -39,7 +39,8 @@ const param_name_t params[] = {
     {"m5d", "MOT_5_DIRECTION"},
     {"m6d", "MOT_6_DIRECTION"},
     {"m7d", "MOT_7_DIRECTION"},
-    {"m8d", "MOT_8_DIRECTION"}
+    {"m8d", "MOT_8_DIRECTION"},
+    {"am", "ANGLE_MAX"}
 };
 
 static int params_cnt = sizeof(params) / sizeof(params[0]);
