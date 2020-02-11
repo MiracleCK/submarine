@@ -320,7 +320,7 @@ void AP_Motors6DOF::output_armed_stabilizing()
         lateral_thrust = lateral_thrust * cosf(_roll_thr) + throttle_thrust * sinf(_roll_thr);
         throttle_thrust = throttle_thrust * cosf(_pitch_thr) * cosf(_roll_thr) 
                         - _forward_in * sinf(_pitch_thr) 
-                        - _lateral_in * sinf(_roll_thr);
+                        + _lateral_in * sinf(_roll_thr);
 
         if (is_param_print() && is_dbg_motor) {
             printf("pitch = %2.2f roll = %2.2f\r\n", _pitch_thr, _roll_thr);
@@ -347,31 +347,55 @@ void AP_Motors6DOF::output_armed_stabilizing()
             limit.throttle_upper = true;
         }
 
+        if (is_param_print() && is_dbg_motor) {
+            printf("ryp_out:\r\n");
+        }
+
         // calculate roll, pitch and yaw for each motor
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
             if (motor_enabled[i]) {
                 rpy_out[i] = roll_thrust * _roll_factor[i] +
                              pitch_thrust * _pitch_factor[i] +
                              yaw_thrust * _yaw_factor[i];
-
+                if (is_param_print() && is_dbg_motor) {
+                    printf("%2.2f ", rpy_out[i]);
+                }
             }
         }
 
         // calculate linear command for each motor
         // linear factors should be 0.0 or 1.0 for now
+        if (is_param_print() && is_dbg_motor) {
+            printf("\r\n");
+            printf("linear_out:\r\n");
+        }
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
             if (motor_enabled[i]) {
                 linear_out[i] = throttle_thrust * _throttle_factor[i] +
                                 forward_thrust * _forward_factor[i] +
                                 lateral_thrust * _lateral_factor[i];
+                if (is_param_print() && is_dbg_motor) {
+                    printf("%2.2f ", linear_out[i]);
+                }
             }
         }
 
         // Calculate final output for each motor
+        if (is_param_print() && is_dbg_motor) {
+            printf("\r\n");
+            printf("_thrust_rpyt_out:\r\n");
+        }
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
             if (motor_enabled[i]) {
                 _thrust_rpyt_out[i] = constrain_float(_motor_reverse[i]*(rpy_out[i] + linear_out[i]),-1.0f,1.0f);
+                if (is_param_print() && is_dbg_motor) {
+                    printf("%2.2f ", _thrust_rpyt_out[i]);
+                }
             }
+        }
+
+        if (is_param_print() && is_dbg_motor) {
+            printf("\r\n\r\n");
         }
     }
 
@@ -380,7 +404,16 @@ void AP_Motors6DOF::output_armed_stabilizing()
 	// Current limiting
     float _batt_current;
     if (_batt_current_max <= 0.0f || !battery.current_amps(_batt_current)) {
+        if (is_param_print() && is_dbg_motor) {
+            printf("not used battery motor output limit\r\n");
+            printf("\r\n\r\n");
+        }
         return;
+    }
+
+    if (is_param_print() && is_dbg_motor) {
+        printf("do battery motor output limit\r\n");
+        printf("\r\n\r\n");
     }
 
     float _batt_current_delta = _batt_current - _batt_current_last;
