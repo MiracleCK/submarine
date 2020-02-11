@@ -698,13 +698,33 @@ void Sub::load_parameters()
     AP_Param::set_by_name("MNT_RC_IN_TILT", 8);
     AP_Param::set_default_by_name("RNGFND1_TYPE", (uint8_t)RangeFinder::Type::MAVLink);
 
+    // below is user define
+    //
     AP_Param::set_default_by_name("FRAME_CONFIG", AP_Motors6DOF::SUB_FRAME_CUSTOM);
     
     AP_Param::set_default_by_name("MOT_PWM_TYPE", 4); // DShot150
     
-    // should define in hwdef
-    AP_Param::set_default_by_name("RC1_TRIM", 1100);
-    AP_Param::set_default_by_name("RC3_TRIM", 1500);
+    char rc_param_name[13]; // len is the max_size of below param name
+    int rc_param_buf_len = sizeof(rc_param_name);
+
+    // exchange throttle channel according to hwdef
+    if (RC_IN_CHANNEL_THROTTLE != 2 && RC_IN_CHANNEL_THROTTLE < 8) {
+        snprintf(rc_param_name, rc_param_buf_len, "RC%d_TRIM", RC_IN_CHANNEL_THROTTLE+1);
+        AP_Param::set_default_by_name(rc_param_name, 1100);
+
+        AP_Param::set_default_by_name("RC3_TRIM", 1500); // default throttle is RC3
+    }
+
+    // to consistent with algorithm output, reverse input channl
+    if (RC_IN_CHANNEL_ROLL < 8) {
+        snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", RC_IN_CHANNEL_ROLL+1);
+        AP_Param::set_default_by_name(rc_param_name, 1);
+    }
+
+    if (RC_IN_CHANNEL_PITCH < 8) {
+        snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", RC_IN_CHANNEL_PITCH+1);
+        AP_Param::set_default_by_name(rc_param_name, 1);
+    }
 }
 
 void Sub::convert_old_parameters()
