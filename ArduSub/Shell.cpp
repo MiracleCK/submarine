@@ -40,7 +40,10 @@ const param_name_t params[] = {
     {"m6d", "MOT_6_DIRECTION"},
     {"m7d", "MOT_7_DIRECTION"},
     {"m8d", "MOT_8_DIRECTION"},
-    {"am", "ANGLE_MAX"}
+    {"am", "ANGLE_MAX"},
+    {"atx", "AHRS_TRIM_X"},
+    {"aty", "AHRS_TRIM_Y"},
+    {"atz", "AHRS_TRIM_Z"}
 };
 
 static int params_cnt = sizeof(params) / sizeof(params[0]);
