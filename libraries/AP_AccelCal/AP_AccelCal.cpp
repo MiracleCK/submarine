@@ -351,6 +351,13 @@ void AP_AccelCal::update_status() {
         }
     }
 
+    for(uint8_t i=0 ; (cal = get_calibrator(i))  ; i++) {
+        if (cal->get_status() == ACCEL_CAL_WAITING_FOR_STILL) {
+            _status = ACCEL_CAL_WAITING_FOR_STILL;    // waiting for user hold still
+            return;
+        }
+    }
+
     _status = ACCEL_CAL_SUCCESS;    // we have succeeded calibration if all the calibrators have
     return;
 }

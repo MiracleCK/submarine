@@ -5,6 +5,8 @@
 #include "AP_Vehicle/AP_Vehicle_Type.h"
 
 #define AP_ACCELCAL_MAX_NUM_CLIENTS 4
+#define DETECT_ORIENTATION_SIDE_CNT 6
+
 class GCS_MAVLINK;
 class AP_AccelCal_Client;
 
@@ -35,6 +37,9 @@ public:
     static void register_client(AP_AccelCal_Client* client);
 
     void handleMessage(const mavlink_message_t &msg);
+
+    // auto detect
+    void auto_upate();
 
 private:
     GCS_MAVLINK *_gcs;
@@ -75,6 +80,37 @@ private:
     uint8_t _num_active_calibrators;
 
     AccelCalibrator* get_calibrator(uint8_t i);
+
+    // auto detect cal
+
+    enum detect_orientation {
+        DETECT_ORIENTATION_LEVEL,
+        DETECT_ORIENTATION_LEFT,
+        DETECT_ORIENTATION_RIGHT,
+        DETECT_ORIENTATION_NOSE_DOWN,
+        DETECT_ORIENTATION_NOSE_UP,
+        DETECT_ORIENTATION_BACK,
+        DETECT_ORIENTATION_ERROR,
+        DETECT_ORIENTATION_DETECTING
+    };
+
+    struct detect_orientation_s{
+        uint64_t t_start;
+        uint64_t t_prev;
+        uint64_t t_still;
+        uint64_t t_timeout;
+
+        float accel_ema[3]; // exponential moving average of accel
+        float accel_disp[3]; // max-hold dispersion of accel
+
+        detect_orientation orientation;
+    };
+
+    detect_orientation_s detect;
+    bool side_collected[DETECT_ORIENTATION_SIDE_CNT];
+
+    void _detect_orientation_auto_pending_notify(void);
+    detect_orientation detect_orientation_auto(void);
 };
 
 class AP_AccelCal_Client {
