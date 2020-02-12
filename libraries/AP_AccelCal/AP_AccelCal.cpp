@@ -23,6 +23,7 @@
         if (_gcs != nullptr) {                                          \
             _gcs->send_text(MAV_SEVERITY_CRITICAL, fmt, ## args);       \
         }                                                               \
+        hal.shell->printf(fmt "\r\n", ## args);                         \
     } while (0)
 
 
@@ -189,6 +190,8 @@ void AP_AccelCal::start(GCS_MAVLINK *gcs)
     _start_collect_sample = false;
     _num_active_calibrators = 0;
 
+    memset(&detect, 0, sizeof(detect_orientation_s));
+
     AccelCalibrator *cal;
     for(uint8_t i=0; (cal = get_calibrator(i)); i++) {
         cal->clear();
@@ -347,13 +350,6 @@ void AP_AccelCal::update_status() {
     for(uint8_t i=0 ; (cal = get_calibrator(i))  ; i++) {
         if (cal->get_status() == ACCEL_CAL_NOT_STARTED) {
             _status = ACCEL_CAL_NOT_STARTED;    // we haven't started if all the calibrators haven't
-            return;
-        }
-    }
-
-    for(uint8_t i=0 ; (cal = get_calibrator(i))  ; i++) {
-        if (cal->get_status() == ACCEL_CAL_WAITING_FOR_STILL) {
-            _status = ACCEL_CAL_WAITING_FOR_STILL;    // waiting for user hold still
             return;
         }
     }

@@ -39,7 +39,7 @@ public:
     void handleMessage(const mavlink_message_t &msg);
 
     // auto detect
-    void auto_upate();
+    void auto_update();
 
 private:
     GCS_MAVLINK *_gcs;
@@ -82,7 +82,8 @@ private:
     AccelCalibrator* get_calibrator(uint8_t i);
 
     // auto detect cal
-
+    // according to ACCELCAL_VEHICLE_POS order
+    // but start from 0
     enum detect_orientation {
         DETECT_ORIENTATION_LEVEL,
         DETECT_ORIENTATION_LEFT,
@@ -103,13 +104,14 @@ private:
         float accel_ema[3]; // exponential moving average of accel
         float accel_disp[3]; // max-hold dispersion of accel
 
+        bool is_inited;
+
         detect_orientation orientation;
     };
 
     detect_orientation_s detect;
-    bool side_collected[DETECT_ORIENTATION_SIDE_CNT];
 
-    void _detect_orientation_auto_pending_notify(void);
+    void _detect_init(void);
     detect_orientation detect_orientation_auto(void);
 };
 

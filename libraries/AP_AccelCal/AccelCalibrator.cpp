@@ -94,14 +94,6 @@ void AccelCalibrator::start(enum accel_cal_fit_type_t fit_type, uint8_t num_samp
     set_status(ACCEL_CAL_WAITING_FOR_ORIENTATION);
 }
 
-void AccelCalibrator::wait_for_still() {
-    set_status(ACCEL_CAL_WAITING_FOR_STILL);
-}
-
-void AccelCalibrator::detecting() {
-    set_status(ACCEL_CAL_WAITING_FOR_ORIENTATION);
-}
-
 // set Accel calibrator status to make itself ready for future accel cals
 void AccelCalibrator::clear() {
     set_status(ACCEL_CAL_NOT_STARTED);
@@ -274,10 +266,6 @@ void AccelCalibrator::set_status(enum accel_cal_status_t status) {
                 _sample_buffer = nullptr;
             }
 
-            break;
-
-        case ACCEL_CAL_WAITING_FOR_STILL:
-            _status = ACCEL_CAL_WAITING_FOR_STILL;
             break;
 
         case ACCEL_CAL_WAITING_FOR_ORIENTATION:     

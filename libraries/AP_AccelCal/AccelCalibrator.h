@@ -24,8 +24,6 @@ enum accel_cal_status_t {
     ACCEL_CAL_COLLECTING_SAMPLE=2,
     ACCEL_CAL_SUCCESS=3,
     ACCEL_CAL_FAILED=4,
-
-    ACCEL_CAL_WAITING_FOR_STILL = 128
 };
 
 enum accel_cal_fit_type_t {
@@ -41,9 +39,6 @@ public:
     void start(enum accel_cal_fit_type_t fit_type = ACCEL_CAL_AXIS_ALIGNED_ELLIPSOID, uint8_t num_samples = 6, float sample_time = 0.5f);
     void start(enum accel_cal_fit_type_t fit_type, uint8_t num_samples, float sample_time, Vector3f offset, Vector3f diag, Vector3f offdiag);
     
-    void wait_for_still();
-    void detecting();
-
     // set Accel calibrator status to make itself ready for future accel cals
     void clear();
 

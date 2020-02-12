@@ -1719,7 +1719,7 @@ void AP_InertialSensor::acal_update()
     }
 
     EXPECT_DELAY_MS(20000);
-    _acal->update();
+    _acal->auto_update();
 
     if (hal.util->get_soft_armed() && _acal->get_status() != ACCEL_CAL_NOT_STARTED) {
         _acal->cancel();

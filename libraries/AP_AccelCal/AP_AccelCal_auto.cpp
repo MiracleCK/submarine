@@ -18,7 +18,11 @@
 
 const extern AP_HAL::HAL& hal;
 
-void AP_AccelCal::auto_upate()
+const char* orientation_name[] = {
+    "level", "left", "right", "nose down", "nose up", "back",
+};
+
+void AP_AccelCal::auto_update()
 {
     if (!get_calibrator(0)) {
         // no calibrators
@@ -38,38 +42,35 @@ void AP_AccelCal::auto_upate()
             return;
         }
         
-        
         switch(_status) {
             case ACCEL_CAL_NOT_STARTED:
                 fail();
                 return;
-            case ACCEL_CAL_WAITING_FOR_STILL: {
-                if ((cal = get_calibrator(0)) == NULL) {
-                    fail();
-                    return;
-                }
-                detect.accel_ema[0] = 0.0f;
-                detect.accel_ema[1] = 0.0f;
-                detect.accel_ema[2] = 0.0f;
-
-                detect.accel_disp[0] = 0.0f;
-                detect.accel_disp[1] = 0.0f;
-                detect.accel_disp[2] = 0.0f;
-
-                uint64_t t_start = AP_HAL::micros64();
-                detect.t_prev = t_start;
-                detect.t_still = 0;
-                detect.t_timeout = t_start + 30000000; // 30s
-                
-                _detect_orientation_auto_pending_notify();
-                cal->detecting();           
-                break;
-            }
             case ACCEL_CAL_WAITING_FOR_ORIENTATION: {
                 // if we're waiting for orientation, first ensure that all calibrators are on the same step
                 detect_orientation orientation;
                 if ((cal = get_calibrator(0)) == NULL) {
                     fail();
+                    return;
+                }
+
+                uint8_t num_samples_collected = cal->get_num_samples_collected();
+
+                if (!detect.is_inited) {
+                    _detect_init();
+
+                    if (num_samples_collected < sizeof(orientation_name)){
+                        _mix_printf("Pending: %s", orientation_name[num_samples_collected]);
+
+                        uint32_t now = AP_HAL::millis();
+                        if (now - _last_position_request_ms > AP_ACCELCAL_AUTO_POSITION_REQUEST_INTERVAL_MS) {
+                            _last_position_request_ms = now;
+                            _gcs->send_accelcal_vehicle_position(num_samples_collected+1);
+                        }
+                    } else {
+                        fail();
+                    }
+
                     return;
                 }
                 
@@ -78,13 +79,13 @@ void AP_AccelCal::auto_upate()
                 }else if (orientation == DETECT_ORIENTATION_ERROR){
                     fail();
                 }else{
-                    if (side_collected[orientation]){
-                        cal->wait_for_still();
-                    } else {
+                    // need as level/left/right/down/up/back order
+                    if (orientation == num_samples_collected) {
                         detect.orientation = orientation;
                         collect_sample();
-                        side_collected[orientation] = true;
                     }
+
+                    detect.is_inited = false;
                 }
                 break;
             }
@@ -303,34 +304,20 @@ AP_AccelCal::detect_orientation AP_AccelCal::detect_orientation_auto(void)
     return DETECT_ORIENTATION_ERROR;    // Can't detect orientation
 }
 
-void AP_AccelCal::_detect_orientation_auto_pending_notify(void)
-{
-    for (uint8_t i = 0; i < DETECT_ORIENTATION_SIDE_CNT; i++){
-        if (!side_collected[i]){
-            switch (i){
-                case DETECT_ORIENTATION_LEFT:
-                    _mix_printf("Pending: left");
-                break;
-                case DETECT_ORIENTATION_RIGHT:
-                    _mix_printf("Pending: right");
-                break;
-                case DETECT_ORIENTATION_NOSE_UP:
-                    _mix_printf("Pending: nose up");
-                break;
-                case DETECT_ORIENTATION_NOSE_DOWN:
-                    _mix_printf("Pending: nose down");
-                break;
-                case DETECT_ORIENTATION_BACK:
-                    _mix_printf("Pending: back");
-                break;
-                case DETECT_ORIENTATION_LEVEL:
-                    _mix_printf("Pending: level");
-                default:
-                break;
-            }
+void AP_AccelCal::_detect_init(void) {
+    detect.accel_ema[0] = 0.0f;
+    detect.accel_ema[1] = 0.0f;
+    detect.accel_ema[2] = 0.0f;
 
-            break;
-        }
-    }
+    detect.accel_disp[0] = 0.0f;
+    detect.accel_disp[1] = 0.0f;
+    detect.accel_disp[2] = 0.0f;
+
+    uint64_t t_start = AP_HAL::micros64();
+    detect.t_prev = t_start;
+    detect.t_still = 0;
+    detect.t_timeout = t_start + 30000000; // 30s
+
+    detect.is_inited = true;
 }
 
