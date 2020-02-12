@@ -59,12 +59,15 @@ void param_debug_tick(void);
 bool is_param_print(void);
 
 static int cmd_param_set(const char *name, float value);
-static int cmd_param_show(void);
+static int cmd_param_show(int argc, char *argv[]);
 static void cmd_param(int argc, char *argv[]);
 static int cmd_param_reset(void);
 static void cmd_param_dbg(int argc, char *argv[]);
 
 static void cmd_version(int argc, char *argv[]);
+
+static int radian_to_degree(float value);
+static float degree_to_radian(int value);
 
 AP_HAL::Shell::ShellCommand shell_commands[] = {
     {"param", cmd_param},
@@ -85,7 +88,7 @@ void cmd_param(int argc, char *argv[])
     
     if (!strcmp(argv[0], "show")) // param show
     {
-        cmd_param_show();
+        cmd_param_show(argc - 1, &argv[1]);
         return;
     }
 
@@ -192,6 +195,12 @@ int cmd_param_set(const char *name, float value)
     }
     float old_value = vp->cast_to_float(var_type);
 
+    if (!strcmp((const char*)key, "AHRS_TRIM_X") ||
+            !strcmp((const char*)key, "AHRS_TRIM_Y") ||
+            !strcmp((const char*)key, "AHRS_TRIM_Z")) {
+        value = degree_to_radian(value);
+    }
+
     // set the value
     vp->set_float(value, var_type);
 
@@ -209,7 +218,7 @@ int cmd_param_set(const char *name, float value)
     return 0;
 }
 
-int cmd_param_show(void)
+int cmd_param_show(int argc, char *argv[])
 {
     enum ap_var_type var_type;
     // set parameter
@@ -232,6 +241,14 @@ int cmd_param_show(void)
         }
 
         float value = vp->cast_to_float(var_type);
+
+        if (argc <= 0 || strcmp(argv[0], "radian")) {
+            if (!strcmp((const char*)key, "AHRS_TRIM_X") ||
+            !strcmp((const char*)key, "AHRS_TRIM_Y") ||
+            !strcmp((const char*)key, "AHRS_TRIM_Z")) {
+                value = radian_to_degree(value);
+            }
+        }
 
         hal.shell->printf("%s: %3.6f\r\n", key, value);
 
@@ -275,4 +292,12 @@ void param_debug_tick(void)
 bool is_param_print(void)
 {
     return is_dbg_bprintf && (dbg_print_cnt > 0);
+}
+
+int radian_to_degree(float value) {
+    return (int)(value * 18000 / M_PI);
+}
+
+float degree_to_radian(int value) {
+    return (float)value * M_PI / 18000;
 }
