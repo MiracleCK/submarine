@@ -7,6 +7,20 @@
 #define AP_ACCELCAL_MAX_NUM_CLIENTS 4
 #define DETECT_ORIENTATION_SIDE_CNT 6
 
+#define _send_pos(pos) do {                        \
+    if (_gcs != nullptr) {                         \
+        _gcs->send_accelcal_vehicle_position(pos); \
+    }                                              \
+} while(0)
+
+#define _printf(fmt, args ...) do {                                 \
+    if (_gcs != nullptr) {                                          \
+        _gcs->send_text(MAV_SEVERITY_CRITICAL, fmt, ## args);       \
+    }                                                               \
+    hal.shell->printf(fmt "\r\n", ## args);                         \
+} while (0)
+
+
 class GCS_MAVLINK;
 class AP_AccelCal_Client;
 

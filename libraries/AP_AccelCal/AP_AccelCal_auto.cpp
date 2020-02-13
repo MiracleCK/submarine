@@ -9,13 +9,6 @@
 #define CONSTANTS_ONE_G   9.80665f
 #define AP_ACCELCAL_AUTO_POSITION_REQUEST_INTERVAL_MS 1000
 
-#define _mix_printf(fmt, args ...) do {                                 \
-        if (_gcs != nullptr) {                                          \
-            _gcs->send_text(MAV_SEVERITY_CRITICAL, fmt, ## args);       \
-        }                                                               \
-        hal.shell->printf(fmt "\r\n", ## args);                        \
-    } while (0)
-
 const extern AP_HAL::HAL& hal;
 
 const char* orientation_name[] = {
@@ -60,12 +53,12 @@ void AP_AccelCal::auto_update()
                     _detect_init();
 
                     if (num_samples_collected < sizeof(orientation_name)){
-                        _mix_printf("Pending: %s", orientation_name[num_samples_collected]);
+                        _printf("Pending: %s", orientation_name[num_samples_collected]);
 
                         uint32_t now = AP_HAL::millis();
                         if (now - _last_position_request_ms > AP_ACCELCAL_AUTO_POSITION_REQUEST_INTERVAL_MS) {
                             _last_position_request_ms = now;
-                            _gcs->send_accelcal_vehicle_position(num_samples_collected+1);
+                            _send_pos(num_samples_collected+1);
                         }
                     } else {
                         fail();
@@ -143,10 +136,10 @@ void AP_AccelCal::auto_update()
             _last_position_request_ms = now;
             switch (_last_result) {
                 case ACCEL_CAL_SUCCESS:
-                    _gcs->send_accelcal_vehicle_position(ACCELCAL_VEHICLE_POS_SUCCESS);
+                    _send_pos(ACCELCAL_VEHICLE_POS_SUCCESS);
                     break;
                 case ACCEL_CAL_FAILED:
-                    _gcs->send_accelcal_vehicle_position(ACCELCAL_VEHICLE_POS_FAILED);
+                    _send_pos(ACCELCAL_VEHICLE_POS_FAILED);
                     break;
                 default:
                     // should never hit this state
@@ -225,7 +218,7 @@ AP_AccelCal::detect_orientation AP_AccelCal::detect_orientation_auto(void)
             /* is still now */
             if (*t_still == 0) {
                 /* first time */
-                _mix_printf("detecting, hold still...");
+                _printf("detecting, hold still...");
                 
                 
                 *t_still = t;
@@ -242,7 +235,7 @@ AP_AccelCal::detect_orientation AP_AccelCal::detect_orientation_auto(void)
                accel_disp[2] > still_thr2 * 4.0f) {
             /* not still, reset still start time */
             if (*t_still != 0) {
-                _mix_printf("detected motion, hold still...");
+                _printf("detected motion, hold still...");
 
                 hal.scheduler->delay(500);
                 *t_still = 0;
@@ -250,7 +243,7 @@ AP_AccelCal::detect_orientation AP_AccelCal::detect_orientation_auto(void)
         }
 
         if (t > *t_timeout) {
-            _mix_printf("detect timeout");
+            _printf("detect timeout");
             return DETECT_ORIENTATION_ERROR;
         }
 
@@ -260,46 +253,46 @@ AP_AccelCal::detect_orientation AP_AccelCal::detect_orientation_auto(void)
     if (fabsf(accel_ema[0] - CONSTANTS_ONE_G) < accel_err_thr &&
         fabsf(accel_ema[1]) < accel_err_thr &&
         fabsf(accel_ema[2]) < accel_err_thr) {
-        _mix_printf("detected nose up");
+        _printf("detected nose up");
         return DETECT_ORIENTATION_NOSE_UP;        // [ g, 0, 0 ]
     }
 
     if (fabsf(accel_ema[0] + CONSTANTS_ONE_G) < accel_err_thr &&
         fabsf(accel_ema[1]) < accel_err_thr &&
         fabsf(accel_ema[2]) < accel_err_thr) {
-        _mix_printf("detected nose down");
+        _printf("detected nose down");
         return DETECT_ORIENTATION_NOSE_DOWN;        // [ -g, 0, 0 ]
     }
 
     if (fabsf(accel_ema[0]) < accel_err_thr &&
         fabsf(accel_ema[1] - CONSTANTS_ONE_G) < accel_err_thr &&
         fabsf(accel_ema[2]) < accel_err_thr) {
-        _mix_printf("detected left");
+        _printf("detected left");
         return DETECT_ORIENTATION_LEFT;        // [ 0, g, 0 ]
     }
 
     if (fabsf(accel_ema[0]) < accel_err_thr &&
         fabsf(accel_ema[1] + CONSTANTS_ONE_G) < accel_err_thr &&
         fabsf(accel_ema[2]) < accel_err_thr) {
-        _mix_printf("detected right");
+        _printf("detected right");
         return DETECT_ORIENTATION_RIGHT;        // [ 0, -g, 0 ]
     }
 
     if (fabsf(accel_ema[0]) < accel_err_thr &&
         fabsf(accel_ema[1]) < accel_err_thr &&
         fabsf(accel_ema[2] - CONSTANTS_ONE_G) < accel_err_thr) {
-        _mix_printf("detected back");
+        _printf("detected back");
         return DETECT_ORIENTATION_BACK;        // [ 0, 0, g ]
     }
 
     if (fabsf(accel_ema[0]) < accel_err_thr &&
         fabsf(accel_ema[1]) < accel_err_thr &&
         fabsf(accel_ema[2] + CONSTANTS_ONE_G) < accel_err_thr) {
-        _mix_printf("detected level");
+        _printf("detected level");
         return DETECT_ORIENTATION_LEVEL;        // [ 0, 0, -g ]
     }
 
-    _mix_printf("ERROR: invalid orientation");
+    _printf("ERROR: invalid orientation");
 
     return DETECT_ORIENTATION_ERROR;    // Can't detect orientation
 }

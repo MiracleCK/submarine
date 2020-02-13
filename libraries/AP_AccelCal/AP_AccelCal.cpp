@@ -19,14 +19,6 @@
 
 #define AP_ACCELCAL_POSITION_REQUEST_INTERVAL_MS 1000
 
-#define _printf(fmt, args ...) do {                                     \
-        if (_gcs != nullptr) {                                          \
-            _gcs->send_text(MAV_SEVERITY_CRITICAL, fmt, ## args);       \
-        }                                                               \
-        hal.shell->printf(fmt "\r\n", ## args);                         \
-    } while (0)
-
-
 const extern AP_HAL::HAL& hal;
 static bool _start_collect_sample;
 
@@ -111,7 +103,7 @@ void AP_AccelCal::update()
                 uint32_t now = AP_HAL::millis();
                 if (now - _last_position_request_ms > AP_ACCELCAL_POSITION_REQUEST_INTERVAL_MS) {
                     _last_position_request_ms = now;
-                    _gcs->send_accelcal_vehicle_position(step);
+                    _send_pos(step);
                 }
                 break;
             }
@@ -169,10 +161,10 @@ void AP_AccelCal::update()
             _last_position_request_ms = now;
             switch (_last_result) {
                 case ACCEL_CAL_SUCCESS:
-                    _gcs->send_accelcal_vehicle_position(ACCELCAL_VEHICLE_POS_SUCCESS);
+                    _send_pos(ACCELCAL_VEHICLE_POS_SUCCESS);
                     break;
                 case ACCEL_CAL_FAILED:
-                    _gcs->send_accelcal_vehicle_position(ACCELCAL_VEHICLE_POS_FAILED);
+                    _send_pos(ACCELCAL_VEHICLE_POS_FAILED);
                     break;
                 default:
                     // should never hit this state
@@ -184,7 +176,7 @@ void AP_AccelCal::update()
 
 void AP_AccelCal::start(GCS_MAVLINK *gcs)
 {
-    if (gcs == nullptr || _started) {
+    if (_started) {
         return;
     }
     _start_collect_sample = false;

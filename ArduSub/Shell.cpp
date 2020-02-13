@@ -8,6 +8,8 @@
 
 extern const AP_HAL::HAL& hal;
 
+extern void cmd_cali(int argc, char *argv[]);
+
 typedef struct {
     const char* param_short_name;
     const char* param_name;
@@ -72,6 +74,7 @@ static float degree_to_radian(int value);
 AP_HAL::Shell::ShellCommand shell_commands[] = {
     {"param", cmd_param},
     {"version", cmd_version},
+    {"cali", cmd_cali},
     {NULL, NULL} // this is the end of commands
 };
 
