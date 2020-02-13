@@ -45,7 +45,9 @@ const param_name_t params[] = {
     {"amax", "ANGLE_MAX"},
     {"atx", "AHRS_TRIM_X"},
     {"aty", "AHRS_TRIM_Y"},
-    {"atz", "AHRS_TRIM_Z"}
+    {"atz", "AHRS_TRIM_Z"},
+    {"gap", "GND_ABS_PRESS"},
+    {"gsg", "GND_SPEC_GRAV"}
 };
 
 static int params_cnt = sizeof(params) / sizeof(params[0]);
