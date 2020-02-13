@@ -20,3 +20,5 @@
         - this is the reason `const ShellCommand *scp = scfg->sc_commands;`
     + add a `AP_HAL::Shell`, and then implement chibi shell in `AP_HAL_ChibiOS`
 * use `SUB_FRAME_CUSTOM` as the frame type
+* calibration
+    + use auto detect orientation accel calibration instead of old one
