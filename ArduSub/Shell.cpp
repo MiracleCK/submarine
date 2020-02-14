@@ -55,7 +55,9 @@ const param_name_t params[] = {
     {"aty", "AHRS_TRIM_Y"},
     {"atz", "AHRS_TRIM_Z"},
     {"gap", "GND_ABS_PRESS"},
-    {"gsg", "GND_SPEC_GRAV"}
+    {"gsg", "GND_SPEC_GRAV"},
+    {"battm", "BATT_MONITOR"},
+    {"battb", "BATT_BUS"}
 };
 
 static int params_cnt = sizeof(params) / sizeof(params[0]);
