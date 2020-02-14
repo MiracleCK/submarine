@@ -61,6 +61,7 @@ const param_name_t params[] = {
     {"acrpp", "ACRO_RP_P"},
     {"acyp", "ACRO_YAW_P"},
     {"aceo", "ACRO_EXPO"},
+    {"actr", "ACRO_TRAINER"},
     {"battm", "BATT_MONITOR"},
     {"battb", "BATT_BUS"}
 };
