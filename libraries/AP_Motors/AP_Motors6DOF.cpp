@@ -121,6 +121,62 @@ const AP_Param::GroupInfo AP_Motors6DOF::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("12_DIRECTION", 13, AP_Motors6DOF, _motor_reverse[11], 1),
 
+    // @Param: 1_MAPPING
+    // @DisplayName: Motor physical number
+    // @Description: Used to mapping logic motor number to physic number
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("1_MAPPING", 14, AP_Motors6DOF, _motor_mapping[0], 1),
+
+    // @Param: 2_MAPPING
+    // @DisplayName: Motor physical number
+    // @Description: Used to mapping logic motor number to physic number
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("2_MAPPING", 15, AP_Motors6DOF, _motor_mapping[1], 2),
+
+    // @Param: 3_MAPPING
+    // @DisplayName: Motor physical number
+    // @Description: Used to mapping logic motor number to physic number
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("3_MAPPING", 16, AP_Motors6DOF, _motor_mapping[2], 3),
+
+    // @Param: 4_MAPPING
+    // @DisplayName: Motor physical number
+    // @Description: Used to mapping logic motor number to physic number
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("4_MAPPING", 17, AP_Motors6DOF, _motor_mapping[3], 4),
+
+    // @Param: 5_MAPPING
+    // @DisplayName: Motor physical number
+    // @Description: Used to mapping logic motor number to physic number
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("5_MAPPING", 18, AP_Motors6DOF, _motor_mapping[4], 5),
+
+    // @Param: 6_MAPPING
+    // @DisplayName: Motor physical number
+    // @Description: Used to mapping logic motor number to physic number
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("6_MAPPING", 19, AP_Motors6DOF, _motor_mapping[5], 6),
+
+    // @Param: 7_MAPPING
+    // @DisplayName: Motor physical number
+    // @Description: Used to mapping logic motor number to physic number
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("7_MAPPING", 20, AP_Motors6DOF, _motor_mapping[6], 7),
+
+    // @Param: 8_MAPPING
+    // @DisplayName: Motor physical number
+    // @Description: Used to mapping logic motor number to physic number
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("8_MAPPING", 21, AP_Motors6DOF, _motor_mapping[7], 8),
+
     AP_GROUPEND
 };
 
@@ -278,7 +334,7 @@ void AP_Motors6DOF::output_to_motors()
     // send output to each motor
     for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
         if (motor_enabled[i]) {
-            rc_write(i, motor_out[i]);
+            rc_write(_motor_mapping[i] - 1, motor_out[i]);
         }
     }
 }
