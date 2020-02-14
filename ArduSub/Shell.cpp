@@ -63,14 +63,15 @@ const param_name_t params[] = {
 static int params_cnt = sizeof(params) / sizeof(params[0]);
 
 bool is_dbg_motor;
-bool is_dbg_attitude;
-bool is_dbg_ctrl;
+bool is_dbg_batt;
+
 uint32_t dbg_print_cnt = 20;
 uint32_t dbg_print_timeinterval = 1000;
 bool is_dbg_bprintf;
 
 void param_debug_tick(void);
 bool is_param_print(void);
+bool is_param_print_cnt_remain(void);
 
 static int cmd_param_set(const char *name, float value);
 static int cmd_param_show(int argc, char *argv[]);
@@ -163,20 +164,14 @@ void cmd_param_dbg(int argc, char *argv[]) {
         } else {
             is_dbg_motor = false;
         }
-    } else if (!strcmp(argv[0], "atti")) {
+    } else if (!strcmp(argv[0], "batt")) {
         if (argc >= 2 && !strcmp(argv[1], "on")) {
-            is_dbg_attitude = true;
+            is_dbg_batt = true;
         } else {
-            is_dbg_attitude = false;
-        }
-    } else if (!strcmp(argv[0], "ctrl")) {
-        if (argc >= 2 && !strcmp(argv[1], "on")) {
-            is_dbg_ctrl = true;
-        } else {
-            is_dbg_ctrl = false;
+            is_dbg_batt = false;
         }
     } else {
-        hal.shell->printf("usage: param dbg motor|atti|ctrl on|[off] [print_cnt]\r\n");
+        hal.shell->printf("usage: param dbg motor|batt on|[off] [print_cnt]\r\n");
         return;
     }
 
@@ -186,8 +181,8 @@ void cmd_param_dbg(int argc, char *argv[]) {
         dbg_print_cnt = 20;
     }
 
-    hal.shell->printf("set is_dbg_motor %d is_dbg_attitude %d is_dbg_ctrl %d dbg_print_cnt %d.\r\n", 
-                is_dbg_motor, is_dbg_attitude, is_dbg_ctrl, dbg_print_cnt);
+    hal.shell->printf("set is_dbg_motor %d is_dbg_batt %d dbg_print_cnt %d.\r\n", 
+                is_dbg_motor, is_dbg_batt, dbg_print_cnt);
 }
 
 int cmd_param_set(const char *name, float value)
@@ -306,7 +301,11 @@ void param_debug_tick(void)
 
 bool is_param_print(void)
 {
-    return is_dbg_bprintf && (dbg_print_cnt > 0);
+    return is_dbg_bprintf && is_param_print_cnt_remain();
+}
+
+bool is_param_print_cnt_remain(void) {
+    return (dbg_print_cnt > 0);
 }
 
 int radian_to_degree(float value) {
