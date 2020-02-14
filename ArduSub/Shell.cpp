@@ -10,6 +10,8 @@ extern const AP_HAL::HAL& hal;
 
 extern void cmd_cali(int argc, char *argv[]);
 
+extern bool use_angle_rate;
+
 typedef struct {
     const char* param_short_name;
     const char* param_name;
@@ -55,7 +57,10 @@ const param_name_t params[] = {
     {"aty", "AHRS_TRIM_Y"},
     {"atz", "AHRS_TRIM_Z"},
     {"gap", "GND_ABS_PRESS"},
-    {"gsg", "GND_SPEC_GRAV"}
+    {"gsg", "GND_SPEC_GRAV"},
+    {"acrpp", "ACRO_RP_P"},
+    {"acyp", "ACRO_YAW_P"},
+    {"aceo", "ACRO_EXPO"}
 };
 
 static int params_cnt = sizeof(params) / sizeof(params[0]);
@@ -102,6 +107,7 @@ void cmd_param(int argc, char *argv[])
     if (!strcmp(argv[0], "show")) // param show
     {
         cmd_param_show(argc - 1, &argv[1]);
+        hal.shell->printf("USE_RATE = %d\r\n", use_angle_rate);
         return;
     }
 
@@ -124,6 +130,11 @@ void cmd_param(int argc, char *argv[])
 
     if (!strcmp(argv[0], "set")) // param set
     {
+        if (!strcmp(argv[1], "rpyr")) {
+            use_angle_rate = !use_angle_rate;
+            return;
+        }
+
         int i;
         for (i = 0; i < params_cnt; i++) {
             if (!strcmp(argv[1], params[i].param_short_name)){
