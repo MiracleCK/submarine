@@ -715,7 +715,7 @@ void Sub::load_parameters()
         AP_Param::set_default_by_name("RC3_TRIM", 1500); // default throttle is RC3
     }
 
-    // to consistent with algorithm output, reverse input channl
+    // to consistent with algorithm output, reverse input channel
     if (RC_IN_CHANNEL_ROLL < 8) {
         snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", RC_IN_CHANNEL_ROLL+1);
         AP_Param::set_default_by_name(rc_param_name, 1);
@@ -725,6 +725,16 @@ void Sub::load_parameters()
         snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", RC_IN_CHANNEL_PITCH+1);
         AP_Param::set_default_by_name(rc_param_name, 1);
     }
+
+    // mapping logic motor to physical
+    AP_Param::set_default_by_name("MOT_1_MAPPING", 5);
+    AP_Param::set_default_by_name("MOT_2_MAPPING", 7);
+    AP_Param::set_default_by_name("MOT_3_MAPPING", 3);
+    AP_Param::set_default_by_name("MOT_4_MAPPING", 4);
+    AP_Param::set_default_by_name("MOT_5_MAPPING", 2);
+    AP_Param::set_default_by_name("MOT_6_MAPPING", 1);
+    AP_Param::set_default_by_name("MOT_7_MAPPING", 8);
+    AP_Param::set_default_by_name("MOT_8_MAPPING", 6);
 }
 
 void Sub::convert_old_parameters()
