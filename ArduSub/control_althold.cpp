@@ -1,6 +1,8 @@
 #include "Sub.h"
 
 
+bool use_angle_rate = true;
+
 /*
  * control_althold.pde - init and run calls for althold, flight mode
  */
@@ -23,6 +25,10 @@ bool Sub::althold_init()
 
     last_pilot_heading = ahrs.yaw_sensor;
 
+    if (use_angle_rate) {
+        set_neutral_controls();
+    }
+
     return true;
 }
 
@@ -30,6 +36,11 @@ bool Sub::althold_init()
 // should be called at 100hz or more
 void Sub::althold_run()
 {
+    if (use_angle_rate) {
+        althold_run_rate();
+        return;
+    }
+
     uint32_t tnow = AP_HAL::millis();
 
     // initialize vertical speeds and acceleration
@@ -95,6 +106,67 @@ void Sub::althold_run()
             attitude_control.input_euler_angle_roll_pitch_yaw(target_roll, target_pitch, last_pilot_heading, true);
         }
     }
+
+    // Hold actual position until zero derivative is detected
+    static bool engageStopZ = true;
+    // Get last user velocity direction to check for zero derivative points
+    static bool lastVelocityZWasNegative = false;
+    if (fabsf(channel_throttle->norm_input()-0.5f) > 0.05f) { // Throttle input above 5%
+        // output pilot's throttle
+        attitude_control.set_throttle_out(channel_throttle->norm_input(), false, g.throttle_filt);
+        // reset z targets to current values
+        pos_control.relax_alt_hold_controllers();
+        engageStopZ = true;
+        lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
+    } else { // hold z
+
+        if (ap.at_bottom) {
+            pos_control.relax_alt_hold_controllers(); // clear velocity and position targets
+            pos_control.set_alt_target(inertial_nav.get_altitude() + 10.0f); // set target to 10 cm above bottom
+        }
+
+        // Detects a zero derivative
+        // When detected, move the altitude set point to the actual position
+        // This will avoid any problem related to joystick delays
+        // or smaller input signals
+        if(engageStopZ && (lastVelocityZWasNegative ^ is_negative(inertial_nav.get_velocity_z()))) {
+            engageStopZ = false;
+            pos_control.relax_alt_hold_controllers();
+        }
+
+        pos_control.update_z_controller();
+    }
+
+    motors.set_forward(channel_forward->norm_input());
+    motors.set_lateral(channel_lateral->norm_input());
+}
+
+void Sub::althold_run_rate()
+{
+    // initialize vertical speeds and acceleration
+    pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
+    pos_control.set_max_accel_z(g.pilot_accel_z);
+
+    if (!motors.armed()) {
+        motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::GROUND_IDLE);
+        // Sub vehicles do not stabilize roll/pitch/yaw when not auto-armed (i.e. on the ground, pilot has never raised throttle)
+        attitude_control.set_throttle_out(0,true,g.throttle_filt);
+        attitude_control.relax_attitude_controllers();
+        pos_control.relax_alt_hold_controllers(motors.get_throttle_hover());
+        last_pilot_heading = ahrs.yaw_sensor;
+        return;
+    }
+
+    motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
+
+    // get pilot desired lean angles
+    float target_roll_rate, target_pitch_rate, target_yaw_rate;
+
+    get_pilot_desired_angle_rates(
+        channel_roll->get_control_in(), channel_pitch->get_control_in(), channel_yaw->get_control_in(), 
+        target_roll_rate, target_pitch_rate, target_yaw_rate);
+
+    attitude_control.input_rate_bf_roll_pitch_yaw(target_roll_rate, target_pitch_rate, target_yaw_rate);
 
     // Hold actual position until zero derivative is detected
     static bool engageStopZ = true;
