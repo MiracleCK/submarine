@@ -1,4 +1,9 @@
+
+#include <AP_HAL/AP_HAL.h>
+
 #include "AP_BattMonitor_SMBus.h"
+
+extern const AP_HAL::HAL& hal;
 
 #define AP_BATTMONITOR_SMBUS_PEC_POLYNOME 0x07 // Polynome for CRC generation
 
@@ -15,8 +20,10 @@ AP_BattMonitor_SMBus::AP_BattMonitor_SMBus(AP_BattMonitor &mon,
 
 void AP_BattMonitor_SMBus::init(void)
 {
+    hal.shell->printf("call AP_BattMonitor_SMBus::init()\r\n");
     if (_dev) {
         timer_handle = _dev->register_periodic_callback(100000, FUNCTOR_BIND_MEMBER(&AP_BattMonitor_SMBus::timer, void));
+        hal.shell->printf("batt monitor inited\r\n");
     }
 }
 

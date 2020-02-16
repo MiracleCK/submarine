@@ -5,10 +5,15 @@
 #include "AP_BattMonitor_SMBus_Solo.h"
 #include <utility>
 
+extern bool is_param_print_cnt_remain(void);
+extern bool is_dbg_batt;
+extern const AP_HAL::HAL& hal;
+
 #define BATTMONITOR_SMBUS_SOLO_CELL_VOLTAGE         0x28    // cell voltage register
 #define BATTMONITOR_SMBUS_SOLO_CURRENT              0x2a    // current register
 #define BATTMONITOR_SMBUS_SOLO_BUTTON_DEBOUNCE      6       // button held down for 5 intervals will cause a power off event
 #define BATTMONITOR_SMBUS_SOLO_NUM_CELLS            4       // solo's battery pack is 4S
+#define BATTMONITOR_SMBUS_SOLO_VOLTAGE              0x09    // voltage register
 
 /*
  * Other potentially useful registers, listed here for future use
@@ -35,9 +40,13 @@ AP_BattMonitor_SMBus_Solo::AP_BattMonitor_SMBus_Solo(AP_BattMonitor &mon,
 
 void AP_BattMonitor_SMBus_Solo::timer()
 {
+    uint16_t data;
     uint8_t buff[8];
     uint32_t tnow = AP_HAL::micros();
 
+    if (is_param_print_cnt_remain() && is_dbg_batt) {
+        hal.shell->printf("\r\ncall batt monitor solo timer\r\n");
+    }
 
     // read cell voltages
     if (read_block(BATTMONITOR_SMBUS_SOLO_CELL_VOLTAGE, buff, 8, false)) {
@@ -56,12 +65,23 @@ void AP_BattMonitor_SMBus_Solo::timer()
         _state.voltage = pack_voltage_mv * 1e-3f;
         _state.last_time_micros = tnow;
         _state.healthy = true;
+
+        if (is_param_print_cnt_remain() && is_dbg_batt) {
+            hal.shell->printf("voltage %f\r\n", _state.voltage);
+        }
+    } else if (read_word(BATTMONITOR_SMBUS_SOLO_VOLTAGE, data)) {
+        _state.voltage = (float)data / 1000.0f;
+        _state.last_time_micros = tnow;
+        _state.healthy = true;
     }
 
     // timeout after 5 seconds
     if ((tnow - _state.last_time_micros) > AP_BATTMONITOR_SMBUS_TIMEOUT_MICROS) {
         _state.healthy = false;
         // do not attempt to ready any more data from battery
+        if (is_param_print_cnt_remain() && is_dbg_batt) {
+            hal.shell->printf("batt monitor timeout\r\n");
+        }
         return;
     }
 
@@ -69,6 +89,10 @@ void AP_BattMonitor_SMBus_Solo::timer()
     if (read_block(BATTMONITOR_SMBUS_SOLO_CURRENT, buff, 4, false) == 4) {
         _state.current_amps = -(float)((int32_t)((uint32_t)buff[3]<<24 | (uint32_t)buff[2]<<16 | (uint32_t)buff[1]<<8 | (uint32_t)buff[0])) / 1000.0f;
         _state.last_time_micros = tnow;
+
+        if (is_param_print_cnt_remain() && is_dbg_batt) {
+            hal.shell->printf("current_amps %f\r\n", _state.current_amps);
+        }
     }
 
     read_full_charge_capacity();
