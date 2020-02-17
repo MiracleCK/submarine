@@ -518,3 +518,6 @@ define RC_IN_CHANNEL_THROTTLE 0
 define RC_IN_CHANNEL_YAW 3
 define RC_IN_CHANNEL_FORWARD 2
 define RC_IN_CHANNEL_LATERAL 4
+
+define ROTATE_CUSTOM_IMU {tmp = x; x = -y; y = -tmp;}
+define ROTATE_CUSTOM_MAG {tmp = x; x = z; z = y; y = -tmp; return;}
