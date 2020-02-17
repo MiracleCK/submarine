@@ -373,7 +373,7 @@ void AP_Motors6DOF::output_armed_stabilizing()
         lateral_thrust = _lateral_in;
 
         forward_thrust = forward_thrust * cosf(_pitch_thr) + throttle_thrust * sinf(_pitch_thr);
-        lateral_thrust = lateral_thrust * cosf(_roll_thr) - throttle_thrust * sinf(_roll_thr);
+        lateral_thrust = lateral_thrust * cosf(_roll_thr) + throttle_thrust * sinf(_roll_thr);
         throttle_thrust = throttle_thrust * cosf(_pitch_thr) * cosf(_roll_thr) 
                         - _forward_in * sinf(_pitch_thr) 
                         - _lateral_in * sinf(_roll_thr);
