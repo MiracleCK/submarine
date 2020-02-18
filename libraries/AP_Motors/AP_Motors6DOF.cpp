@@ -441,16 +441,72 @@ void AP_Motors6DOF::output_armed_stabilizing()
             printf("\r\n");
             printf("_thrust_rpyt_out:\r\n");
         }
+
+        // map programed MOT_1/2/... to Structural designer defined MOT_1/2/...
+        // MOT1:4 MOT2:3 MOT3:2 MOT4:1 MOT5:6 MOT6:7 MOT7:5 MOT8:8
+        int motor_stru_mapping[AP_MOTORS_MAX_NUM_MOTORS] = {4, 3, 2, 1, 6, 7, 5, 8};
+        // programed MOT_n                                1   2   3   4   5   6   7   8
+        //             propeller                          R   L   R   L   L   R   R   L
+        int motor_lr_factor[AP_MOTORS_MAX_NUM_MOTORS] = {-1,  1, -1,  1,  1, -1, -1,  1}; // L/R propeller factor, to make positive thrust with positive sign
+        int real_motor_order;
+        int designer_motor_order;
+        float k_tn[AP_MOTORS_MAX_NUM_MOTORS];
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
             if (motor_enabled[i]) {
                 _thrust_rpyt_out[i] = constrain_float(_motor_reverse[i]*(rpy_out[i] + linear_out[i]),-1.0f,1.0f);
                 if (is_param_print() && is_dbg_motor) {
-                    printf("%2.2f ", _thrust_rpyt_out[i]);
+                    real_motor_order = _motor_mapping[i];
+                    designer_motor_order = motor_stru_mapping[real_motor_order - 1];
+                    k_tn[designer_motor_order - 1] = _thrust_rpyt_out[i] * motor_lr_factor[real_motor_order - 1];
+                    if (k_tn[designer_motor_order - 1] < 0) {
+                        k_tn[designer_motor_order - 1] *= 0.6f;
+                    }
+                    
+                    // printf("%2.2f ", _thrust_rpyt_out[i]);
                 }
             }
         }
 
         if (is_param_print() && is_dbg_motor) {
+            float f_max = 13.5f;
+            float cos_alpha[AP_MOTORS_MAX_NUM_MOTORS] = {-0.377965211, 0.377965211, 0.377965211, -0.377965211,
+                -0.377965211, 0.377965211, 0.377965211, -0.377965211};
+            float cos_beta[AP_MOTORS_MAX_NUM_MOTORS] = {0.654653741, 0.654653741, 0.654653741, 0.654653741,
+                -0.654653741, -0.654653741, -0.654653741, -0.654653741};
+            float cos_gamma[AP_MOTORS_MAX_NUM_MOTORS] = {0.654653741, 0.654653741, -0.654653741, -0.654653741,
+                0.654653741, 0.654653741, -0.654653741, -0.654653741};
+            float x_tn[AP_MOTORS_MAX_NUM_MOTORS] = {87.5, -87.5, -87.5, 87.5, 87.5, -87.5, -87.5, 87.5};
+            float y_tn[AP_MOTORS_MAX_NUM_MOTORS] = {150, 150, 150, 150, -150, -150, -150, -150};
+            float z_tn[AP_MOTORS_MAX_NUM_MOTORS] = {40, 40, -40, -40, 40, 40, -40, -40};
+            float f_x[AP_MOTORS_MAX_NUM_MOTORS], 
+                  f_y[AP_MOTORS_MAX_NUM_MOTORS], 
+                  f_z[AP_MOTORS_MAX_NUM_MOTORS], 
+                  t_fx[AP_MOTORS_MAX_NUM_MOTORS], 
+                  t_fy[AP_MOTORS_MAX_NUM_MOTORS], 
+                  t_fz[AP_MOTORS_MAX_NUM_MOTORS];
+            float f_x_sum = 0.0f, f_y_sum = 0.0f, f_z_sum = 0.0f, 
+                  t_fx_sum = 0.0f, t_fy_sum = 0.0f, t_fz_sum = 0.0f;
+            for (i = 0; i < 8; i++) {
+                f_x[i] = f_max * k_tn[i] * cos_alpha[i];
+                f_y[i] = f_max * k_tn[i] * cos_beta[i];
+                f_z[i] = f_max * k_tn[i] * cos_gamma[i];
+                t_fx[i] = y_tn[i] * f_z[i] - z_tn[i] * f_y[i];
+                t_fy[i] = z_tn[i] * f_x[i] - x_tn[i] * f_z[i];
+                t_fz[i] = x_tn[i] * f_y[i] - y_tn[i] * f_x[i];
+            }
+            for (i = 0; i < 8; i++) {
+                f_x_sum += f_x[i];
+                f_y_sum += f_y[i];
+                f_z_sum += f_z[i];
+                t_fx_sum += t_fx[i];
+                t_fy_sum += t_fy[i];
+                t_fz_sum += t_fz[i];
+            }
+
+            printf(" F_X         F_Y         F_Z         T_FX        T_FY        T_FZ\r\n");
+            printf("% 6.4f % 6.4f % 6.4f % 6.4f % 6.4  % 6.4f\r\n", f_x_sum, f_y_sum, f_z_sum,
+                t_fx_sum, t_fy_sum, t_fz_sum);
+
             printf("\r\n\r\n");
         }
     }
