@@ -350,6 +350,8 @@ float AP_Motors6DOF::get_current_limit_max_throttle()
 // ToDo calculate headroom for rpy to be added for stabilization during full throttle/forward/lateral commands
 extern bool is_param_print(void);
 extern bool is_dbg_motor;
+extern float correct_pitch_thr;
+extern float correct_roll_thr;
 void AP_Motors6DOF::output_armed_stabilizing()
 {
     if ((sub_frame_t)_last_frame_class == SUB_FRAME_VECTORED) {
@@ -372,14 +374,17 @@ void AP_Motors6DOF::output_armed_stabilizing()
         forward_thrust = _forward_in;
         lateral_thrust = _lateral_in;
 
-        forward_thrust = forward_thrust * cosf(_pitch_thr) + throttle_thrust * sinf(_pitch_thr);
-        lateral_thrust = lateral_thrust * cosf(_roll_thr) + throttle_thrust * sinf(_roll_thr);
-        throttle_thrust = throttle_thrust * cosf(_pitch_thr) * cosf(_roll_thr) 
-                        - _forward_in * sinf(_pitch_thr) 
-                        - _lateral_in * sinf(_roll_thr);
+        float corrected_pitch = correct_pitch_thr + _pitch_thr;
+        float corrected_roll = correct_roll_thr + _roll_thr;
+
+        forward_thrust = forward_thrust * cosf(corrected_pitch) + throttle_thrust * sinf(corrected_pitch);
+        lateral_thrust = lateral_thrust * cosf(corrected_roll) + throttle_thrust * sinf(corrected_roll);
+        throttle_thrust = throttle_thrust * cosf(corrected_pitch) * cosf(corrected_roll) 
+                        - _forward_in * sinf(corrected_pitch) 
+                        - _lateral_in * sinf(corrected_roll);
 
         if (is_param_print() && is_dbg_motor) {
-            printf("pitch = %2.2f roll = %2.2f\r\n", _pitch_thr, _roll_thr);
+            printf("pitch = %2.2f roll = %2.2f\r\n", corrected_pitch, corrected_roll);
             printf("forward = %1.3f lateral = %1.3f throttle = %1.3f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
         }
 
@@ -504,7 +509,7 @@ void AP_Motors6DOF::output_armed_stabilizing()
             }
 
             printf(" F_X         F_Y         F_Z         T_FX        T_FY        T_FZ\r\n");
-            printf("% 6.4f % 6.4f % 6.4f % 6.4f % 6.4  % 6.4f\r\n", f_x_sum, f_y_sum, f_z_sum,
+            printf("%6.4f %6.4f %6.4f %6.4f %6.4f  %6.4f\r\n", f_x_sum, f_y_sum, f_z_sum,
                 t_fx_sum, t_fy_sum, t_fz_sum);
 
             printf("\r\n\r\n");

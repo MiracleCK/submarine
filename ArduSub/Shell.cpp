@@ -68,6 +68,9 @@ const param_name_t params[] = {
 
 static int params_cnt = sizeof(params) / sizeof(params[0]);
 
+float correct_pitch_thr = 0.0f;
+float correct_roll_thr = 0.0f;
+
 bool is_dbg_motor;
 bool is_dbg_batt;
 
@@ -111,7 +114,9 @@ void cmd_param(int argc, char *argv[])
     if (!strcmp(argv[0], "show")) // param show
     {
         cmd_param_show(argc - 1, &argv[1]);
-        hal.shell->printf("USE_RATE = %d\r\n", use_angle_rate);
+        hal.shell->printf("rpyr:USE_RATE: %d\r\n", use_angle_rate);
+        hal.shell->printf("cpthr:CORRECT_PITCH:  %d\r\n", radian_to_degree(correct_pitch_thr));
+        hal.shell->printf("crthr:CORRECT_ROLL: %d\r\n", radian_to_degree(correct_roll_thr));
         return;
     }
 
@@ -136,6 +141,16 @@ void cmd_param(int argc, char *argv[])
     {
         if (!strcmp(argv[1], "rpyr")) {
             use_angle_rate = !use_angle_rate;
+            return;
+        }
+
+        if (!strcmp(argv[1], "cpthr")){
+            correct_pitch_thr = degree_to_radian(strtod(argv[2], NULL));
+            return;
+        }
+
+        if (!strcmp(argv[1], "crthr")){
+            correct_roll_thr = degree_to_radian(strtod(argv[2], NULL));
             return;
         }
 
@@ -272,7 +287,7 @@ int cmd_param_show(int argc, char *argv[])
             }
         }
 
-        hal.shell->printf("%s: %3.6f\r\n", key, value);
+        hal.shell->printf("%s:%s: %3.6f\r\n", params[i].param_short_name, key, value);
 
     }
 
