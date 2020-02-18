@@ -531,3 +531,12 @@ define CUSTOM_MOTORS_MOT_5   1.0f, -1.0f, -1.0f,  1.0f,     -1.0f,     1.0f
 define CUSTOM_MOTORS_MOT_6   1.0f, -1.0f,  1.0f,  1.0f,      1.0f,    -1.0f
 define CUSTOM_MOTORS_MOT_7   1.0f,  1.0f, -1.0f, -1.0f,      1.0f,     1.0f
 define CUSTOM_MOTORS_MOT_8   1.0f,  1.0f,  1.0f, -1.0f,     -1.0f,    -1.0f
+
+define MOT_1_MAPPING 5
+define MOT_2_MAPPING 7
+define MOT_3_MAPPING 3
+define MOT_4_MAPPING 4
+define MOT_5_MAPPING 2
+define MOT_6_MAPPING 1
+define MOT_7_MAPPING 8
+define MOT_8_MAPPING 6
