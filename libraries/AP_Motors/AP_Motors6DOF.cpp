@@ -419,6 +419,15 @@ void AP_Motors6DOF::output_armed_stabilizing()
         float corrected_pitch = _custom_pitch_thr + _pitch_thr;
         float corrected_roll = _custom_roll_thr + _roll_thr;
 
+        if (is_param_print() && is_dbg_motor) {
+            printf("============================\r\n");
+            printf("pitch %2.2f roll %2.2f\r\n", _pitch_thr, _roll_thr);
+            printf("custom: pitch %2.2f roll %2.2f\r\n", _custom_pitch_thr, _custom_roll_thr);
+            printf("corrected: pitch %2.2f roll %2.2f\r\n", corrected_pitch, corrected_roll);
+            printf("thrust: roll %2.3f pitch %2.3f yaw %2.3f\r\n", roll_thrust, pitch_thrust, yaw_thrust);
+            printf("thurst: forward = %2.3f lateral = %2.3f throttle = %2.3f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
+        }
+
         forward_thrust = forward_thrust * cosf(corrected_pitch) 
                        + _custom_thrust_factor[0] * throttle_thrust * sinf(corrected_pitch);
         lateral_thrust = lateral_thrust * cosf(corrected_roll) 
@@ -428,8 +437,7 @@ void AP_Motors6DOF::output_armed_stabilizing()
                         + _custom_thrust_factor[3] * _lateral_in * sinf(corrected_roll);
 
         if (is_param_print() && is_dbg_motor) {
-            printf("pitch = %2.2f roll = %2.2f\r\n", corrected_pitch, corrected_roll);
-            printf("forward = %1.3f lateral = %1.3f throttle = %1.3f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
+            printf("corrected: forward = %2.3f lateral = %2.3f throttle = %2.3f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
         }
 
         float rpy_out[AP_MOTORS_MAX_NUM_MOTORS]; // buffer so we don't have to multiply coefficients multiple times.
@@ -452,44 +460,26 @@ void AP_Motors6DOF::output_armed_stabilizing()
             limit.throttle_upper = true;
         }
 
-        if (is_param_print() && is_dbg_motor) {
-            printf("ryp_out:\r\n");
-        }
-
         // calculate roll, pitch and yaw for each motor
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
             if (motor_enabled[i]) {
                 rpy_out[i] = roll_thrust * _roll_factor[i] +
                              pitch_thrust * _pitch_factor[i] +
                              yaw_thrust * _yaw_factor[i];
-                if (is_param_print() && is_dbg_motor) {
-                    printf("%2.2f ", rpy_out[i]);
-                }
             }
         }
 
         // calculate linear command for each motor
         // linear factors should be 0.0 or 1.0 for now
-        if (is_param_print() && is_dbg_motor) {
-            printf("\r\n");
-            printf("linear_out:\r\n");
-        }
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
             if (motor_enabled[i]) {
                 linear_out[i] = throttle_thrust * _throttle_factor[i] +
                                 forward_thrust * _forward_factor[i] +
                                 lateral_thrust * _lateral_factor[i];
-                if (is_param_print() && is_dbg_motor) {
-                    printf("%2.2f ", linear_out[i]);
-                }
             }
         }
 
         // Calculate final output for each motor
-        if (is_param_print() && is_dbg_motor) {
-            printf("\r\n");
-            printf("_thrust_rpyt_out:\r\n");
-        }
 
         // map programed MOT_1/2/... to Structural designer defined MOT_1/2/...
         // MOT1:4 MOT2:3 MOT3:2 MOT4:1 MOT5:6 MOT6:7 MOT7:5 MOT8:8
@@ -510,13 +500,38 @@ void AP_Motors6DOF::output_armed_stabilizing()
                     if (k_tn[designer_motor_order - 1] < 0) {
                         k_tn[designer_motor_order - 1] *= 0.6f;
                     }
-                    
-                    // printf("%2.2f ", _thrust_rpyt_out[i]);
                 }
             }
         }
 
+        float designer_rpy_out[8], designer_linear_out[8], designer_rpyt_out[8];
         if (is_param_print() && is_dbg_motor) {
+            for (i = 0; i < 8; i++) {
+                real_motor_order = _motor_mapping[i];
+                designer_motor_order = motor_stru_mapping[real_motor_order - 1];
+                designer_rpy_out[designer_motor_order - 1] = rpy_out[i];
+                designer_linear_out[designer_motor_order - 1] = linear_out[i];
+                designer_rpyt_out[designer_motor_order - 1] = _thrust_rpyt_out[i]; 
+            }
+
+            printf("\r\nprintf as designer MOT_n order");
+            printf("\r\nrpy out:\r\n");
+            for (i = 0; i < 8; i++) {
+                printf("%2.3f ", i, designer_rpy_out[i]);
+            }
+            printf("\r\nlinear out:\r\n");
+            for (i = 0; i < 8; i++) {
+                printf("%2.3f ", i, designer_linear_out[i]);
+            }
+            printf("\r\nrpyt out:\r\n");
+            for (i = 0; i < 8; i++) {
+                printf("%2.3f ", i, designer_rpyt_out[i]);
+            }
+            printf("\r\nKtn:\r\n");
+            for (i = 0; i < 8; i++) {
+                printf("%2.3f ", i, k_tn[i]);
+            }
+
             float f_max = 13.5f;
             float cos_alpha[AP_MOTORS_MAX_NUM_MOTORS] = {-0.377965211, 0.377965211, 0.377965211, -0.377965211,
                 -0.377965211, 0.377965211, 0.377965211, -0.377965211};
@@ -552,7 +567,7 @@ void AP_Motors6DOF::output_armed_stabilizing()
                 t_fz_sum += t_fz[i];
             }
 
-            printf(" F_X         F_Y         F_Z         T_FX        T_FY        T_FZ\r\n");
+            printf("\r\n F_X         F_Y         F_Z         T_FX        T_FY        T_FZ\r\n");
             printf("%6.4f %6.4f %6.4f %6.4f %6.4f  %6.4f\r\n", f_x_sum, f_y_sum, f_z_sum,
                 t_fx_sum, t_fy_sum, t_fz_sum);
 
