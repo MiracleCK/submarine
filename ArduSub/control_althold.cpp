@@ -1,7 +1,7 @@
 #include "Sub.h"
 
 
-bool use_angle_rate = true;
+bool use_angle_rate = false;
 
 /*
  * control_althold.pde - init and run calls for althold, flight mode
