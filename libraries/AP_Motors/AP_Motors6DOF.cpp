@@ -422,7 +422,7 @@ void AP_Motors6DOF::output_armed_stabilizing()
         if (is_param_print() && is_dbg_motor) {
             printf("============================\r\n");
             printf("pitch %2.2f roll %2.2f\r\n", _pitch_thr, _roll_thr);
-            printf("custom: pitch %2.2f roll %2.2f\r\n", _custom_pitch_thr, _custom_roll_thr);
+            printf("custom: pitch %2.2f roll %2.2f\r\n", _custom_pitch_thr.get(), _custom_roll_thr.get());
             printf("corrected: pitch %2.2f roll %2.2f\r\n", corrected_pitch, corrected_roll);
             printf("thrust: roll %2.3f pitch %2.3f yaw %2.3f\r\n", roll_thrust, pitch_thrust, yaw_thrust);
             printf("thurst: forward = %2.3f lateral = %2.3f throttle = %2.3f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
