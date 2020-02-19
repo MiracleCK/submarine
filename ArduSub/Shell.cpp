@@ -56,7 +56,7 @@ const param_name_t params[] = {
     {"mlf", "MOT_LTR_FACT"},
     {"mtff", "MOT_TFP_FACT"},
     {"mtlf", "MOT_TLR_FACT"},
-    {"mcp", "MOT_CUSTOM_PITCH"},
+    {"mcp", "MOT_CUSTOM_PIT"},
     {"mcr", "MOT_CUSTOM_ROLL"},
     {"amax", "ANGLE_MAX"},
     {"atx", "AHRS_TRIM_X"},
