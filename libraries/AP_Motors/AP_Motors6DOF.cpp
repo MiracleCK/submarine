@@ -177,6 +177,48 @@ const AP_Param::GroupInfo AP_Motors6DOF::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("8_MAPPING", 21, AP_Motors6DOF, _motor_mapping[7], 8),
 
+    // @Param: CUSTOM_PITCH
+    // @DisplayName: User corrected pitch
+    // @Description: Used to correct pitch thr
+    // @Ragne: 1 8
+    // @User: Advanced
+    AP_GROUPINFO("CUSTOM_PIT", 22, AP_Motors6DOF, _custom_pitch_thr, 0.0f),
+
+    // @Param: CUSTOM_ROLL
+    // @DisplayName: User corrected roll
+    // @Description: Used to correct roll thr
+    // @Ragne: 1 8
+    // @User: Advanced
+    AP_GROUPINFO("CUSTOM_ROLL", 23, AP_Motors6DOF, _custom_roll_thr, 0.0f),
+
+    // @Param: FTP_FACT
+    // @DisplayName: Forward throttle thrust correct factor
+    // @Description: Used to correct forward thrust with throttle thrust of pitch
+    // @Values: 1:multi with 1, -1:multi with -1
+    // @User: Advanced
+    AP_GROUPINFO("FTP_FACT", 24, AP_Motors6DOF, _custom_thrust_factor[0], 1),
+
+    // @Param: LTR_FACT
+    // @DisplayName: Lateral throttle thrust correct factor
+    // @Description: Used to correct Lateral thrust with throttle thrust of roll
+    // @Values: 1:multi with 1, -1:multi with -1
+    // @User: Advanced
+    AP_GROUPINFO("LTR_FACT", 25, AP_Motors6DOF, _custom_thrust_factor[1], 1),
+
+    // @Param: TFP_FACT
+    // @DisplayName: Throttle forward thrust correct factor
+    // @Description: Used to correct Throttle thrust with forward thrust of pitch
+    // @Values: 1:multi with 1, -1:multi with -1
+    // @User: Advanced
+    AP_GROUPINFO("TFP_FACT", 26, AP_Motors6DOF, _custom_thrust_factor[2], -1),
+
+    // @Param: TLR_FACT
+    // @DisplayName: Throttle lateral thrust correct factor
+    // @Description: Used to correct Throttle thrust with lateral thrust of roll
+    // @Values: 1:multi with 1, -1:multi with -1
+    // @User: Advanced
+    AP_GROUPINFO("TLR_FACT", 27, AP_Motors6DOF, _custom_thrust_factor[3], -1),
+
     AP_GROUPEND
 };
 
@@ -374,14 +416,16 @@ void AP_Motors6DOF::output_armed_stabilizing()
         forward_thrust = _forward_in;
         lateral_thrust = _lateral_in;
 
-        float corrected_pitch = correct_pitch_thr + _pitch_thr;
-        float corrected_roll = correct_roll_thr + _roll_thr;
+        float corrected_pitch = _custom_pitch_thr + _pitch_thr;
+        float corrected_roll = _custom_roll_thr + _roll_thr;
 
-        forward_thrust = forward_thrust * cosf(corrected_pitch) + throttle_thrust * sinf(corrected_pitch);
-        lateral_thrust = lateral_thrust * cosf(corrected_roll) + throttle_thrust * sinf(corrected_roll);
+        forward_thrust = forward_thrust * cosf(corrected_pitch) 
+                       + _custom_thrust_factor[0] * throttle_thrust * sinf(corrected_pitch);
+        lateral_thrust = lateral_thrust * cosf(corrected_roll) 
+                       + _custom_thrust_factor[1] * throttle_thrust * sinf(corrected_roll);
         throttle_thrust = throttle_thrust * cosf(corrected_pitch) * cosf(corrected_roll) 
-                        - _forward_in * sinf(corrected_pitch) 
-                        - _lateral_in * sinf(corrected_roll);
+                        + _custom_thrust_factor[2] * _forward_in * sinf(corrected_pitch) 
+                        + _custom_thrust_factor[3] * _lateral_in * sinf(corrected_roll);
 
         if (is_param_print() && is_dbg_motor) {
             printf("pitch = %2.2f roll = %2.2f\r\n", corrected_pitch, corrected_roll);

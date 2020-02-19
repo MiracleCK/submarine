@@ -71,6 +71,10 @@ protected:
     AP_Float            _forwardVerticalCouplingFactor;
     AP_Int8             _motor_mapping[AP_MOTORS_MAX_NUM_MOTORS];
 
+    AP_Float            _custom_pitch_thr;
+    AP_Float            _custom_roll_thr;
+    AP_Int8             _custom_thrust_factor[4];
+
     float               _throttle_factor[AP_MOTORS_MAX_NUM_MOTORS]; // each motors contribution to throttle (climb/descent)
     float               _forward_factor[AP_MOTORS_MAX_NUM_MOTORS]; // each motors contribution to forward/backward
     float               _lateral_factor[AP_MOTORS_MAX_NUM_MOTORS];  // each motors contribution to lateral (left/right)

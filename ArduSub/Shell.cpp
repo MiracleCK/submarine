@@ -52,6 +52,12 @@ const param_name_t params[] = {
     {"m6d", "MOT_6_DIRECTION"},
     {"m7d", "MOT_7_DIRECTION"},
     {"m8d", "MOT_8_DIRECTION"},
+    {"mff", "MOT_FTP_FACT"},
+    {"mlf", "MOT_LTR_FACT"},
+    {"mtff", "MOT_TFP_FACT"},
+    {"mtlf", "MOT_TLR_FACT"},
+    {"mcp", "MOT_CUSTOM_PITCH"},
+    {"mcr", "MOT_CUSTOM_ROLL"},
     {"amax", "ANGLE_MAX"},
     {"atx", "AHRS_TRIM_X"},
     {"aty", "AHRS_TRIM_Y"},
@@ -67,9 +73,6 @@ const param_name_t params[] = {
 };
 
 static int params_cnt = sizeof(params) / sizeof(params[0]);
-
-float correct_pitch_thr = 0.0f;
-float correct_roll_thr = 0.0f;
 
 bool is_dbg_motor;
 bool is_dbg_batt;
@@ -114,9 +117,6 @@ void cmd_param(int argc, char *argv[])
     if (!strcmp(argv[0], "show")) // param show
     {
         cmd_param_show(argc - 1, &argv[1]);
-        hal.shell->printf("rpyr:USE_RATE: %d\r\n", use_angle_rate);
-        hal.shell->printf("cpthr:CORRECT_PITCH:  %d\r\n", radian_to_degree(correct_pitch_thr));
-        hal.shell->printf("crthr:CORRECT_ROLL: %d\r\n", radian_to_degree(correct_roll_thr));
         return;
     }
 
@@ -139,21 +139,6 @@ void cmd_param(int argc, char *argv[])
 
     if (!strcmp(argv[0], "set")) // param set
     {
-        if (!strcmp(argv[1], "rpyr")) {
-            use_angle_rate = !use_angle_rate;
-            return;
-        }
-
-        if (!strcmp(argv[1], "cpthr")){
-            correct_pitch_thr = degree_to_radian(strtod(argv[2], NULL));
-            return;
-        }
-
-        if (!strcmp(argv[1], "crthr")){
-            correct_roll_thr = degree_to_radian(strtod(argv[2], NULL));
-            return;
-        }
-
         int i;
         for (i = 0; i < params_cnt; i++) {
             if (!strcmp(argv[1], params[i].param_short_name)){
@@ -232,9 +217,11 @@ int cmd_param_set(const char *name, float value)
     }
     float old_value = vp->cast_to_float(var_type);
 
-    if (!strcmp((const char*)key, "AHRS_TRIM_X") ||
-            !strcmp((const char*)key, "AHRS_TRIM_Y") ||
-            !strcmp((const char*)key, "AHRS_TRIM_Z")) {
+    if (!strcmp((const char*)key, "AHRS_TRIM_X") 
+     || !strcmp((const char*)key, "AHRS_TRIM_Y") 
+     || !strcmp((const char*)key, "AHRS_TRIM_Z")
+     || !strcmp((const char*)key, "MOT_CUSTOM_PIT")
+     || !strcmp((const char*)key, "MOT_CUSTOM_ROLL")) {
         value = degree_to_radian(value);
     }
 
@@ -282,7 +269,9 @@ int cmd_param_show(int argc, char *argv[])
         if (argc <= 0 || strcmp(argv[0], "radian")) {
             if (!strcmp((const char*)key, "AHRS_TRIM_X") ||
             !strcmp((const char*)key, "AHRS_TRIM_Y") ||
-            !strcmp((const char*)key, "AHRS_TRIM_Z")) {
+            !strcmp((const char*)key, "AHRS_TRIM_Z") ||
+            !strcmp((const char*)key, "MOT_CUSTOM_PIT") ||
+            !strcmp((const char*)key, "MOT_CUSTOM_ROLL")) {
                 value = radian_to_degree(value);
             }
         }
