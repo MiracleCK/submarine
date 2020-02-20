@@ -26,7 +26,7 @@ static ShellCommand chibi_shell_commands[] = {
 };
 
 ShellConfig shell_cfg = {
-  (BaseSequentialStream *)&SD8,
+  (BaseSequentialStream *)&HAL_STDOUT_SERIAL,
   chibi_shell_commands
 };
 
