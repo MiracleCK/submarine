@@ -700,9 +700,9 @@ void Sub::load_parameters()
 
     // below is user define
     //
-    AP_Param::set_default_by_name("FRAME_CONFIG", AP_Motors6DOF::SUB_FRAME_CUSTOM);
+    AP_Param::set_default_by_name("FRAME_CONFIG", AP_Motors6DOF::SUB_FRAME_SIMPLEROV_4);
     
-    AP_Param::set_default_by_name("MOT_PWM_TYPE", 4); // DShot150
+    AP_Param::set_default_by_name("MOT_PWM_TYPE", 0); // DShot150
     
     char rc_param_name[13]; // len is the max_size of below param name
     int rc_param_buf_len = sizeof(rc_param_name);

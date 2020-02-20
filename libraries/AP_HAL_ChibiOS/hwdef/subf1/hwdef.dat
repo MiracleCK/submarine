@@ -529,4 +529,6 @@ define RC_IN_CHANNEL_FORWARD 2
 define RC_IN_CHANNEL_LATERAL 1
 
 # ROTATE_CUSTOM_IMU is the same as MAG, no need define
-define ROTATE_CUSTOM_MAG {tmp = y; y = -x; x = tmp; return;}
+#define ROTATE_CUSTOM_MAG {tmp = y; y = -x; x = tmp; return;}
+define ROTATE_CUSTOM_MAG {return;}
+#define ROTATE_CUSTOM_MAG {x = -x; y = -y; return;}
