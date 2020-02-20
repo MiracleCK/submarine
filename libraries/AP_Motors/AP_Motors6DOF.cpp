@@ -264,18 +264,6 @@ void AP_Motors6DOF::setup_motors(motor_frame_class frame_class, motor_frame_type
         add_motor_raw_6dof(AP_MOTORS_MOT_3,     0,              0,              0,              -1.0f,              0,                  0,              3);
         break;
     case SUB_FRAME_SIMPLEROV_4:
-    #if 1
-        add_motor_raw_6dof(AP_MOTORS_MOT_1,     0,              0,              1.0f,          0,                  1.0f,              1.0f,          1);  //左前
-        add_motor_raw_6dof(AP_MOTORS_MOT_2,     0,              0,              -1.0f,         0,                  -1.0f,             1.0f,          2);  //左后
-        add_motor_raw_6dof(AP_MOTORS_MOT_3,     0,              0,              -1.0f,         0,                  1.0f,              1.0f,          3);  //右后
-        add_motor_raw_6dof(AP_MOTORS_MOT_4,     0,              0,              1.0f,          0,                  -1.0f,             1.0f,          4);  //右前
-    #else
-        add_motor_raw_6dof(AP_MOTORS_MOT_1,     0,              0,              1.0f,          0,                1.0f,            1.0f,         1);  //左前
-        add_motor_raw_6dof(AP_MOTORS_MOT_2,     0,              0,              1.0f,          0,                1.0f,            1.0f,         2);  //左后
-        add_motor_raw_6dof(AP_MOTORS_MOT_3,     0,              0,              1.0f,          0,                1.0f,            1.0f,         3);  //右后
-        add_motor_raw_6dof(AP_MOTORS_MOT_4,     0,              0,              1.0f,          0,                1.0f,            1.0f,         4);  //右前
-    #endif
-        break;
     case SUB_FRAME_SIMPLEROV_5:
     default:
         add_motor_raw_6dof(AP_MOTORS_MOT_1,     0,              0,              -1.0f,          0,                  1.0f,               0,              1);
