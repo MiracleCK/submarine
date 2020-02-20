@@ -529,9 +529,8 @@ define RC_IN_CHANNEL_FORWARD 2
 define RC_IN_CHANNEL_LATERAL 1
 
 # ROTATE_CUSTOM_IMU is the same as MAG, no need define
-#define ROTATE_CUSTOM_MAG {tmp = y; y = -x; x = tmp; return;}
+# f1 no need rotate, remain raw axis
 define ROTATE_CUSTOM_MAG {return;}
-#define ROTATE_CUSTOM_MAG {x = -x; y = -y; return;}
 
 #      Motor #               Roll   Pitch    Yaw    Throttle   Forward   Lateral
 define CUSTOM_MOTORS_MOT_1      0,      0,   1.0f,      0,      1.0f,     1.0f
