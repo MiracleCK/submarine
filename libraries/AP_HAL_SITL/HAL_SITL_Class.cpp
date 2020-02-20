@@ -41,6 +41,7 @@ static Empty::I2CDeviceManager i2c_mgr_instance;
 static Empty::SPIDeviceManager emptySPI;
 static Empty::OpticalFlow emptyOpticalFlow;
 static Empty::Flash emptyFlash;
+static Empty::Shell emptyShell;
 
 static UARTDriver sitlUart0Driver(0, &sitlState);
 static UARTDriver sitlUart1Driver(1, &sitlState);
@@ -75,6 +76,7 @@ HAL_SITL::HAL_SITL() :
         &utilInstance,      /* util */
         &emptyOpticalFlow, /* onboard optical flow */
         &emptyFlash, /* flash driver */
+        &emptyShell,
         nullptr),           /* CAN */
     _sitl_state(&sitlState)
 {}

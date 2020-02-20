@@ -698,11 +698,18 @@ void Sub::load_parameters()
     AP_Param::set_by_name("MNT_RC_IN_TILT", 8);
     AP_Param::set_default_by_name("RNGFND1_TYPE", (uint8_t)RangeFinder::Type::MAVLink);
 
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+    return;
+#endif
+
     // below is user define
     //
     AP_Param::set_default_by_name("FRAME_CONFIG", AP_Motors6DOF::SUB_FRAME_CUSTOM);
     
     AP_Param::set_default_by_name("MOT_PWM_TYPE", 4); // DShot150
+
+    AP_Param::set_by_name("BATT_MONITOR", 5);
+    AP_Param::set_and_save_by_name("BATT_BUS", 1); // need save, if not would be changed by batt library
     
     char rc_param_name[13]; // len is the max_size of below param name
     int rc_param_buf_len = sizeof(rc_param_name);
