@@ -454,7 +454,7 @@ void AP_Motors6DOF::output_armed_stabilizing()
             printf("\r\n");
             printf("thrust: roll %2.4f pitch %2.4f yaw %2.4f\r\n", roll_thrust, pitch_thrust, yaw_thrust);
             printf("thurst: forward = %2.4f lateral = %2.4f throttle = %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
-            printf("thrust custom: forward %2.4f\r\n", _custom_forward_thrust);
+            printf("thrust custom: forward %2.4f\r\n", _custom_forward_thrust.get());
         }
 
         forward_thrust = forward_thrust * cosf(corrected_pitch) 
