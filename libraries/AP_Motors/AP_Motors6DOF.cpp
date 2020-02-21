@@ -219,17 +219,25 @@ const AP_Param::GroupInfo AP_Motors6DOF::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("TLR_FACT", 27, AP_Motors6DOF, _custom_thrust_factor[3], -1),
 
-    // @Param: CUSTOM_FORWARD_THRUST
+    // @Param: CFT
     // @DisplayName: User corrected forward thrust
     // @Description: Used to correct forward thrust
     // @Ragne: 1 8
     // @User: Advanced
     AP_GROUPINFO("CFT", 28, AP_Motors6DOF, _custom_forward_thrust, 0.0f),
 
+    // @Param: THR_RATIO
+    // @DisplayName: Negative thrust ratio
+    // @Description: Used to correct Negative thrust ratio
+    // @Values: !=0: use ratio, 0: donot use ratio
+    // @User: Advanced
+    AP_GROUPINFO("THR_RATIO", 29, AP_Motors6DOF, _custom_negative_thrust_ratio, 0.85f),
+
     AP_GROUPEND
 };
 
-static void motor_vector_force_debug(float rpy_out[], float linear_out[], float rpyt_out[]);
+static void to_designer_order_out(float out[]);
+static void motor_vector_force_debug(float rpy_out[], float linear_out[], float rpyt_out[], float ratio);
 
 void AP_Motors6DOF::setup_motors(motor_frame_class frame_class, motor_frame_type frame_type)
 {
@@ -444,6 +452,15 @@ void AP_Motors6DOF::output_armed_stabilizing()
         float corrected_pitch = _custom_pitch_thr + _pitch_thr;
         float corrected_roll = _custom_roll_thr + _roll_thr;
 
+        // test real data
+        roll_thrust = 0.04;
+        pitch_thrust = 0.594;
+        yaw_thrust = -0.001;
+        throttle_thrust = 0.284;
+        corrected_pitch = -0.02;
+        corrected_roll = 0;
+
+
         if (is_param_print() && is_dbg_motor) {
             printf("============================\r\n");
             printf("pitch %3.4f/%3.1f roll %3.4f/%3.1f\r\n", _pitch_thr, ToDeg(_pitch_thr),  _roll_thr, ToDeg(_roll_thr));
@@ -517,7 +534,74 @@ void AP_Motors6DOF::output_armed_stabilizing()
         }
 
         if (is_param_print() && is_dbg_motor) {
-            motor_vector_force_debug(rpy_out, linear_out, _thrust_rpyt_out);
+            float origin_rpyt_out[8];
+            for (i = 0; i < 8; i++) {
+                origin_rpyt_out[i] = _thrust_rpyt_out[i];
+            }
+
+            to_designer_order_out(origin_rpyt_out);
+            
+            printf("\r\nprintf as designer MOT_n order\r\n");
+            printf("origin rpyt out:\r\n");
+            for (i = 0; i < 8; i++) {
+                printf("%2.4f ", origin_rpyt_out[i]);
+            }
+        }
+
+        // correct nagative thurst with param ratio
+        // M2 programed MOT_n      1   2   3   4   5   6   7   8
+        //             propeller   R   L   R   L   L   R   R   L
+        int motor_lr_factor[8] = {-1,  1, -1,  1,  1, -1, -1,  1}; // L/R propeller factor, to make positive thrust with positive sign
+        float thrust_rpyt_out_max = 1;
+        if (!is_zero(_custom_negative_thrust_ratio)) {
+            for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
+                if (motor_enabled[i]) {
+                    _thrust_rpyt_out[i] = rpy_out[i] + linear_out[i];
+                    if ((_thrust_rpyt_out[i] < 0) != (motor_lr_factor[i] < 0)) {
+                        _thrust_rpyt_out[i] = _thrust_rpyt_out[i] / _custom_negative_thrust_ratio;
+                    }
+                    if (fabsf(_thrust_rpyt_out[i]) > thrust_rpyt_out_max) {
+                        thrust_rpyt_out_max = fabsf(_thrust_rpyt_out[i]);
+                    }
+                }
+            }
+
+            if (is_param_print() && is_dbg_motor) {
+                float ratio_rpyt_out[8];
+                for (i = 0; i < 8; i++) {
+                    ratio_rpyt_out[i] = _thrust_rpyt_out[i];
+                }
+
+                to_designer_order_out(ratio_rpyt_out);
+                
+                printf("\r\nratio rpyt out:\r\n");
+                for (i = 0; i < 8; i++) {
+                    printf("%2.4f ", ratio_rpyt_out[i]);
+                }
+            }
+
+            // normalize
+            for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
+                if (motor_enabled[i]) {
+                    _thrust_rpyt_out[i] = constrain_float(_thrust_rpyt_out[i] / thrust_rpyt_out_max,-1.0f,1.0f);
+                }
+            }
+
+            if (is_param_print() && is_dbg_motor) {
+                motor_vector_force_debug(rpy_out, linear_out, _thrust_rpyt_out, _custom_negative_thrust_ratio);
+            }
+
+            // thurst analize should not effected by direction
+            // motor direction
+            for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
+                if (motor_enabled[i]) {
+                    _thrust_rpyt_out[i] = constrain_float(_motor_reverse[i] * _thrust_rpyt_out[i],-1.0f,1.0f);
+                }
+            }
+        } else {
+            if (is_param_print() && is_dbg_motor) {
+                motor_vector_force_debug(rpy_out, linear_out, _thrust_rpyt_out, _custom_negative_thrust_ratio);
+            }
         }
     }
 
@@ -757,12 +841,26 @@ bool AP_Motors6DOF::set_reversed(int motor_number, bool reversed) {
     return true;
 }
 
-
-void motor_vector_force_debug(float rpy_out[], float linear_out[], float rpyt_out[]) {
+void to_designer_order_out(float out[]) {
     // map programed MOT_1/2/... to Structural designer defined MOT_1/2/...
     // MOT1:4 MOT2:3 MOT3:2 MOT4:1 MOT5:6 MOT6:7 MOT7:5 MOT8:8
     int motor_stru_mapping[8] = {4, 3, 2, 1, 6, 7, 5, 8};
-    
+
+    int designer_motor_order;
+    int i;
+    float tmp[8];
+
+    for (i = 0; i < 8; i++) {
+        designer_motor_order = motor_stru_mapping[i];
+        tmp[designer_motor_order - 1] = out[i];
+    }
+
+    for (i = 0; i < 8; i++) {
+        out[i] = tmp[i];
+    }
+}
+
+void motor_vector_force_debug(float rpy_out[], float linear_out[], float rpyt_out[], float ratio) {
     // test data from designer table
     // our thrust -1 means clockwise, it revesed to design
     // so do reverse when define
@@ -777,8 +875,6 @@ void motor_vector_force_debug(float rpy_out[], float linear_out[], float rpyt_ou
     //             propeller   R   L   R   L   L   R   R   L
     int motor_lr_factor[8] = {-1,  1, -1,  1,  1, -1, -1,  1}; // L/R propeller factor, to make positive thrust with positive sign
     
-    int designer_motor_order;
-    
     // designer order
     float k_tn[8];
 
@@ -787,15 +883,21 @@ void motor_vector_force_debug(float rpy_out[], float linear_out[], float rpyt_ou
     float designer_rpy_out[8], designer_linear_out[8], designer_rpyt_out[8];
 
     for (i = 0; i < 8; i++) {
-        designer_motor_order = motor_stru_mapping[i];
+        designer_rpy_out[i] = rpy_out[i];
+        designer_linear_out[i] = linear_out[i];
+        designer_rpyt_out[i] = rpyt_out[i]; 
 
-        designer_rpy_out[designer_motor_order - 1] = rpy_out[i];
-        designer_linear_out[designer_motor_order - 1] = linear_out[i];
-        designer_rpyt_out[designer_motor_order - 1] = rpyt_out[i]; 
+        k_tn[i] = rpyt_out[i] * motor_lr_factor[i];
+    }
 
-        k_tn[designer_motor_order - 1] = rpyt_out[i] * motor_lr_factor[i];
-        if (k_tn[designer_motor_order - 1] < 0) {
-            k_tn[designer_motor_order - 1] *= 0.6f;
+    to_designer_order_out(designer_rpy_out);
+    to_designer_order_out(designer_linear_out);
+    to_designer_order_out(designer_rpyt_out);
+    to_designer_order_out(k_tn);
+
+    for (i = 0; i < 8; i++) {
+        if (k_tn[i] < 0 && !is_zero(ratio)) {
+            k_tn[i] *= ratio;
         }
     }
 

@@ -75,6 +75,7 @@ protected:
     AP_Float            _custom_roll_thr;
     AP_Int8             _custom_thrust_factor[4];
     AP_Float            _custom_forward_thrust;
+    AP_Float            _custom_negative_thrust_ratio;
 
     float               _throttle_factor[AP_MOTORS_MAX_NUM_MOTORS]; // each motors contribution to throttle (climb/descent)
     float               _forward_factor[AP_MOTORS_MAX_NUM_MOTORS]; // each motors contribution to forward/backward
