@@ -219,6 +219,13 @@ const AP_Param::GroupInfo AP_Motors6DOF::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("TLR_FACT", 27, AP_Motors6DOF, _custom_thrust_factor[3], -1),
 
+    // @Param: CUSTOM_FORWARD_THRUST
+    // @DisplayName: User corrected forward thrust
+    // @Description: Used to correct forward thrust
+    // @Ragne: 1 8
+    // @User: Advanced
+    AP_GROUPINFO("CFT", 28, AP_Motors6DOF, _custom_forward_thrust, 0.0f),
+
     AP_GROUPEND
 };
 
@@ -439,15 +446,18 @@ void AP_Motors6DOF::output_armed_stabilizing()
 
         if (is_param_print() && is_dbg_motor) {
             printf("============================\r\n");
-            printf("pitch %2.2f roll %2.2f\r\n", _pitch_thr, _roll_thr);
-            printf("custom: pitch %2.2f roll %2.2f\r\n", _custom_pitch_thr.get(), _custom_roll_thr.get());
-            printf("corrected: pitch %2.2f roll %2.2f\r\n", corrected_pitch, corrected_roll);
-            printf("thrust: roll %2.3f pitch %2.3f yaw %2.3f\r\n", roll_thrust, pitch_thrust, yaw_thrust);
-            printf("thurst: forward = %2.3f lateral = %2.3f throttle = %2.3f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
+            printf("pitch %3.4f roll %3.4f\r\n", _pitch_thr, _roll_thr);
+            printf("custom: pitch %3.4f roll %3.4f\r\n", _custom_pitch_thr.get(), _custom_roll_thr.get());
+            printf("corrected: pitch %3.4f roll %3.4f\r\n", corrected_pitch, corrected_roll);
+            printf("\r\n");
+            printf("thrust: roll %2.4f pitch %2.4f yaw %2.4f\r\n", roll_thrust, pitch_thrust, yaw_thrust);
+            printf("thurst: forward = %2.4f lateral = %2.4f throttle = %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
+            printf("thrust custom: forward %2.4f\r\n", _custom_forward_thrust);
         }
 
         forward_thrust = forward_thrust * cosf(corrected_pitch) 
-                       + _custom_thrust_factor[0] * throttle_thrust * sinf(corrected_pitch);
+                       + _custom_thrust_factor[0] * throttle_thrust * sinf(corrected_pitch)
+                       + _custom_forward_thrust;
         lateral_thrust = lateral_thrust * cosf(corrected_roll) 
                        + _custom_thrust_factor[1] * throttle_thrust * sinf(corrected_roll);
         throttle_thrust = throttle_thrust * cosf(corrected_pitch) * cosf(corrected_roll) 
@@ -455,7 +465,7 @@ void AP_Motors6DOF::output_armed_stabilizing()
                         + _custom_thrust_factor[3] * _lateral_in * sinf(corrected_roll);
 
         if (is_param_print() && is_dbg_motor) {
-            printf("corrected: forward = %2.3f lateral = %2.3f throttle = %2.3f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
+            printf("thrust corrected: forward %2.4f lateral %2.4f throttle %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
         }
 
         float rpy_out[AP_MOTORS_MAX_NUM_MOTORS]; // buffer so we don't have to multiply coefficients multiple times.
@@ -790,19 +800,19 @@ void motor_vector_force_debug(float rpy_out[], float linear_out[], float rpyt_ou
     printf("\r\nprintf as designer MOT_n order");
     printf("\r\nrpy out:\r\n");
     for (i = 0; i < 8; i++) {
-        printf("%2.3f ", i, designer_rpy_out[i]);
+        printf("%2.4f ", i, designer_rpy_out[i]);
     }
     printf("\r\nlinear out:\r\n");
     for (i = 0; i < 8; i++) {
-        printf("%2.3f ", i, designer_linear_out[i]);
+        printf("%2.4f ", i, designer_linear_out[i]);
     }
     printf("\r\nrpyt out:\r\n");
     for (i = 0; i < 8; i++) {
-        printf("%2.3f ", i, designer_rpyt_out[i]);
+        printf("%2.4f ", i, designer_rpyt_out[i]);
     }
     printf("\r\nKtn:\r\n");
     for (i = 0; i < 8; i++) {
-        printf("%2.3f ", i, k_tn[i]);
+        printf("%2.4f ", i, k_tn[i]);
     }
 
     float f_max = 13.5f;
