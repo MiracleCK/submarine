@@ -42,7 +42,7 @@
 # extract the required DMA and alternate function tables.
 
 # MCU class and specific type
-MCU STM32F4xx STM32F427xx
+MCU STM32F4xx STM32F407xx
 
 # We set a specific HAL_BOARD_SUBTYPE, allowing for custom config in
 # drivers. For this to be used the subtype needs to be added to
@@ -67,6 +67,7 @@ APJ_BOARD_ID 9
 
 # crystal frequency
 OSCILLATOR_HZ 24000000
+STM32_PLLM_VALUE 24
 
 # On some boards you will need to also set the various PLL values. See
 # the defaults in common/mcuconf.h, and use the define mechanism
@@ -103,7 +104,7 @@ FLASH_SIZE_KB 2048
 # The value for STDOUT_SERIAL is a serial device name, and must be for a 
 # serial device for which pins are defined in this file. For example, SD7
 # is for UART7 (SD7 == "serial device 7" in ChibiOS).
-STDOUT_SERIAL SD8
+STDOUT_SERIAL SD3
 STDOUT_BAUDRATE 57600
 
 # Now the USB setup, if you have USB. All of these settings are
@@ -144,7 +145,7 @@ I2C_ORDER I2C1 I2C2
 # 6) SERIAL5: extra UART (usually RTOS debug console)
 
 # order of UARTs (and USB)
-UART_ORDER OTG1 USART6 EMPTY EMPTY EMPTY UART8
+UART_ORDER OTG1 USART2 USART1 EMPTY EMPTY USART3
 
 # If the board has an IOMCU connected via a UART then this defines the
 # UART to talk to that MCU. Leave it out for boards with no IOMCU.
@@ -188,8 +189,12 @@ UART_ORDER OTG1 USART6 EMPTY EMPTY EMPTY UART8
 # RX pins.
 
 # USART6 serial GPS
-PG14 USART6_TX USART6
-PG9 USART6_RX USART6
+#PG14 USART6_TX USART6
+#PG9 USART6_RX USART6
+
+# USART2 serial GPS
+PD5 USART2_TX USART2
+PD6 USART2_RX USART2
 
 # Now define the primary battery connectors. The labels we choose here
 # are used to create defines for pins in the various drivers, so
@@ -257,8 +262,8 @@ PB2 BOOT1 INPUT
 
 # Now the first I2C bus. The pin speeds are automatically setup
 # correctly, but can be overridden here if needed.
-PB6 I2C1_SCL I2C1
-PB7 I2C1_SDA I2C1
+PB8 I2C1_SCL I2C1
+PB9 I2C1_SDA I2C1
 
 # the 2nd I2C bus
 PB10 I2C2_SCL I2C2
@@ -276,7 +281,7 @@ PB15 SPI2_MOSI SPI2
 # that CS pins are software controlled, and are not tied to a particular
 # SPI bus.
 #PC1 MAG_CS CS
-PC4 MPU_CS CS
+PC2 MPU_CS CS
 
 # This defines more ADC inputs.
 #PC3 AUX_POWER ADC1 SCALE(1)
@@ -294,12 +299,12 @@ PC4 MPU_CS CS
 #PC7 USART6_RX USART6
 
 # Now setup the pins for the microSD card, if available.
-PC8 SDIO_D0 SDIO
-PC9 SDIO_D1 SDIO
-PC10 SDIO_D2 SDIO
-PC11 SDIO_D3 SDIO
-PC12 SDIO_CK SDIO
-PD2 SDIO_CMD SDIO
+#PC8 SDIO_D0 SDIO
+#PC9 SDIO_D1 SDIO
+#PC10 SDIO_D2 SDIO
+#PC11 SDIO_D3 SDIO
+#PC12 SDIO_CK SDIO
+#PD2 SDIO_CMD SDIO
 
 # More CS pins for more sensors. The labels for all CS pins need to
 # match the SPI device table later in this file.
@@ -322,14 +327,14 @@ PD2 SDIO_CMD SDIO
 
 # The telem2 USART, also with RTS/CTS available.
 # USART3 serial3 telem2
-#PD8 USART3_TX USART3
-#PD9 USART3_RX USART3
+PD8 USART3_TX USART3
+PD9 USART3_RX USART3
 #PD11 USART3_CTS USART3
 #PD12 USART3_RTS USART3
 
 # The CS pin for FRAM (ramtron). This one is marked as using
 # SPEED_VERYLOW, which matches the HAL_PX4 setup.
-PB12 FRAM_CS CS SPEED_VERYLOW
+PD10 FRAM_CS CS SPEED_VERYLOW
 
 # Now we start defining some PWM pins. We also map these pins to GPIO
 # values, so users can set BRD_PWM_COUNT to choose how many of the PWM
@@ -340,12 +345,12 @@ PE14 TIM1_CH4 TIM1 PWM(1) GPIO(50)
 PE13 TIM1_CH3 TIM1 PWM(2) GPIO(51)
 PE11 TIM1_CH2 TIM1 PWM(3) GPIO(52)
 PE9  TIM1_CH1 TIM1 PWM(4) GPIO(53)
-PD13 TIM4_CH2 TIM4 PWM(5) GPIO(54)
-PD14 TIM4_CH3 TIM4 PWM(6) GPIO(55)
-PD12 TIM4_CH1 TIM4 PWM(7) GPIO(56)
-PD15 TIM4_CH4 TIM4 PWM(8) GPIO(57)
+#PD13 TIM4_CH2 TIM4 PWM(5) GPIO(54)
+#PD14 TIM4_CH3 TIM4 PWM(6) GPIO(55)
+#PD12 TIM4_CH1 TIM4 PWM(7) GPIO(56)
+#PD15 TIM4_CH4 TIM4 PWM(8) GPIO(57)
 
-define BOARD_PWM_COUNT_DEFAULT 8
+define BOARD_PWM_COUNT_DEFAULT 4
 
 # Relays default to use GPIO pins 54 and 55.
 #define RELAY1_PIN_DEFAULT 54
@@ -357,8 +362,12 @@ define BOARD_PWM_COUNT_DEFAULT 8
 
 # the 2nd GPS UART
 # UART8 serial4 GPS2
-PE0 UART8_RX UART8
-PE1 UART8_TX UART8
+#PE0 UART8_RX UART8
+#PE1 UART8_TX UART8
+
+# UART1 serial4 GPS2
+PB6 USART1_TX USART1
+PB7 USART1_RX USART1
 
 # Now setup SPI bus4.
 #PE2 SPI4_SCK  SPI4
@@ -467,7 +476,7 @@ define HAL_WITH_RAMTRON 1
 #define HAL_HAVE_IMU_HEATER 1
 
 # Enable FAT filesystem support (needs a microSD defined via SDIO).
-define HAL_OS_FATFS_IO 1
+#define HAL_OS_FATFS_IO 1
 
 define HAL_SUPPORT_RCOUT_SERIAL 1
 
@@ -509,34 +518,22 @@ define HAL_USE_ADC FALSE
 define STM32_ADC_USE_ADC1 FALSE
 define HAL_DISABLE_ADC_DRIVER TRUE
 
-#define HAL_BARO_ALLOW_INIT_NO_BARO TRUE
+define HAL_BARO_ALLOW_INIT_NO_BARO TRUE
 
 # define channel map
-define RC_IN_CHANNEL_PITCH 1
-define RC_IN_CHANNEL_ROLL 6
+define RC_IN_CHANNEL_PITCH 6
+define RC_IN_CHANNEL_ROLL 4
 define RC_IN_CHANNEL_THROTTLE 0
 define RC_IN_CHANNEL_YAW 3
 define RC_IN_CHANNEL_FORWARD 2
-define RC_IN_CHANNEL_LATERAL 4
+define RC_IN_CHANNEL_LATERAL 1
 
-define ROTATE_CUSTOM_IMU {tmp = x; x = -y; y = -tmp;}
-define ROTATE_CUSTOM_MAG {tmp = x; x = z; z = y; y = -tmp; return;}
+# ROTATE_CUSTOM_IMU is the same as MAG, no need define
+# f1 no need rotate, remain raw axis
+define ROTATE_CUSTOM_MAG {return;}
 
-#      Motor #               Roll   Pitch  Yaw    Throttle   Forward   Lateral
-define CUSTOM_MOTORS_MOT_1  -1.0f,  1.0f,  1.0f,  1.0f,     -1.0f,     1.0f
-define CUSTOM_MOTORS_MOT_2  -1.0f, -1.0f,  1.0f, -1.0f,      1.0f,     1.0f
-define CUSTOM_MOTORS_MOT_3  -1.0f, -1.0f, -1.0f, -1.0f,     -1.0f,    -1.0f
-define CUSTOM_MOTORS_MOT_4  -1.0f,  1.0f, -1.0f,  1.0f,      1.0f,    -1.0f
-define CUSTOM_MOTORS_MOT_5   1.0f, -1.0f, -1.0f,  1.0f,     -1.0f,     1.0f
-define CUSTOM_MOTORS_MOT_6   1.0f, -1.0f,  1.0f,  1.0f,      1.0f,    -1.0f
-define CUSTOM_MOTORS_MOT_7   1.0f,  1.0f, -1.0f, -1.0f,      1.0f,     1.0f
-define CUSTOM_MOTORS_MOT_8   1.0f,  1.0f,  1.0f, -1.0f,     -1.0f,    -1.0f
-
-define MOT_1_MAPPING 5
-define MOT_2_MAPPING 7
-define MOT_3_MAPPING 3
-define MOT_4_MAPPING 4
-define MOT_5_MAPPING 2
-define MOT_6_MAPPING 1
-define MOT_7_MAPPING 8
-define MOT_8_MAPPING 6
+#      Motor #               Roll   Pitch    Yaw    Throttle   Forward   Lateral
+define CUSTOM_MOTORS_MOT_1      0,      0,   1.0f,      0,      1.0f,     1.0f
+define CUSTOM_MOTORS_MOT_2      0,      0,  -1.0f,      0,     -1.0f,     1.0f
+define CUSTOM_MOTORS_MOT_3      0,      0,  -1.0f,      0,      1.0f,     1.0f
+define CUSTOM_MOTORS_MOT_4      0,      0,   1.0f,      0,     -1.0f,     1.0f

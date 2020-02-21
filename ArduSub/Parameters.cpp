@@ -698,6 +698,10 @@ void Sub::load_parameters()
     AP_Param::set_by_name("MNT_RC_IN_TILT", 8);
     AP_Param::set_default_by_name("RNGFND1_TYPE", (uint8_t)RangeFinder::Type::MAVLink);
 
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+    return;
+#endif
+
     // below is user define
     //
     AP_Param::set_default_by_name("FRAME_CONFIG", AP_Motors6DOF::SUB_FRAME_CUSTOM);
@@ -730,14 +734,30 @@ void Sub::load_parameters()
     }
 
     // mapping logic motor to physical
-    AP_Param::set_default_by_name("MOT_1_MAPPING", 5);
-    AP_Param::set_default_by_name("MOT_2_MAPPING", 7);
-    AP_Param::set_default_by_name("MOT_3_MAPPING", 3);
-    AP_Param::set_default_by_name("MOT_4_MAPPING", 4);
-    AP_Param::set_default_by_name("MOT_5_MAPPING", 2);
-    AP_Param::set_default_by_name("MOT_6_MAPPING", 1);
-    AP_Param::set_default_by_name("MOT_7_MAPPING", 8);
-    AP_Param::set_default_by_name("MOT_8_MAPPING", 6);
+    #ifdef MOT_1_MAPPING
+        AP_Param::set_default_by_name("MOT_1_MAPPING", MOT_1_MAPPING);
+    #endif
+    #ifdef MOT_2_MAPPING
+        AP_Param::set_default_by_name("MOT_2_MAPPING", MOT_2_MAPPING);
+    #endif
+    #ifdef MOT_3_MAPPING
+        AP_Param::set_default_by_name("MOT_3_MAPPING", MOT_3_MAPPING);
+    #endif
+    #ifdef MOT_4_MAPPING
+        AP_Param::set_default_by_name("MOT_4_MAPPING", MOT_4_MAPPING);
+    #endif
+    #ifdef MOT_5_MAPPING
+        AP_Param::set_default_by_name("MOT_5_MAPPING", MOT_5_MAPPING);
+    #endif
+    #ifdef MOT_6_MAPPING
+        AP_Param::set_default_by_name("MOT_6_MAPPING", MOT_6_MAPPING);
+    #endif
+    #ifdef MOT_7_MAPPING
+        AP_Param::set_default_by_name("MOT_7_MAPPING", MOT_7_MAPPING);
+    #endif
+    #ifdef MOT_8_MAPPING
+        AP_Param::set_default_by_name("MOT_8_MAPPING", MOT_8_MAPPING);
+    #endif
 }
 
 void Sub::convert_old_parameters()

@@ -258,12 +258,15 @@ void Vector3<T>::rotate(enum Rotation rotation)
     
     case ROTATION_CUSTOM_IMU:{
         // donot know why data had been roated, so remove the rotation
-        tmp = x; x = -y; y = -tmp;
+        #ifdef ROTATE_CUSTOM_IMU
+            ROTATE_CUSTOM_IMU
+        #endif
     }
     case ROTATION_CUSTOM_MAG:{
         // align to body frame
-        tmp = x; x = z; z = y; y = -tmp;
-        return;
+        #ifdef ROTATE_CUSTOM_MAG
+            ROTATE_CUSTOM_MAG
+        #endif
     }
     }
 }

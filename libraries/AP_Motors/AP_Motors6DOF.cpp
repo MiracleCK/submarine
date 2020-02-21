@@ -276,14 +276,30 @@ void AP_Motors6DOF::setup_motors(motor_frame_class frame_class, motor_frame_type
 
     case SUB_FRAME_CUSTOM:
         // Put your custom motor setup here
-        add_motor_raw_6dof(AP_MOTORS_MOT_1,    -1.0f,           1.0f,           1.0f,           1.0f,              -1.0f,              1.0f,           1);
-        add_motor_raw_6dof(AP_MOTORS_MOT_2,    -1.0f,          -1.0f,           1.0f,          -1.0f,               1.0f,              1.0f,           2);
-        add_motor_raw_6dof(AP_MOTORS_MOT_3,    -1.0f,          -1.0f,          -1.0f,          -1.0f,              -1.0f,             -1.0f,           3);
-        add_motor_raw_6dof(AP_MOTORS_MOT_4,    -1.0f,           1.0f,          -1.0f,           1.0f,               1.0f,             -1.0f,           4);
-        add_motor_raw_6dof(AP_MOTORS_MOT_5,     1.0f,          -1.0f,          -1.0f,           1.0f,              -1.0f,              1.0f,           5);
-        add_motor_raw_6dof(AP_MOTORS_MOT_6,     1.0f,          -1.0f,           1.0f,           1.0f,               1.0f,             -1.0f,           6);
-        add_motor_raw_6dof(AP_MOTORS_MOT_7,     1.0f,           1.0f,          -1.0f,          -1.0f,               1.0f,              1.0f,           7);
-        add_motor_raw_6dof(AP_MOTORS_MOT_8,     1.0f,           1.0f,           1.0f,          -1.0f,              -1.0f,             -1.0f,           8);
+        #ifdef CUSTOM_MOTORS_MOT_1
+            add_motor_raw_6dof(AP_MOTORS_MOT_1, CUSTOM_MOTORS_MOT_1, 1);
+        #endif
+        #ifdef CUSTOM_MOTORS_MOT_2
+            add_motor_raw_6dof(AP_MOTORS_MOT_2, CUSTOM_MOTORS_MOT_2, 2);
+        #endif
+        #ifdef CUSTOM_MOTORS_MOT_3
+            add_motor_raw_6dof(AP_MOTORS_MOT_3, CUSTOM_MOTORS_MOT_3, 3);
+        #endif
+        #ifdef CUSTOM_MOTORS_MOT_4
+            add_motor_raw_6dof(AP_MOTORS_MOT_4, CUSTOM_MOTORS_MOT_4, 4);
+        #endif
+        #ifdef CUSTOM_MOTORS_MOT_5
+            add_motor_raw_6dof(AP_MOTORS_MOT_5, CUSTOM_MOTORS_MOT_5, 5);
+        #endif
+        #ifdef CUSTOM_MOTORS_MOT_6
+            add_motor_raw_6dof(AP_MOTORS_MOT_6, CUSTOM_MOTORS_MOT_6, 6);
+        #endif
+        #ifdef CUSTOM_MOTORS_MOT_7
+            add_motor_raw_6dof(AP_MOTORS_MOT_7, CUSTOM_MOTORS_MOT_7, 7);
+        #endif
+        #ifdef CUSTOM_MOTORS_MOT_8
+            add_motor_raw_6dof(AP_MOTORS_MOT_8, CUSTOM_MOTORS_MOT_8, 8);
+        #endif
         break;
 
     case SUB_FRAME_SIMPLEROV_3:

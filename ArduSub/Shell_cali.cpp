@@ -9,7 +9,9 @@ static bool calibrate_gyros();
 static void calibrate_accel();
 static void calibrate_accel_level();
 
-char* cmd_cali_usage = "cali gyros|accel|baro [level]\r\n";
+void cmd_cali(int argc, char *argv[]);
+
+const char* cmd_cali_usage = "cali gyros|accel|baro [level]\r\n";
 
 void cmd_cali(int argc, char *argv[]) {
     if (argc < 1) {
