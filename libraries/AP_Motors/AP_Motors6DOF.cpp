@@ -453,12 +453,12 @@ void AP_Motors6DOF::output_armed_stabilizing()
         float corrected_roll = _custom_roll_thr + _roll_thr;
 
         // test real data
-        roll_thrust = 0.04;
-        pitch_thrust = 0.594;
-        yaw_thrust = -0.001;
-        throttle_thrust = 0.284;
-        corrected_pitch = -0.02;
-        corrected_roll = 0;
+        // roll_thrust = 0.04;
+        // pitch_thrust = 0.594;
+        // yaw_thrust = -0.001;
+        // throttle_thrust = 0.284;
+        // corrected_pitch = -0.02;
+        // corrected_roll = 0;
 
 
         if (is_param_print() && is_dbg_motor) {
