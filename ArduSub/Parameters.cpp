@@ -698,12 +698,15 @@ void Sub::load_parameters()
     AP_Param::set_by_name("MNT_RC_IN_TILT", 8);
     AP_Param::set_default_by_name("RNGFND1_TYPE", (uint8_t)RangeFinder::Type::MAVLink);
 
+    // below is user define
+    //
+    
+    AP_Param::set_default_by_name("ANGLE_MAX", 8000);
+
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
     return;
 #endif
 
-    // below is user define
-    //
     AP_Param::set_default_by_name("FRAME_CONFIG", AP_Motors6DOF::SUB_FRAME_CUSTOM);
     
     AP_Param::set_default_by_name("MOT_PWM_TYPE", 4); // DShot150
