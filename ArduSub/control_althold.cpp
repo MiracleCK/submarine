@@ -155,8 +155,6 @@ void Sub::get_alt_hold_pilot_desired_rate_lean_angles(float roll_rate_in, float 
     pitch_control_in = (last_pilot_pitch + pitch_rate_in * G_Dt) * scaler;
 
     get_pilot_desired_lean_angles(roll_control_in, pitch_control_in, roll_out, pitch_out, attitude_control.get_althold_lean_angle_max());
-    last_pilot_pitch = pitch_out;
-    last_pilot_roll = roll_out;
 }
 
 void Sub::get_alt_hold_pilot_desired_angle_rates(int16_t roll_in, int16_t pitch_in, int16_t yaw_in, float &roll_out, float &pitch_out, float &yaw_out)
@@ -240,6 +238,13 @@ void Sub::althold_run_rate()
     
     get_alt_hold_pilot_desired_rate_lean_angles(target_roll_rate, target_pitch_rate, target_roll, target_pitch);
 
+    if (is_request_reset_rp) {
+        target_pitch = 0;
+        target_roll = 0;
+
+        is_request_reset_rp = false;
+    }
+
     // call attitude controller
     if (!is_zero(target_yaw_rate)) { // call attitude controller with rate yaw determined by pilot input
         attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate);
@@ -261,6 +266,9 @@ void Sub::althold_run_rate()
             attitude_control.input_euler_angle_roll_pitch_yaw(target_roll, target_pitch, last_pilot_heading, true);
         }
     }
+
+    last_pilot_pitch = target_pitch;
+    last_pilot_roll = target_roll;
 
     // Hold actual position until zero derivative is detected
     static bool engageStopZ = true;
