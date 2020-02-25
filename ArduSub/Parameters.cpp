@@ -758,6 +758,11 @@ void Sub::load_parameters()
     #ifdef MOT_8_MAPPING
         AP_Param::set_default_by_name("MOT_8_MAPPING", MOT_8_MAPPING);
     #endif
+
+    AP_Param::set_default_by_name("MOT_FTP_FACT", 1);
+    AP_Param::set_default_by_name("MOT_LTR_FACT", -1);
+    AP_Param::set_default_by_name("MOT_TFP_FACT", -1);
+    AP_Param::set_default_by_name("MOT_TLR_FACT", 1);
 }
 
 void Sub::convert_old_parameters()
