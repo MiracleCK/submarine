@@ -904,19 +904,19 @@ void motor_vector_force_debug(float rpy_out[], float linear_out[], float rpyt_ou
     printf("\r\nprintf as designer MOT_n order");
     printf("\r\nrpy out:\r\n");
     for (i = 0; i < 8; i++) {
-        printf("%2.4f ", i, designer_rpy_out[i]);
+        printf("%2.4f ", designer_rpy_out[i]);
     }
     printf("\r\nlinear out:\r\n");
     for (i = 0; i < 8; i++) {
-        printf("%2.4f ", i, designer_linear_out[i]);
+        printf("%2.4f ", designer_linear_out[i]);
     }
     printf("\r\nrpyt out:\r\n");
     for (i = 0; i < 8; i++) {
-        printf("%2.4f ", i, designer_rpyt_out[i]);
+        printf("%2.4f ", designer_rpyt_out[i]);
     }
     printf("\r\nKtn:\r\n");
     for (i = 0; i < 8; i++) {
-        printf("%2.4f ", i, k_tn[i]);
+        printf("%2.4f ", k_tn[i]);
     }
 
     float f_max = 13.5f;
