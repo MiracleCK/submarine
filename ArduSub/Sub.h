@@ -430,9 +430,14 @@ private:
     uint32_t last_pilot_yaw_input_ms;
     uint32_t fs_terrain_recover_start_ms;
 
+    int32_t last_pilot_roll;
+    int32_t last_pilot_pitch;
+
     static const AP_Scheduler::Task scheduler_tasks[];
     static const AP_Param::Info var_info[];
     static const struct LogStructure log_structure[];
+
+    bool is_request_reset_rp; // request to reset ROLL and PITCH angle to 0
 
     void fast_loop();
     void fifty_hz_loop();
@@ -492,6 +497,8 @@ private:
     bool acro_init(void);
     void acro_run();
     void get_pilot_desired_angle_rates(int16_t roll_in, int16_t pitch_in, int16_t yaw_in, float &roll_out, float &pitch_out, float &yaw_out);
+    void get_alt_hold_pilot_desired_rate_lean_angles(float roll_rate_in, float pitch_rate_in, float &roll_out, float &pitch_out);
+    void get_alt_hold_pilot_desired_angle_rates(int16_t roll_in, int16_t pitch_in, int16_t yaw_in, float &roll_out, float &pitch_out, float &yaw_out);
     bool althold_init(void);
     void althold_run();
     void althold_run_rate();
@@ -578,6 +585,7 @@ private:
     void enable_motor_output();
     void init_joystick();
     void transform_manual_control_to_rc_override(int16_t x, int16_t y, int16_t z, int16_t r, uint16_t buttons);
+    bool manual_control_reset_rp(uint16_t buttons);
     void handle_jsbutton_press(uint8_t button,bool shift=false,bool held=false);
     void handle_jsbutton_release(uint8_t button, bool shift);
     JSButton* get_button(uint8_t index);

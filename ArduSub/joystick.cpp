@@ -51,6 +51,16 @@ void Sub::init_joystick()
     gain = constrain_float(gain, 0.1, 1.0);
 }
 
+bool Sub::manual_control_reset_rp(uint16_t buttons) {
+    if ((buttons & 0x01) != 0x01) {
+        return false;
+    }
+
+    is_request_reset_rp = true;
+
+    return true;
+}
+
 void Sub::transform_manual_control_to_rc_override(int16_t x, int16_t y, int16_t z, int16_t r, uint16_t buttons)
 {
 
