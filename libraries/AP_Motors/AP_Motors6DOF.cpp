@@ -231,7 +231,7 @@ const AP_Param::GroupInfo AP_Motors6DOF::var_info[] = {
     // @Description: Used to correct Negative thrust ratio
     // @Values: !=0: use ratio, 0: donot use ratio
     // @User: Advanced
-    AP_GROUPINFO("THR_RATIO", 29, AP_Motors6DOF, _custom_negative_thrust_ratio, 0.85f),
+    AP_GROUPINFO("THR_RATIO", 29, AP_Motors6DOF, _custom_negative_thrust_ratio, 1.0f),
 
     AP_GROUPEND
 };
