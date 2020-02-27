@@ -1,5 +1,9 @@
 #include "Sub.h"
 
+#ifndef DEFAULT_CONTROL_MODE
+    #define DEFAULT_CONTROL_MODE MANUAL
+#endif
+
 // Functions that will handle joystick/gamepad input
 // ----------------------------------------------------------------------------
 
@@ -35,7 +39,7 @@ void Sub::init_joystick()
     lights1 = RC_Channels::rc_channel(8)->get_radio_min();
     lights2 = RC_Channels::rc_channel(9)->get_radio_min();
 
-    set_mode(MANUAL, ModeReason::RC_COMMAND); // Initialize flight mode
+    set_mode(DEFAULT_CONTROL_MODE, ModeReason::RC_COMMAND); // Initialize flight mode
 
     if (g.numGainSettings < 1) {
         g.numGainSettings.set_and_save(1);
