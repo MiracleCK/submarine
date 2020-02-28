@@ -95,7 +95,6 @@ void AP_BattMonitor_SMBus_Solo::timer()
     read_serial_number();
 
     read_cycle_count();
-    // printf("temperature =%2.2f \r\n", _state.temperature);
 }
 
 // read_block - returns number of characters read if successful, zero if unsuccessful
