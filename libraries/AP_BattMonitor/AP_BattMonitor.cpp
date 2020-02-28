@@ -107,7 +107,7 @@ AP_BattMonitor::init()
     for (uint8_t instance=0; instance<AP_BATT_MONITOR_MAX_INSTANCES; instance++) {
         // clear out the cell voltages
         memset(&state[instance].cell_voltages, 0xFF, sizeof(cells));
-
+        printf("instance_type =%d \r\n", get_type(instance));
         switch (get_type(instance)) {
             case AP_BattMonitor_Params::BattMonitor_TYPE_ANALOG_VOLTAGE_ONLY:
             case AP_BattMonitor_Params::BattMonitor_TYPE_ANALOG_VOLTAGE_AND_CURRENT:
@@ -133,6 +133,7 @@ AP_BattMonitor::init()
                                                                                          100000, true, 20), 6);
                 break;
             case AP_BattMonitor_Params::BattMonitor_TYPE_MAXELL:
+                printf("secelt maxell \r\n");
                 _params[instance]._i2c_bus.set_default(AP_BATTMONITOR_SMBUS_BUS_EXTERNAL);
                 drivers[instance] = new AP_BattMonitor_SMBus_Maxell(*this, state[instance], _params[instance],
                                                                     hal.i2c_mgr->get_device(_params[instance]._i2c_bus, AP_BATTMONITOR_SMBUS_I2C_ADDR,
@@ -178,6 +179,7 @@ AP_BattMonitor::init()
             // there will be a gap, but as we always check for drivers[instances] being nullptr
             // this is safe
             _num_instances = instance + 1;
+            printf("_num_instances = %d \r\n", _num_instances);
         }
     }
 }

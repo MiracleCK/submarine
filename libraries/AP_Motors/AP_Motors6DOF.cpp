@@ -387,13 +387,13 @@ void AP_Motors6DOF::output_armed_stabilizing()
         throttle_thrust = get_throttle_bidirectional();
         forward_thrust = _forward_in;
         lateral_thrust = _lateral_in;
-
+#if 0
         forward_thrust = forward_thrust * cosf(_pitch_thr) + throttle_thrust * sinf(_pitch_thr);
         lateral_thrust = lateral_thrust * cosf(_roll_thr) + throttle_thrust * sinf(_roll_thr);
         throttle_thrust = throttle_thrust * cosf(_pitch_thr) * cosf(_roll_thr) 
                         - _forward_in * sinf(_pitch_thr) 
                         + _lateral_in * sinf(_roll_thr);
-
+#endif
         if (is_param_print() && is_dbg_motor) {
             printf("pitch = %2.2f roll = %2.2f\r\n", _pitch_thr, _roll_thr);
             printf("forward = %1.3f lateral = %1.3f throttle = %1.3f\r\n", forward_thrust, lateral_thrust, throttle_thrust);

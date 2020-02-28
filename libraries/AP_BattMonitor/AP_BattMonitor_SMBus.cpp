@@ -15,6 +15,7 @@ AP_BattMonitor_SMBus::AP_BattMonitor_SMBus(AP_BattMonitor &mon,
 
 void AP_BattMonitor_SMBus::init(void)
 {
+    printf("sbus timer back \r\n");
     if (_dev) {
         timer_handle = _dev->register_periodic_callback(100000, FUNCTOR_BIND_MEMBER(&AP_BattMonitor_SMBus::timer, void));
     }
@@ -35,7 +36,7 @@ void AP_BattMonitor_SMBus::read(void)
 {
     // nothing to be done here for actually interacting with the battery
     // however we can use this to set any parameters that need to be set
-
+    // printf("read data \r\n");
     if (_serial_number != _params._serial_number) {
         _params._serial_number.set_and_notify(_serial_number);
     }
@@ -88,7 +89,7 @@ bool AP_BattMonitor_SMBus::read_temp(void)
         _state.temperature = ((float)(data - 2731)) * 0.1f;
         return true;
     }
-
+    
     return false;
 }
 

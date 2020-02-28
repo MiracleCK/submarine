@@ -39,11 +39,15 @@ AP_BattMonitor_SMBus_Maxell::AP_BattMonitor_SMBus_Maxell(AP_BattMonitor &mon,
 
 void AP_BattMonitor_SMBus_Maxell::timer()
 {
+    printf("read cell message! \r\n");
 	// check if PEC is supported
+#if 1
     if (!check_pec_support()) {
+        printf("back! \r\n");
         return;
     }
-
+#endif
+    printf("read data! \r\n");
     uint16_t data;
     uint32_t tnow = AP_HAL::micros();
 
@@ -68,6 +72,7 @@ void AP_BattMonitor_SMBus_Maxell::timer()
     // timeout after 5 seconds
     if ((tnow - _state.last_time_micros) > AP_BATTMONITOR_SMBUS_TIMEOUT_MICROS) {
         _state.healthy = false;
+        printf("bad cell! \r\n");
         return;
     }
 
@@ -76,7 +81,7 @@ void AP_BattMonitor_SMBus_Maxell::timer()
         _state.current_amps = -(float)((int16_t)data) / 1000.0f;
         _state.last_time_micros = tnow;
     }
-
+    
     read_full_charge_capacity();
 
     // FIXME: Perform current integration if the remaining capacity can't be requested
@@ -87,6 +92,7 @@ void AP_BattMonitor_SMBus_Maxell::timer()
     read_serial_number();
 
     read_cycle_count();
+    printf("temperature =%2.2f \r\n", _state.temperature);
 }
 
 // read_block - returns number of characters read if successful, zero if unsuccessful
@@ -141,10 +147,11 @@ bool AP_BattMonitor_SMBus_Maxell::check_pec_support()
     if (_pec_confirmed) {
         return true;
     }
-
+    
     // specification info
     uint16_t data;
     if (!read_word(BATTMONITOR_SMBUS_SPECIFICATION_INFO, data)) {
+        printf("false =%d \r\n", false);
         return false;
     }
 
@@ -155,6 +162,7 @@ bool AP_BattMonitor_SMBus_Maxell::check_pec_support()
     if (version < 3) {
         _pec_supported = false;
         _pec_confirmed = true;
+        printf("return ture! \r\n");
         return true;
     }
 
