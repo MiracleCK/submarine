@@ -211,6 +211,7 @@ static Empty::OpticalFlow opticalFlow;
 #endif
 
 static Empty::Flash flashDriver;
+static Empty::Shell emptyShell;
 
 HAL_Linux::HAL_Linux() :
     AP_HAL::HAL(
@@ -234,6 +235,7 @@ HAL_Linux::HAL_Linux() :
         &utilInstance,
         &opticalFlow,
         &flashDriver,
+        &emptyShell,
         nullptr)
 {}
 
