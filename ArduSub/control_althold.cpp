@@ -34,6 +34,10 @@ bool Sub::althold_init()
 // should be called at 100hz or more
 void Sub::althold_run()
 {
+    if (smart_mode_auto_switch()) {
+        return;
+    }
+
     if (use_angle_rate) {
         althold_run_rate();
         return;

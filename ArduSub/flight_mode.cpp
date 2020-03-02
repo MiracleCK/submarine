@@ -4,6 +4,12 @@
 // returns true if mode was successfully set
 bool Sub::set_mode(control_mode_t mode, ModeReason reason)
 {
+    // if set_mode called by MAVLink or joystick
+    // we do not do smart mode auto switch again
+    if (reason == ModeReason::GCS_COMMAND || reason == ModeReason::RC_COMMAND) {
+        is_mode_auto_switch_enabled = false;
+    }
+
     // boolean to record if flight mode could be set
     bool success = false;
 
@@ -229,4 +235,51 @@ void Sub::notify_flight_mode(control_mode_t mode)
         AP_Notify::flags.autopilot_mode = false;
         break;
     }
+}
+
+// auto switch mode according to sensor healthy
+// and stop auto switch when mode set by GCS or RC
+//
+// true: auto switched
+// false: not do auto switch
+bool Sub::smart_mode_auto_switch() {
+    if (!is_mode_auto_switch_enabled) {
+        return false;
+    }
+
+    ModeReason reason = ModeReason::STARTUP;
+    bool is_success = false;
+
+    if (!is_startup_mode_auto_switch) {
+        reason = ModeReason::BAD_DEPTH;
+    }
+
+    switch (control_mode) {
+        case MANUAL: {
+            if (!sub.set_mode(ALT_HOLD, reason)) {
+                is_success = sub.set_mode(STABILIZE, reason);
+            } else {
+                is_success = true;
+            }
+        } break;
+
+        case STABILIZE: {
+            is_success = sub.set_mode(ALT_HOLD, reason);
+        } break;
+
+        case ALT_HOLD: {
+            if(!control_check_barometer()) {
+                is_success = sub.set_mode(STABILIZE, reason);
+            }
+        } break;
+
+        default:
+            break;
+    }
+
+    if (is_success) {
+        is_startup_mode_auto_switch = false;
+    }
+
+    return is_success;
 }
