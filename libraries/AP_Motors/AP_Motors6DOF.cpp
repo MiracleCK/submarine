@@ -441,6 +441,9 @@ void AP_Motors6DOF::output_armed_stabilizing()
         float   throttle_thrust;            // throttle thrust input value, +/- 1.0
         float   forward_thrust;             // forward thrust input value, +/- 1.0
         float   lateral_thrust;             // lateral thrust input value, +/- 1.0
+        float   throttle_temp;
+        float   forward_temp;;
+        float   lateral_temp;
 
         roll_thrust = (_roll_in + _roll_in_ff);
         pitch_thrust = (_pitch_in + _pitch_in_ff);
@@ -473,7 +476,7 @@ void AP_Motors6DOF::output_armed_stabilizing()
             printf("thurst: forward = %2.4f lateral = %2.4f throttle = %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
             printf("thrust custom: forward %2.4f\r\n", _custom_forward_thrust.get());
         }
-
+#if 0
         forward_thrust = forward_thrust * cosf(corrected_pitch) 
                        + _custom_thrust_factor[0] * throttle_thrust * sinf(corrected_pitch)
                        + _custom_forward_thrust;
@@ -482,7 +485,20 @@ void AP_Motors6DOF::output_armed_stabilizing()
         throttle_thrust = throttle_thrust * cosf(corrected_pitch) * cosf(corrected_roll) 
                         + _custom_thrust_factor[2] * _forward_in * sinf(corrected_pitch) 
                         + _custom_thrust_factor[3] * _lateral_in * sinf(corrected_roll);
+#else
+        throttle_temp = throttle_thrust;
+        forward_temp = forward_thrust;
+        lateral_temp = lateral_thrust;
 
+        forward_thrust = forward_thrust * cosf(corrected_pitch) 
+                       + _custom_thrust_factor[0] * throttle_thrust * sinf(corrected_pitch)
+                       + _custom_forward_thrust;
+        lateral_thrust = lateral_thrust * cosf(corrected_roll) 
+                       + _custom_thrust_factor[1] * throttle_thrust * sinf(corrected_roll);
+        throttle_thrust = throttle_temp * cosf(corrected_pitch) * cosf(corrected_roll) 
+                        + _custom_thrust_factor[2] * forward_temp * sinf(corrected_pitch) 
+                        + _custom_thrust_factor[3] * lateral_temp * sinf(corrected_roll);
+#endif
         if (is_param_print() && is_dbg_motor) {
             printf("thrust corrected: forward %2.4f lateral %2.4f throttle %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
         }
