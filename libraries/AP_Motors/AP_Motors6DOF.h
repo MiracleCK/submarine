@@ -51,10 +51,8 @@ public:
 
     // var_info for holding Parameter information
     static const struct AP_Param::GroupInfo        var_info[];
-   
-    //
-    void set_roll_pitch_thr(float roll, float pitch) { _roll_thr = roll; _pitch_thr = pitch; }
 
+    void set_roll_pitch_thr(float roll, float pitch) { _roll_thr = roll; _pitch_thr = pitch; }
 protected:
     // return current_limit as a number from 0 ~ 1 in the range throttle_min to throttle_max
     float               get_current_limit_max_throttle() override;
@@ -69,13 +67,6 @@ protected:
     // Parameters
     AP_Int8             _motor_reverse[AP_MOTORS_MAX_NUM_MOTORS];
     AP_Float            _forwardVerticalCouplingFactor;
-    AP_Int8             _motor_mapping[AP_MOTORS_MAX_NUM_MOTORS];
-
-    AP_Float            _custom_pitch_thr;
-    AP_Float            _custom_roll_thr;
-    AP_Int8             _custom_thrust_factor[4];
-    AP_Float            _custom_forward_thrust;
-    AP_Float            _custom_negative_thrust_ratio;
 
     float               _throttle_factor[AP_MOTORS_MAX_NUM_MOTORS]; // each motors contribution to throttle (climb/descent)
     float               _forward_factor[AP_MOTORS_MAX_NUM_MOTORS]; // each motors contribution to forward/backward
@@ -87,5 +78,4 @@ protected:
 
     float               _pitch_thr;
     float               _roll_thr;
-
 };

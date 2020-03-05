@@ -34,7 +34,7 @@ public:
     Thruster(int8_t _servo, float roll_fac, float pitch_fac, float yaw_fac, float throttle_fac, float forward_fac, float lat_fac) :
         servo(_servo)
     {
-        linear = Vector3f(forward_fac, lat_fac, -throttle_fac);
+        linear = Vector3f(forward_fac, lat_fac, throttle_fac);
         rotational = Vector3f(roll_fac, pitch_fac, yaw_fac);
     };
     int8_t servo;

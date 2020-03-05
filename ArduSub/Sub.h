@@ -285,7 +285,7 @@ private:
     // Baro sensor instance index of the external water pressure sensor
     uint8_t depth_sensor_idx;
 
-    AP_Motors6DOF motors;
+    AP_Motors6DOF_M2 motors;
 
     // GPS variables
     // Sometimes we need to remove the scaling for distance calcs

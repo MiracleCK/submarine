@@ -273,6 +273,10 @@ class VehicleInfo(object):
                 "waf_target": "bin/ardusub",
                 "default_params_filename": "default_params/sub.parm",
             },
+            "custom_m2": {
+                "waf_target": "bin/ardusub",
+                "default_params_filename": "default_params/sub-custom-m2.parm",
+            },
         },
     },
     "AntennaTracker": {

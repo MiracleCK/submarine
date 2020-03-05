@@ -700,16 +700,16 @@ void Sub::load_parameters()
 
     // below is user define
     //
+
+    #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+        return;
+    #endif
     
-    AP_Param::set_default_by_name("ANGLE_MAX", 8000);
-
-#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
-    return;
-#endif
-
     AP_Param::set_default_by_name("FRAME_CONFIG", AP_Motors6DOF::SUB_FRAME_CUSTOM);
     
     AP_Param::set_default_by_name("MOT_PWM_TYPE", 4); // DShot150
+
+    AP_Param::set_default_by_name("ANGLE_MAX", 8000);
 
     // AP_Param::set_by_name("BATT_MONITOR", 5);
     AP_Param::set_and_save_by_name("BATT_MONITOR", 7);

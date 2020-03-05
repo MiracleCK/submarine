@@ -47,6 +47,19 @@ static Thruster vectored_6dof_thrusters[] =
        Thruster(7,          -1.0f,          1.0f,           0,              -1.0f,              0,                  0)
 };
 
+static Thruster vectored_m2_thrusters[] =
+{
+       //       Motor #     Roll Factor     Pitch Factor    Yaw Factor      Throttle Factor     Forward Factor      Lateral Factor
+       Thruster(0,         -1.0f,           1.0f,           1.0f,           1.0f,              -1.0f,               1.0f),
+       Thruster(1,         -1.0f,          -1.0f,           1.0f,          -1.0f,               1.0f,               1.0f),
+       Thruster(2,         -1.0f,          -1.0f,          -1.0f,          -1.0f,              -1.0f,              -1.0f),
+       Thruster(3,         -1.0f,           1.0f,          -1.0f,           1.0f,               1.0f,              -1.0f),
+       Thruster(4,          1.0f,          -1.0f,          -1.0f,           1.0f,              -1.0f,               1.0f),
+       Thruster(5,          1.0f,          -1.0f,           1.0f,           1.0f,               1.0f,              -1.0f),
+       Thruster(6,          1.0f,           1.0f,          -1.0f,          -1.0f,               1.0f,               1.0f),
+       Thruster(7,          1.0f,           1.0f,           1.0f,          -1.0f,              -1.0f,              -1.0f),
+};
+
 Submarine::Submarine(const char *frame_str) :
     Aircraft(frame_str),
     frame(NULL)
@@ -61,17 +74,21 @@ Submarine::Submarine(const char *frame_str) :
     if (strstr(frame_str, "vectored_6dof")) {
         thrusters = vectored_6dof_thrusters;
         n_thrusters = 8;
-    }
+    } else if (strstr(frame_str, "custom_m2")) {
+        thrusters = vectored_m2_thrusters;
+        n_thrusters = 8;
+    } 
 }
 
 // calculate rotational and linear accelerations
 void Submarine::calculate_forces(const struct sitl_input &input, Vector3f &rot_accel, Vector3f &body_accel)
 {
     rot_accel = Vector3f(0,0,0);
+    body_accel = Vector3f(0,0,0);
 
     // slight positive buoyancy
-    body_accel = dcm.transposed() *  Vector3f(0, 0, -calculate_buoyancy_acceleration());
-
+    Vector3f buoyancy_accel = dcm.transposed() *  Vector3f(0, 0, -calculate_buoyancy_acceleration());
+    
     for (int i = 0; i < n_thrusters; i++) {
         Thruster t = thrusters[i];
         int16_t pwm = input.servos[t.servo];
@@ -86,6 +103,10 @@ void Submarine::calculate_forces(const struct sitl_input &input, Vector3f &rot_a
         body_accel += t.linear * thrust / frame_property.weight;
         rot_accel += t.rotational * thrust * frame_property.thruster_mount_radius / frame_property.moment_of_inertia;
     }
+
+    body_accel.x = body_accel.x + buoyancy_accel.x;
+    body_accel.y = body_accel.y + buoyancy_accel.y;
+    body_accel.z = -body_accel.z + buoyancy_accel.z;
 
     float floor_depth = calculate_sea_floor_depth(position);
     range = floor_depth - position.z;
