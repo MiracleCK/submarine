@@ -203,7 +203,7 @@ const AP_Param::GroupInfo AP_Motors6DOF_M2::var_info[] = {
     // @Description: Used to correct Lateral thrust with throttle thrust of roll
     // @Values: 1:multi with 1, -1:multi with -1
     // @User: Advanced
-    AP_GROUPINFO("LTR_FACT", 25, AP_Motors6DOF_M2, _custom_thrust_factor[1], 1),
+    AP_GROUPINFO("LTR_FACT", 25, AP_Motors6DOF_M2, _custom_thrust_factor[1], -1),
 
     // @Param: TFP_FACT
     // @DisplayName: Throttle forward thrust correct factor
@@ -217,7 +217,7 @@ const AP_Param::GroupInfo AP_Motors6DOF_M2::var_info[] = {
     // @Description: Used to correct Throttle thrust with lateral thrust of roll
     // @Values: 1:multi with 1, -1:multi with -1
     // @User: Advanced
-    AP_GROUPINFO("TLR_FACT", 27, AP_Motors6DOF_M2, _custom_thrust_factor[3], -1),
+    AP_GROUPINFO("TLR_FACT", 27, AP_Motors6DOF_M2, _custom_thrust_factor[3], 1),
 
     // @Param: CFT
     // @DisplayName: User corrected forward thrust
@@ -315,14 +315,33 @@ void AP_Motors6DOF_M2::output_armed_stabilizing()
         printf("thrust custom: forward %2.4f\r\n", _custom_forward_thrust.get());
     }
 
-    // forward_thrust = forward_thrust * cosf(corrected_pitch) 
-    //                 + _custom_thrust_factor[0] * throttle_thrust * sinf(corrected_pitch)
-    //                 + _custom_forward_thrust;
-    // lateral_thrust = lateral_thrust * cosf(corrected_roll) 
-    //                 + _custom_thrust_factor[1] * throttle_thrust * sinf(corrected_roll);
-    // throttle_thrust = throttle_thrust * cosf(corrected_pitch) * cosf(corrected_roll) 
-    //                 + _custom_thrust_factor[2] * _forward_in * sinf(corrected_pitch) 
-    //                 + _custom_thrust_factor[3] * _lateral_in * sinf(corrected_roll);
+    // _custom_thrust_factor can be derived from
+    // forward thrust, front is +
+    // lateral thrust, right is +
+    // throttle thrust, up is +
+    // so
+    // if we need a NED throttle thrust named desired_throttle, it should be up or down
+    //   throttle = desired_throttle * cos(pitch) * cos(roll)
+    //   and compensate
+    //   forward = desired_throttle * sin(pitch)
+    //   lateral = -desired_throttle * sin(phi)
+    // if we need a NED forward thrust named desired_forward, it should be front or back
+    //   forward = -desired_forward * cos(pitch)
+    //   and compensate
+    //   throttle = - desired_forward * sin(pitch)
+    // if we need a NED lateral thrust named desired_lateral, it should be left or right
+    //   lateral = desired_lateral * cos(phi)
+    //   and compensate
+    //   throttle = desired_lateral * sin(phi)
+
+    forward_thrust = forward_thrust * cosf(corrected_pitch) 
+                    + _custom_thrust_factor[0] * throttle_thrust * sinf(corrected_pitch)
+                    + _custom_forward_thrust;
+    lateral_thrust = lateral_thrust * cosf(corrected_roll) 
+                    + _custom_thrust_factor[1] * throttle_thrust * sinf(corrected_roll);
+    throttle_thrust = throttle_thrust * cosf(corrected_pitch) * cosf(corrected_roll) 
+                    + _custom_thrust_factor[2] * _forward_in * sinf(corrected_pitch) 
+                    + _custom_thrust_factor[3] * _lateral_in * sinf(corrected_roll);
 
     if (is_param_print() && is_dbg_motor) {
         printf("thrust corrected: forward %2.4f lateral %2.4f throttle %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
