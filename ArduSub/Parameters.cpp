@@ -705,7 +705,7 @@ void Sub::load_parameters()
     AP_Param::set_default_by_name("MOT_PWM_TYPE", 4); // DShot150
 
     // AP_Param::set_default_by_name("BATT_MONITOR", 3); // DShot150
-    AP_Param::set_and_save_by_name("BATT_MONITOR", 5);
+    AP_Param::set_and_save_by_name("BATT_MONITOR", 7);
     
     char rc_param_name[13]; // len is the max_size of below param name
     int rc_param_buf_len = sizeof(rc_param_name);

@@ -55,7 +55,11 @@ const param_name_t params[] = {
     {"aty", "AHRS_TRIM_Y"},
     {"atz", "AHRS_TRIM_Z"},
     {"gap", "GND_ABS_PRESS"},
-    {"gsg", "GND_SPEC_GRAV"}
+    {"gsg", "GND_SPEC_GRAV"},
+    {"wsp", "WPNAV_SPEED"},
+    {"wac", "WPNAV_ACCEL"},
+    {"lsp", "LOIT_SPEED"},
+    {"lac", "LOIT_ACC_MAX"}
 };
 
 static int params_cnt = sizeof(params) / sizeof(params[0]);
@@ -66,8 +70,6 @@ bool is_dbg_ctrl;
 uint32_t dbg_print_cnt = 20;
 uint32_t dbg_print_timeinterval = 1000;
 bool is_dbg_bprintf;
-
-Location guided_target;
 
 void param_debug_tick(void);
 bool is_param_print(void);
@@ -122,14 +124,6 @@ void cmd_param(int argc, char *argv[])
     if (argc < 3) {
         hal.shell->printf("usage: param set param_short_name value\r\n");
         return;
-    }
-
-    if (!strcmp(argv[0], "pos")) {
-        guided_target.alt = 0;
-        guided_target.lat = argv[1];
-        guided_target.lng = argv[2];
-
-        printf("alt =%d lat =%d lng =%d \r\n", guided_target.alt, guided_target.lat, guided_target.lng);
     }
 
     if (!strcmp(argv[0], "set")) // param set
