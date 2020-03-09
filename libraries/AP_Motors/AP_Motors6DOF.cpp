@@ -118,6 +118,118 @@ const AP_Param::GroupInfo AP_Motors6DOF::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("12_DIRECTION", 13, AP_Motors6DOF, _motor_reverse[11], 1),
 
+    // @Param: 1_MAPPING
+    // @DisplayName: Motor physical number
+    // @Description: Used to mapping logic motor number to physic number
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("1_MAPPING", 14, AP_Motors6DOF, _motor_mapping[0], 1),
+
+    // @Param: 2_MAPPING
+    // @DisplayName: Motor physical number
+    // @Description: Used to mapping logic motor number to physic number
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("2_MAPPING", 15, AP_Motors6DOF, _motor_mapping[1], 2),
+
+    // @Param: 3_MAPPING
+    // @DisplayName: Motor physical number
+    // @Description: Used to mapping logic motor number to physic number
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("3_MAPPING", 16, AP_Motors6DOF, _motor_mapping[2], 3),
+
+    // @Param: 4_MAPPING
+    // @DisplayName: Motor physical number
+    // @Description: Used to mapping logic motor number to physic number
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("4_MAPPING", 17, AP_Motors6DOF, _motor_mapping[3], 4),
+
+    // @Param: 5_MAPPING
+    // @DisplayName: Motor physical number
+    // @Description: Used to mapping logic motor number to physic number
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("5_MAPPING", 18, AP_Motors6DOF, _motor_mapping[4], 5),
+
+    // @Param: 6_MAPPING
+    // @DisplayName: Motor physical number
+    // @Description: Used to mapping logic motor number to physic number
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("6_MAPPING", 19, AP_Motors6DOF, _motor_mapping[5], 6),
+
+    // @Param: 7_MAPPING
+    // @DisplayName: Motor physical number
+    // @Description: Used to mapping logic motor number to physic number
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("7_MAPPING", 20, AP_Motors6DOF, _motor_mapping[6], 7),
+
+    // @Param: 8_MAPPING
+    // @DisplayName: Motor physical number
+    // @Description: Used to mapping logic motor number to physic number
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("8_MAPPING", 21, AP_Motors6DOF, _motor_mapping[7], 8),
+
+    // @Param: CUSTOM_PITCH
+    // @DisplayName: User corrected pitch
+    // @Description: Used to correct pitch thr
+    // @Ragne: 1 8
+    // @User: Advanced
+    AP_GROUPINFO("CUSTOM_PIT", 22, AP_Motors6DOF, _custom_pitch_thr, 0.0f),
+
+    // @Param: CUSTOM_ROLL
+    // @DisplayName: User corrected roll
+    // @Description: Used to correct roll thr
+    // @Ragne: 1 8
+    // @User: Advanced
+    AP_GROUPINFO("CUSTOM_ROLL", 23, AP_Motors6DOF, _custom_roll_thr, 0.0f),
+
+    // @Param: FTP_FACT
+    // @DisplayName: Forward throttle thrust correct factor
+    // @Description: Used to correct forward thrust with throttle thrust of pitch
+    // @Values: 1:multi with 1, -1:multi with -1
+    // @User: Advanced
+    AP_GROUPINFO("FTP_FACT", 24, AP_Motors6DOF, _custom_thrust_factor[0], 1),
+
+    // @Param: LTR_FACT
+    // @DisplayName: Lateral throttle thrust correct factor
+    // @Description: Used to correct Lateral thrust with throttle thrust of roll
+    // @Values: 1:multi with 1, -1:multi with -1
+    // @User: Advanced
+    AP_GROUPINFO("LTR_FACT", 25, AP_Motors6DOF, _custom_thrust_factor[1], -1),
+
+    // @Param: TFP_FACT
+    // @DisplayName: Throttle forward thrust correct factor
+    // @Description: Used to correct Throttle thrust with forward thrust of pitch
+    // @Values: 1:multi with 1, -1:multi with -1
+    // @User: Advanced
+    AP_GROUPINFO("TFP_FACT", 26, AP_Motors6DOF, _custom_thrust_factor[2], -1),
+
+    // @Param: TLR_FACT
+    // @DisplayName: Throttle lateral thrust correct factor
+    // @Description: Used to correct Throttle thrust with lateral thrust of roll
+    // @Values: 1:multi with 1, -1:multi with -1
+    // @User: Advanced
+    AP_GROUPINFO("TLR_FACT", 27, AP_Motors6DOF, _custom_thrust_factor[3], 1),
+
+    // @Param: CFT
+    // @DisplayName: User corrected forward thrust
+    // @Description: Used to correct forward thrust
+    // @Ragne: 1 8
+    // @User: Advanced
+    AP_GROUPINFO("CFT", 28, AP_Motors6DOF, _custom_forward_thrust, 0.0f),
+
+    // @Param: THR_RATIO
+    // @DisplayName: Negative thrust ratio
+    // @Description: Used to correct Negative thrust ratio
+    // @Values: !=0: use ratio, 0: donot use ratio
+    // @User: Advanced
+    AP_GROUPINFO("THR_RATIO", 29, AP_Motors6DOF, _custom_negative_thrust_ratio, 1.0f),
+
     AP_GROUPEND
 };
 
@@ -173,7 +285,11 @@ void AP_Motors6DOF::setup_motors(motor_frame_class frame_class, motor_frame_type
 
     case SUB_FRAME_CUSTOM:
         // Put your custom motor setup here
-        //break;
+        if (_setup_custom_motors_callback) {
+            _setup_custom_motors_callback();
+        }
+
+        break;
 
     case SUB_FRAME_SIMPLEROV_3:
         add_motor_raw_6dof(AP_MOTORS_MOT_1,     0,              0,              -1.0f,          0,                  1.0f,               0,              1);
@@ -287,6 +403,8 @@ void AP_Motors6DOF::output_armed_stabilizing()
         output_armed_stabilizing_vectored();
     } else if ((sub_frame_t)_last_frame_class == SUB_FRAME_VECTORED_6DOF) {
         output_armed_stabilizing_vectored_6dof();
+    } else if ((sub_frame_t)_last_frame_class == SUB_FRAME_CUSTOM) {
+        output_armed_stabilizing_custom();
     } else {
         uint8_t i;                          // general purpose counter
         float   roll_thrust;                // roll thrust input value, +/- 1.0

@@ -328,8 +328,6 @@ void Sub::read_AHRS()
     // <true> tells AHRS to skip INS update as we have already done it in fast_loop()
     ahrs.update(true);
     ahrs_view.update(true);
-
-    motors.set_roll_pitch_thr(ahrs.get_roll(), ahrs.get_pitch());
 }
 
 // read baro and rangefinder altitude at 10hz

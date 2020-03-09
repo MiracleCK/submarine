@@ -175,6 +175,8 @@ void Sub::exit_mode(control_mode_t old_control_mode, control_mode_t new_control_
         camera_mount.set_mode_to_default();
 #endif  // MOUNT == ENABLED
     }
+
+    thrust_decomposition_init(is_ned_pilot, new_control_mode);
 }
 
 // returns true or false whether mode requires GPS

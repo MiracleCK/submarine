@@ -209,7 +209,6 @@ void Sub::get_alt_hold_pilot_desired_angle_rates(int16_t roll_in, int16_t pitch_
     yaw_out = rate_bf_request.z;
 }
 
-
 void Sub::althold_run_rate()
 {
     uint32_t tnow = AP_HAL::millis();
@@ -274,11 +273,21 @@ void Sub::althold_run_rate()
     last_pilot_pitch = target_pitch;
     last_pilot_roll = target_roll;
 
+    if (is_ned_pilot != is_last_ned_pilot) {
+        thrust_decomposition_init(is_ned_pilot, ALT_HOLD);
+
+        is_last_ned_pilot = is_ned_pilot;
+    }
+
     // Hold actual position until zero derivative is detected
     static bool engageStopZ = true;
     // Get last user velocity direction to check for zero derivative points
     static bool lastVelocityZWasNegative = false;
     if (fabsf(channel_throttle->norm_input()-0.5f) > 0.05f) { // Throttle input above 5%
+        if (!is_ned_pilot) {
+            thrust_decomposition_clear(); // all should linear thrust should be body frame
+        }
+
         // output pilot's throttle
         attitude_control.set_throttle_out(channel_throttle->norm_input(), false, g.throttle_filt);
         // reset z targets to current values

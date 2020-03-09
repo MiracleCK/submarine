@@ -52,13 +52,25 @@ public:
     // var_info for holding Parameter information
     static const struct AP_Param::GroupInfo        var_info[];
 
-    void set_roll_pitch_thr(float roll, float pitch) { _roll_thr = roll; _pitch_thr = pitch; }
+    //Override MotorsMatrix method
+    void add_motor_raw_6dof(int8_t motor_num, float roll_fac, float pitch_fac, float yaw_fac, float climb_fac, float forward_fac, float lat_fac, uint8_t testing_order);
+    
+    // custom
+
+    // used to calc thurst decomposition
+    FUNCTOR_TYPEDEF(thrust_decomposition_fn_t, void, float *, float *, float *); // forward lateral throttle
+    void                set_thrust_decomposition_callback(thrust_decomposition_fn_t callback) {
+        _thrust_decomposition_callback = callback;
+    }
+
+    FUNCTOR_TYPEDEF(setup_custom_motors_fn_t, void); // forward lateral throttle
+    void                set_setup_custom_motors_callback(setup_custom_motors_fn_t callback) {
+        _setup_custom_motors_callback = callback;
+    }
+
 protected:
     // return current_limit as a number from 0 ~ 1 in the range throttle_min to throttle_max
     float               get_current_limit_max_throttle() override;
-
-    //Override MotorsMatrix method
-    void add_motor_raw_6dof(int8_t motor_num, float roll_fac, float pitch_fac, float yaw_fac, float climb_fac, float forward_fac, float lat_fac, uint8_t testing_order);
 
     void output_armed_stabilizing() override;
     void output_armed_stabilizing_vectored();
@@ -76,6 +88,18 @@ protected:
     float _output_limited = 1.0f;
     float _batt_current_last = 0.0f;
 
-    float               _pitch_thr;
-    float               _roll_thr;
+    // custom
+    
+    AP_Int8                   _motor_mapping[AP_MOTORS_MAX_NUM_MOTORS];
+          
+    AP_Float                  _custom_pitch_thr;
+    AP_Float                  _custom_roll_thr;
+    AP_Int8                   _custom_thrust_factor[4];
+    AP_Float                  _custom_forward_thrust;
+    AP_Float                  _custom_negative_thrust_ratio;
+
+    thrust_decomposition_fn_t _thrust_decomposition_callback;
+    setup_custom_motors_fn_t  _setup_custom_motors_callback;
+
+    void output_armed_stabilizing_custom();
 };

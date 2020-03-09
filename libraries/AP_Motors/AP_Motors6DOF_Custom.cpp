@@ -22,248 +22,12 @@
 
 #include <AP_BattMonitor/AP_BattMonitor.h>
 #include <AP_HAL/AP_HAL.h>
-#include "AP_Motors6DOF_M2.h"
+#include "AP_Motors6DOF.h"
 
 extern const AP_HAL::HAL& hal;
 
-// parameters for the motor class
-const AP_Param::GroupInfo AP_Motors6DOF_M2::var_info[] = {
-    AP_NESTEDGROUPINFO(AP_MotorsMulticopter, 0),
-    // @Param: 1_DIRECTION
-    // @DisplayName: Motor normal or reverse
-    // @Description: Used to change motor rotation directions without changing wires
-    // @Values: 1:normal,-1:reverse
-    // @User: Standard
-    AP_GROUPINFO("1_DIRECTION", 1, AP_Motors6DOF_M2, _motor_reverse[0], 1),
-
-    // @Param: 2_DIRECTION
-    // @DisplayName: Motor normal or reverse
-    // @Description: Used to change motor rotation directions without changing wires
-    // @Values: 1:normal,-1:reverse
-    // @User: Standard
-    AP_GROUPINFO("2_DIRECTION", 2, AP_Motors6DOF_M2, _motor_reverse[1], 1),
-
-    // @Param: 3_DIRECTION
-    // @DisplayName: Motor normal or reverse
-    // @Description: Used to change motor rotation directions without changing wires
-    // @Values: 1:normal,-1:reverse
-    // @User: Standard
-    AP_GROUPINFO("3_DIRECTION", 3, AP_Motors6DOF_M2, _motor_reverse[2], 1),
-
-    // @Param: 4_DIRECTION
-    // @DisplayName: Motor normal or reverse
-    // @Description: Used to change motor rotation directions without changing wires
-    // @Values: 1:normal,-1:reverse
-    // @User: Standard
-    AP_GROUPINFO("4_DIRECTION", 4, AP_Motors6DOF_M2, _motor_reverse[3], 1),
-
-    // @Param: 5_DIRECTION
-    // @DisplayName: Motor normal or reverse
-    // @Description: Used to change motor rotation directions without changing wires
-    // @Values: 1:normal,-1:reverse
-    // @User: Standard
-    AP_GROUPINFO("5_DIRECTION", 5, AP_Motors6DOF_M2, _motor_reverse[4], 1),
-
-    // @Param: 6_DIRECTION
-    // @DisplayName: Motor normal or reverse
-    // @Description: Used to change motor rotation directions without changing wires
-    // @Values: 1:normal,-1:reverse
-    // @User: Standard
-    AP_GROUPINFO("6_DIRECTION", 6, AP_Motors6DOF_M2, _motor_reverse[5], 1),
-
-    // @Param: 7_DIRECTION
-    // @DisplayName: Motor normal or reverse
-    // @Description: Used to change motor rotation directions without changing wires
-    // @Values: 1:normal,-1:reverse
-    // @User: Standard
-    AP_GROUPINFO("7_DIRECTION", 7, AP_Motors6DOF_M2, _motor_reverse[6], 1),
-
-    // @Param: 8_DIRECTION
-    // @DisplayName: Motor normal or reverse
-    // @Description: Used to change motor rotation directions without changing wires
-    // @Values: 1:normal,-1:reverse
-    // @User: Standard
-    AP_GROUPINFO("8_DIRECTION", 8, AP_Motors6DOF_M2, _motor_reverse[7], 1),
-
-    // @Param: FV_CPLNG_K
-    // @DisplayName: Forward/vertical to pitch decoupling factor
-    // @Description: Used to decouple pitch from forward/vertical motion. 0 to disable, 1.2 normal
-    // @Range: 0.0 1.5
-    // @Increment: 0.1
-    // @User: Standard
-    AP_GROUPINFO("FV_CPLNG_K", 9, AP_Motors6DOF_M2, _forwardVerticalCouplingFactor, 1.0),
-
-    // @Param: 9_DIRECTION
-    // @DisplayName: Motor normal or reverse
-    // @Description: Used to change motor rotation directions without changing wires
-    // @Values: 1:normal,-1:reverse
-    // @User: Standard
-    AP_GROUPINFO("9_DIRECTION", 10, AP_Motors6DOF_M2, _motor_reverse[8], 1),
-
-    // @Param: 10_DIRECTION
-    // @DisplayName: Motor normal or reverse
-    // @Description: Used to change motor rotation directions without changing wires
-    // @Values: 1:normal,-1:reverse
-    // @User: Standard
-    AP_GROUPINFO("10_DIRECTION", 11, AP_Motors6DOF_M2, _motor_reverse[9], 1),
-
-    // @Param: 11_DIRECTION
-    // @DisplayName: Motor normal or reverse
-    // @Description: Used to change motor rotation directions without changing wires
-    // @Values: 1:normal,-1:reverse
-    // @User: Standard
-    AP_GROUPINFO("11_DIRECTION", 12, AP_Motors6DOF_M2, _motor_reverse[10], 1),
-
-    // @Param: 12_DIRECTION
-    // @DisplayName: Motor normal or reverse
-    // @Description: Used to change motor rotation directions without changing wires
-    // @Values: 1:normal,-1:reverse
-    // @User: Standard
-    AP_GROUPINFO("12_DIRECTION", 13, AP_Motors6DOF_M2, _motor_reverse[11], 1),
-
-    // @Param: 1_MAPPING
-    // @DisplayName: Motor physical number
-    // @Description: Used to mapping logic motor number to physic number
-    // @Ragne: 1 8
-    // @User: Standard
-    AP_GROUPINFO("1_MAPPING", 14, AP_Motors6DOF_M2, _motor_mapping[0], 1),
-
-    // @Param: 2_MAPPING
-    // @DisplayName: Motor physical number
-    // @Description: Used to mapping logic motor number to physic number
-    // @Ragne: 1 8
-    // @User: Standard
-    AP_GROUPINFO("2_MAPPING", 15, AP_Motors6DOF_M2, _motor_mapping[1], 2),
-
-    // @Param: 3_MAPPING
-    // @DisplayName: Motor physical number
-    // @Description: Used to mapping logic motor number to physic number
-    // @Ragne: 1 8
-    // @User: Standard
-    AP_GROUPINFO("3_MAPPING", 16, AP_Motors6DOF_M2, _motor_mapping[2], 3),
-
-    // @Param: 4_MAPPING
-    // @DisplayName: Motor physical number
-    // @Description: Used to mapping logic motor number to physic number
-    // @Ragne: 1 8
-    // @User: Standard
-    AP_GROUPINFO("4_MAPPING", 17, AP_Motors6DOF_M2, _motor_mapping[3], 4),
-
-    // @Param: 5_MAPPING
-    // @DisplayName: Motor physical number
-    // @Description: Used to mapping logic motor number to physic number
-    // @Ragne: 1 8
-    // @User: Standard
-    AP_GROUPINFO("5_MAPPING", 18, AP_Motors6DOF_M2, _motor_mapping[4], 5),
-
-    // @Param: 6_MAPPING
-    // @DisplayName: Motor physical number
-    // @Description: Used to mapping logic motor number to physic number
-    // @Ragne: 1 8
-    // @User: Standard
-    AP_GROUPINFO("6_MAPPING", 19, AP_Motors6DOF_M2, _motor_mapping[5], 6),
-
-    // @Param: 7_MAPPING
-    // @DisplayName: Motor physical number
-    // @Description: Used to mapping logic motor number to physic number
-    // @Ragne: 1 8
-    // @User: Standard
-    AP_GROUPINFO("7_MAPPING", 20, AP_Motors6DOF_M2, _motor_mapping[6], 7),
-
-    // @Param: 8_MAPPING
-    // @DisplayName: Motor physical number
-    // @Description: Used to mapping logic motor number to physic number
-    // @Ragne: 1 8
-    // @User: Standard
-    AP_GROUPINFO("8_MAPPING", 21, AP_Motors6DOF_M2, _motor_mapping[7], 8),
-
-    // @Param: CUSTOM_PITCH
-    // @DisplayName: User corrected pitch
-    // @Description: Used to correct pitch thr
-    // @Ragne: 1 8
-    // @User: Advanced
-    AP_GROUPINFO("CUSTOM_PIT", 22, AP_Motors6DOF_M2, _custom_pitch_thr, 0.0f),
-
-    // @Param: CUSTOM_ROLL
-    // @DisplayName: User corrected roll
-    // @Description: Used to correct roll thr
-    // @Ragne: 1 8
-    // @User: Advanced
-    AP_GROUPINFO("CUSTOM_ROLL", 23, AP_Motors6DOF_M2, _custom_roll_thr, 0.0f),
-
-    // @Param: FTP_FACT
-    // @DisplayName: Forward throttle thrust correct factor
-    // @Description: Used to correct forward thrust with throttle thrust of pitch
-    // @Values: 1:multi with 1, -1:multi with -1
-    // @User: Advanced
-    AP_GROUPINFO("FTP_FACT", 24, AP_Motors6DOF_M2, _custom_thrust_factor[0], 1),
-
-    // @Param: LTR_FACT
-    // @DisplayName: Lateral throttle thrust correct factor
-    // @Description: Used to correct Lateral thrust with throttle thrust of roll
-    // @Values: 1:multi with 1, -1:multi with -1
-    // @User: Advanced
-    AP_GROUPINFO("LTR_FACT", 25, AP_Motors6DOF_M2, _custom_thrust_factor[1], -1),
-
-    // @Param: TFP_FACT
-    // @DisplayName: Throttle forward thrust correct factor
-    // @Description: Used to correct Throttle thrust with forward thrust of pitch
-    // @Values: 1:multi with 1, -1:multi with -1
-    // @User: Advanced
-    AP_GROUPINFO("TFP_FACT", 26, AP_Motors6DOF_M2, _custom_thrust_factor[2], -1),
-
-    // @Param: TLR_FACT
-    // @DisplayName: Throttle lateral thrust correct factor
-    // @Description: Used to correct Throttle thrust with lateral thrust of roll
-    // @Values: 1:multi with 1, -1:multi with -1
-    // @User: Advanced
-    AP_GROUPINFO("TLR_FACT", 27, AP_Motors6DOF_M2, _custom_thrust_factor[3], 1),
-
-    // @Param: CFT
-    // @DisplayName: User corrected forward thrust
-    // @Description: Used to correct forward thrust
-    // @Ragne: 1 8
-    // @User: Advanced
-    AP_GROUPINFO("CFT", 28, AP_Motors6DOF_M2, _custom_forward_thrust, 0.0f),
-
-    // @Param: THR_RATIO
-    // @DisplayName: Negative thrust ratio
-    // @Description: Used to correct Negative thrust ratio
-    // @Values: !=0: use ratio, 0: donot use ratio
-    // @User: Advanced
-    AP_GROUPINFO("THR_RATIO", 29, AP_Motors6DOF_M2, _custom_negative_thrust_ratio, 1.0f),
-
-    AP_GROUPEND
-};
-
 static void to_designer_order_out(float out[]);
 static void motor_vector_force_debug(float rpy_out[], float linear_out[], float rpyt_out[], float ratio);
-
-void AP_Motors6DOF_M2::setup_motors(motor_frame_class frame_class, motor_frame_type frame_type)
-{
-    // remove existing motors
-    for (int8_t i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
-        remove_motor(i);
-    }
-
-    // hard coded config for supported frames
-    switch ((sub_frame_t)frame_class) {
-        //                 Motor #              Roll Factor     Pitch Factor    Yaw Factor      Throttle Factor     Forward Factor      Lateral Factor  Testing Order
-    case SUB_FRAME_CUSTOM:
-        // Put your custom motor setup here
-        add_motor_raw_6dof(AP_MOTORS_MOT_1,    -1.0f,           1.0f,           1.0f,           1.0f,             -1.0f,                1.0f,           1);
-        add_motor_raw_6dof(AP_MOTORS_MOT_2,    -1.0f,          -1.0f,           1.0f,          -1.0f,              1.0f,                1.0f,           2);
-        add_motor_raw_6dof(AP_MOTORS_MOT_3,    -1.0f,          -1.0f,          -1.0f,          -1.0f,             -1.0f,               -1.0f,           3);
-        add_motor_raw_6dof(AP_MOTORS_MOT_4,    -1.0f,           1.0f,          -1.0f,           1.0f,              1.0f,               -1.0f,           4);
-        add_motor_raw_6dof(AP_MOTORS_MOT_5,     1.0f,          -1.0f,          -1.0f,           1.0f,             -1.0f,                1.0f,           5);
-        add_motor_raw_6dof(AP_MOTORS_MOT_6,     1.0f,          -1.0f,           1.0f,           1.0f,              1.0f,               -1.0f,           6);
-        add_motor_raw_6dof(AP_MOTORS_MOT_7,     1.0f,           1.0f,          -1.0f,          -1.0f,              1.0f,                1.0f,           7);
-        add_motor_raw_6dof(AP_MOTORS_MOT_8,     1.0f,           1.0f,           1.0f,          -1.0f,             -1.0f,               -1.0f,           8);
-        break;
-    default:
-        break;
-    }
-}
 
 // output_armed - sends commands to the motors
 // includes new scaling stability patch
@@ -273,7 +37,7 @@ extern bool is_param_print(void);
 extern bool is_dbg_motor;
 extern float correct_pitch_thr;
 extern float correct_roll_thr;
-void AP_Motors6DOF_M2::output_armed_stabilizing()
+void AP_Motors6DOF::output_armed_stabilizing_custom()
 {
     uint8_t i;                          // general purpose counter
     float   roll_thrust;                // roll thrust input value, +/- 1.0
@@ -290,9 +54,6 @@ void AP_Motors6DOF_M2::output_armed_stabilizing()
     forward_thrust = _forward_in;
     lateral_thrust = _lateral_in;
 
-    float corrected_pitch = _custom_pitch_thr + _pitch_thr;
-    float corrected_roll = _custom_roll_thr + _roll_thr;
-
     // test real data
     // roll_thrust = 0.04;
     // pitch_thrust = 0.594;
@@ -304,47 +65,16 @@ void AP_Motors6DOF_M2::output_armed_stabilizing()
 
     if (is_param_print() && is_dbg_motor) {
         printf("============================\r\n");
-        printf("pitch %3.4f/%3.1f roll %3.4f/%3.1f\r\n", _pitch_thr, ToDeg(_pitch_thr),  _roll_thr, ToDeg(_roll_thr));
-        printf("custom: pitch %3.4f/%3.1f roll %3.4f/%3.1f\r\n", _custom_pitch_thr.get(), ToDeg(_custom_pitch_thr.get()),
-            _custom_roll_thr.get(), ToDeg(_custom_roll_thr.get()));
-        printf("corrected: pitch %3.4f/%3.1f roll %3.4f/%3.1f\r\n", corrected_pitch, ToDeg(corrected_pitch), 
-            corrected_roll, ToDeg(corrected_roll));
-        printf("\r\n");
         printf("thrust: roll %2.4f pitch %2.4f yaw %2.4f\r\n", roll_thrust, pitch_thrust, yaw_thrust);
         printf("thurst: forward = %2.4f lateral = %2.4f throttle = %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
-        printf("thrust custom: forward %2.4f\r\n", _custom_forward_thrust.get());
     }
 
-    // _custom_thrust_factor can be derived from
-    // forward thrust, front is +
-    // lateral thrust, right is +
-    // throttle thrust, up is +
-    // so
-    // if we need a NED throttle thrust named desired_throttle, it should be up or down
-    //   throttle = desired_throttle * cos(pitch) * cos(roll)
-    //   and compensate
-    //   forward = desired_throttle * sin(pitch)
-    //   lateral = -desired_throttle * sin(phi)
-    // if we need a NED forward thrust named desired_forward, it should be front or back
-    //   forward = -desired_forward * cos(pitch)
-    //   and compensate
-    //   throttle = - desired_forward * sin(pitch)
-    // if we need a NED lateral thrust named desired_lateral, it should be left or right
-    //   lateral = desired_lateral * cos(phi)
-    //   and compensate
-    //   throttle = desired_lateral * sin(phi)
+    if (_thrust_decomposition_callback) {
+        _thrust_decomposition_callback(&forward_thrust, &lateral_thrust, &throttle_thrust);
 
-    forward_thrust = forward_thrust * cosf(corrected_pitch) 
-                    + _custom_thrust_factor[0] * throttle_thrust * sinf(corrected_pitch)
-                    + _custom_forward_thrust;
-    lateral_thrust = lateral_thrust * cosf(corrected_roll) 
-                    + _custom_thrust_factor[1] * throttle_thrust * sinf(corrected_roll);
-    throttle_thrust = throttle_thrust * cosf(corrected_pitch) * cosf(corrected_roll) 
-                    + _custom_thrust_factor[2] * _forward_in * sinf(corrected_pitch) 
-                    + _custom_thrust_factor[3] * _lateral_in * sinf(corrected_roll);
-
-    if (is_param_print() && is_dbg_motor) {
-        printf("thrust corrected: forward %2.4f lateral %2.4f throttle %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
+        if (is_param_print() && is_dbg_motor) {
+            printf("thrust corrected: forward %2.4f lateral %2.4f throttle %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
+        }
     }
 
     float rpy_out[AP_MOTORS_MAX_NUM_MOTORS]; // buffer so we don't have to multiply coefficients multiple times.

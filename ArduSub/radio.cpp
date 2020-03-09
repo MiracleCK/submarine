@@ -49,6 +49,9 @@ void Sub::init_rc_in()
 // init_rc_out -- initialise motors and check if pilot wants to perform ESC calibration
 void Sub::init_rc_out()
 {
+    // need setup before motors.init
+    motors.set_setup_custom_motors_callback(FUNCTOR_BIND_MEMBER(&Sub::setup_custom_motors, void));
+
     motors.set_update_rate(g.rc_speed);
     motors.set_loop_rate(scheduler.get_loop_rate_hz());
     motors.init((AP_Motors::motor_frame_class)g.frame_configuration.get(), AP_Motors::motor_frame_type::MOTOR_FRAME_TYPE_PLUS);
@@ -61,4 +64,17 @@ void Sub::init_rc_out()
 
     // refresh auxiliary channel to function map
     SRV_Channels::update_aux_servo_function();
+}
+
+void Sub::setup_custom_motors() {
+    //                 Motor #                     Roll Factor     Pitch Factor    Yaw Factor      Throttle Factor     Forward Factor      Lateral Factor  Testing Order
+    // Put your custom motor setup here
+    motors.add_motor_raw_6dof(AP_MOTORS_MOT_1,    -1.0f,           1.0f,           1.0f,           1.0f,              -1.0f,               1.0f,           1);
+    motors.add_motor_raw_6dof(AP_MOTORS_MOT_2,    -1.0f,          -1.0f,           1.0f,          -1.0f,               1.0f,               1.0f,           2);
+    motors.add_motor_raw_6dof(AP_MOTORS_MOT_3,    -1.0f,          -1.0f,          -1.0f,          -1.0f,              -1.0f,              -1.0f,           3);
+    motors.add_motor_raw_6dof(AP_MOTORS_MOT_4,    -1.0f,           1.0f,          -1.0f,           1.0f,               1.0f,              -1.0f,           4);
+    motors.add_motor_raw_6dof(AP_MOTORS_MOT_5,     1.0f,          -1.0f,          -1.0f,           1.0f,              -1.0f,               1.0f,           5);
+    motors.add_motor_raw_6dof(AP_MOTORS_MOT_6,     1.0f,          -1.0f,           1.0f,           1.0f,               1.0f,              -1.0f,           6);
+    motors.add_motor_raw_6dof(AP_MOTORS_MOT_7,     1.0f,           1.0f,          -1.0f,          -1.0f,               1.0f,               1.0f,           7);
+    motors.add_motor_raw_6dof(AP_MOTORS_MOT_8,     1.0f,           1.0f,           1.0f,          -1.0f,              -1.0f,              -1.0f,           8);
 }

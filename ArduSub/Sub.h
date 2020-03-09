@@ -285,7 +285,7 @@ private:
     // Baro sensor instance index of the external water pressure sensor
     uint8_t depth_sensor_idx;
 
-    AP_Motors6DOF_M2 motors;
+    AP_Motors6DOF motors;
 
     // GPS variables
     // Sometimes we need to remove the scaling for distance calcs
@@ -436,8 +436,6 @@ private:
     static const AP_Scheduler::Task scheduler_tasks[];
     static const AP_Param::Info var_info[];
     static const struct LogStructure log_structure[];
-
-    bool is_request_reset_rp; // request to reset ROLL and PITCH angle to 0
 
     void fast_loop();
     void fifty_hz_loop();
@@ -698,6 +696,17 @@ private:
 public:
     void mavlink_delay_cb();
     void mainloop_failsafe_check();
+
+    // custom
+    bool is_request_reset_rp = false; // request to reset ROLL and PITCH angle to 0
+    bool is_ned_pilot = false;
+    bool is_last_ned_pilot = false;
+
+    void setup_custom_motors();
+    void thrust_decomposition_init(bool, control_mode_t);
+    void thrust_decomposition_clear();
+    void thrust_decomposition_ned(float*, float*, float*);
+    void thrust_decomposition_alt_hold_body(float*, float*, float*);
 };
 
 extern const AP_HAL::HAL& hal;
