@@ -715,6 +715,34 @@ void Sub::load_parameters()
     AP_Param::set_and_save_by_name("BATT_MONITOR", 7);
     AP_Param::set_and_save_by_name("BATT_BUS", 1); // need save, if not would be changed by batt library
     
+    AP_Param::set_and_save_by_name("RC3_REVERSED", 1);
+    AP_Param::set_and_save_by_name("RC4_REVERSED", 1);
+    AP_Param::set_and_save_by_name("RC5_REVERSED", 1);
+
+    // fialsafe
+    AP_Param::set_and_save_by_name("FS_PILOT_INPUT", 0);
+
+    // add pid param
+    AP_Param::set_and_save_by_name("ACRO_YAW_P", 6);
+
+    AP_Param::set_and_save_by_name("ATC_ANG_RLL_P", 6);
+    AP_Param::set_and_save_by_name("ATC_ANG_PIT_P", 6);
+    AP_Param::set_and_save_by_name("ATC_ANG_YAW_P", 6);
+    AP_Param::set_and_save_by_name("ATC_RAT_RLL_P", 0.3);
+    AP_Param::set_and_save_by_name("ATC_RAT_RLL_I", 0.7);
+    AP_Param::set_and_save_by_name("ATC_RAT_RLL_D", 0);
+    AP_Param::set_and_save_by_name("ATC_RAT_PIT_P", 0.7);
+    AP_Param::set_and_save_by_name("ATC_RAT_PIT_I", 0.5);
+    AP_Param::set_and_save_by_name("ATC_RAT_PIT_D", 0);
+    AP_Param::set_and_save_by_name("ATC_RAT_YAW_P", 0.6);
+    AP_Param::set_and_save_by_name("ATC_RAT_YAW_I", 5);
+    AP_Param::set_and_save_by_name("ATC_RAT_YAW_D", 0);
+    AP_Param::set_and_save_by_name("PSC_POSZ_P", 20);
+    AP_Param::set_and_save_by_name("PSC_VELZ_P", 10);
+    AP_Param::set_and_save_by_name("PSC_ACCZ_P", 0.5);
+    AP_Param::set_and_save_by_name("PSC_ACCZ_I", 0.1);
+    AP_Param::set_and_save_by_name("PSC_ACCZ_D", 0);      
+
     char rc_param_name[13]; // len is the max_size of below param name
     int rc_param_buf_len = sizeof(rc_param_name);
 

@@ -25,7 +25,7 @@ const AP_HAL::HAL& hal = AP_HAL::get_HAL();
  */
 Sub::Sub()
     : logger(g.log_bitmask),
-          control_mode(MANUAL),
+          control_mode(ALT_HOLD),
           motors(MAIN_LOOP_RATE),
           scaleLongDown(1),
           auto_mode(Auto_WP),
