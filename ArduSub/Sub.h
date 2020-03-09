@@ -667,6 +667,10 @@ private:
     bool init_motor_test();
     bool verify_motor_test();
 
+    bool is_startup_mode_auto_switch = true;
+    bool is_mode_auto_switch_enabled = true;
+    bool smart_mode_auto_switch();
+
     uint32_t last_do_motor_test_fail_ms = 0;
     uint32_t last_do_motor_test_ms = 0;
 

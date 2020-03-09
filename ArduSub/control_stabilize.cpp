@@ -14,6 +14,10 @@ bool Sub::stabilize_init()
 // should be called at 100hz or more
 void Sub::stabilize_run()
 {
+    if (smart_mode_auto_switch()) {
+        return;
+    }
+
     uint32_t tnow = AP_HAL::millis();
     float target_roll, target_pitch;
     float target_yaw_rate;

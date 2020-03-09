@@ -544,7 +544,10 @@ void GCS_MAVLINK_Sub::handleMessage(const mavlink_message_t &msg)
             sub.transform_manual_control_to_rc_override(packet.x,packet.y,packet.z,packet.r,packet.buttons);
         }
 
-        sub.failsafe.last_pilot_input_ms = AP_HAL::millis();
+        // we use this msg as button, but not send timely
+        // so cannot use failsafe.last_pilot_input_ms to check failsafe
+        // sub.failsafe.last_pilot_input_ms = AP_HAL::millis();
+        
         // a RC override message is considered to be a 'heartbeat' from the ground station for failsafe purposes
         sub.failsafe.last_heartbeat_ms = AP_HAL::millis();
         break;
