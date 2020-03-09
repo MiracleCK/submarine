@@ -715,9 +715,6 @@ void Sub::load_parameters()
     AP_Param::set_and_save_by_name("BATT_MONITOR", 7);
     AP_Param::set_and_save_by_name("BATT_BUS", 1); // need save, if not would be changed by batt library
 
-    // fialsafe
-    AP_Param::set_and_save_by_name("FS_PILOT_INPUT", 0);
-
     // add pid param
     AP_Param::set_and_save_by_name("ACRO_YAW_P", 6);
 
