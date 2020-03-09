@@ -714,10 +714,6 @@ void Sub::load_parameters()
     // AP_Param::set_by_name("BATT_MONITOR", 5);
     AP_Param::set_and_save_by_name("BATT_MONITOR", 7);
     AP_Param::set_and_save_by_name("BATT_BUS", 1); // need save, if not would be changed by batt library
-    
-    AP_Param::set_and_save_by_name("RC3_REVERSED", 1);
-    AP_Param::set_and_save_by_name("RC4_REVERSED", 1);
-    AP_Param::set_and_save_by_name("RC5_REVERSED", 1);
 
     // fialsafe
     AP_Param::set_and_save_by_name("FS_PILOT_INPUT", 0);
