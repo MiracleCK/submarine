@@ -24,6 +24,9 @@ struct {
     float climb_rate_cms;
 } static guided_angle_state = {0,0.0f, 0.0f, 0.0f, 0.0f};
 
+extern Location target_loc;
+extern uint8_t pos_reset_flag;
+
 struct Guided_Limit {
     uint32_t timeout_ms;  // timeout (in seconds) from the time that guided is invoked
     float alt_min_cm;   // lower altitude limit in cm above home (0 = no limit)
@@ -260,6 +263,17 @@ void Sub::guided_set_angle(const Quaternion &q, float climb_rate_cms)
 // should be called at 100hz or more
 void Sub::guided_run()
 {
+    if (pos_reset_flag ==1) {
+        const Vector3f pos_target = inertial_nav.get_position();
+        pos_control.set_alt_target(0);
+        pos_control.set_xy_target(pos_target.x,pos_target.y);
+        pos_reset_flag = 0;
+    } else if (pos_reset_flag ==2) {
+        if (!wp_nav.set_wp_destination(target_loc)) {
+            printf("set pos_target fail! \r\n");
+        }
+        pos_reset_flag = 0;
+    }
     // call the correct auto controller
     switch (guided_mode) {
 
