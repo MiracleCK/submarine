@@ -273,8 +273,6 @@ void Sub::althold_run_rate()
     last_pilot_pitch = target_pitch;
     last_pilot_roll = target_roll;
 
-    thrust_decomposition_init(is_ned_pilot, ALT_HOLD);
-
     // Hold actual position until zero derivative is detected
     static bool engageStopZ = true;
     // Get last user velocity direction to check for zero derivative points

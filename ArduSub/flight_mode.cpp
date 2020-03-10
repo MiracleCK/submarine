@@ -115,6 +115,8 @@ bool Sub::set_mode(const uint8_t new_mode, const ModeReason reason)
 // called at 100hz or more
 void Sub::update_flight_mode()
 {
+    thrust_decomposition_init(is_ned_pilot, control_mode);
+
     switch (control_mode) {
     case ACRO:
         acro_run();

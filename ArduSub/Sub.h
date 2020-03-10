@@ -701,6 +701,7 @@ public:
     bool is_request_reset_rp = false; // request to reset ROLL and PITCH angle to 0
     bool is_ned_pilot = true;
     bool is_last_ned_pilot = !is_ned_pilot;
+    bool is_ned_pilot_cleared = false;
 
     void setup_custom_motors();
     void thrust_decomposition_init(bool, control_mode_t);

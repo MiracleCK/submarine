@@ -45,7 +45,7 @@ void Sub::thrust_decomposition_alt_hold_body(float* forward, float* lateral, flo
 
     // throttle thurst need decomposition
     // forward and lateral not need
-
+    
     forward_thrust += throttle_thrust * sinf(pitch);
     lateral_thrust -= throttle_thrust * sinf(roll);
     throttle_thrust = throttle_thrust * cosf(pitch) * cosf(roll);
@@ -59,24 +59,28 @@ void Sub::thrust_decomposition_alt_hold_body(float* forward, float* lateral, flo
 // no need to do decomposition
 
 void Sub::thrust_decomposition_init(bool is_ned, control_mode_t mode) {
-    if (mode == MANUAL) {
-        thrust_decomposition_clear();
+    if (is_last_ned_pilot == is_ned && !is_ned_pilot_cleared) {
         return;
     }
 
-    if (is_last_ned_pilot == is_ned) {
+    is_last_ned_pilot = is_ned;
+    is_ned_pilot_cleared = false;
+    
+    if (mode != STABILIZE && mode != ALT_HOLD) {
+        thrust_decomposition_clear();
+        is_ned_pilot_cleared = true;
         return;
     }
 
     if (is_ned) {
+        hal.shell->printf("set decomposition to NED\r\n");
         motors.set_thrust_decomposition_callback(
             FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_ned, void, float*, float*, float*));
     } else {
+        hal.shell->printf("set decomposition to body\r\n");
         motors.set_thrust_decomposition_callback(
             FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_alt_hold_body, void, float*, float*, float*));
     }
-
-    is_last_ned_pilot = is_ned;
 }
 
 void Sub::thrust_decomposition_clear() {
