@@ -182,7 +182,7 @@ bool Sub::guided_set_destination(const Location& dest_loc)
         return false;
     }
 #endif
-
+    
     if (!wp_nav.set_wp_destination(dest_loc)) {
         // failure to set destination can only be because of missing terrain data
         AP::logger().Write_Error(LogErrorSubsystem::NAVIGATION, LogErrorCode::FAILED_TO_SET_DESTINATION);

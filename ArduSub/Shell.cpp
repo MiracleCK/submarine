@@ -6,6 +6,10 @@
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Common/AP_FWVersion.h>
 
+#include <AP_Common/Location.h>
+
+Location target_loc;
+
 extern const AP_HAL::HAL& hal;
 
 extern void cmd_cali(int argc, char *argv[]);
@@ -124,6 +128,12 @@ void cmd_param(int argc, char *argv[])
     if (argc < 3) {
         hal.shell->printf("usage: param set param_short_name value\r\n");
         return;
+    }
+
+    if (!strcmp(argv[0], "pos")) {
+        target_loc.lng = (int32_t)argv[1];
+        target_loc.lat = (int32_t)argv[2];
+        target_loc.alt = 0;
     }
 
     if (!strcmp(argv[0], "set")) // param set
