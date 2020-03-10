@@ -273,11 +273,7 @@ void Sub::althold_run_rate()
     last_pilot_pitch = target_pitch;
     last_pilot_roll = target_roll;
 
-    if (is_ned_pilot != is_last_ned_pilot) {
-        thrust_decomposition_init(is_ned_pilot, ALT_HOLD);
-
-        is_last_ned_pilot = is_ned_pilot;
-    }
+    thrust_decomposition_init(is_ned_pilot, ALT_HOLD);
 
     // Hold actual position until zero derivative is detected
     static bool engageStopZ = true;

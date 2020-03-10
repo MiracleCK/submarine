@@ -64,6 +64,10 @@ void Sub::thrust_decomposition_init(bool is_ned, control_mode_t mode) {
         return;
     }
 
+    if (is_last_ned_pilot == is_ned) {
+        return;
+    }
+
     if (is_ned) {
         motors.set_thrust_decomposition_callback(
             FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_ned, void, float*, float*, float*));
@@ -71,6 +75,8 @@ void Sub::thrust_decomposition_init(bool is_ned, control_mode_t mode) {
         motors.set_thrust_decomposition_callback(
             FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_alt_hold_body, void, float*, float*, float*));
     }
+
+    is_last_ned_pilot = is_ned;
 }
 
 void Sub::thrust_decomposition_clear() {
