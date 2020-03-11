@@ -70,10 +70,13 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
     }
 
     if (_thrust_decomposition_callback) {
-        _thrust_decomposition_callback(&forward_thrust, &lateral_thrust, &throttle_thrust);
+        float roll, pitch;
+
+        _thrust_decomposition_callback(&roll, &pitch, &forward_thrust, &lateral_thrust, &throttle_thrust);
 
         if (is_param_print() && is_dbg_motor) {
-            printf("thrust corrected: forward %2.4f lateral %2.4f throttle %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
+            printf("thrust decomposition: degree roll %4.2f pitch %4.2f \r\n", ToDeg(roll), ToDeg(pitch));
+            printf("thrust decomposition: forward %2.4f lateral %2.4f throttle %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
         }
     }
 

@@ -706,8 +706,8 @@ public:
     void setup_custom_motors();
     void thrust_decomposition_init(bool, control_mode_t);
     void thrust_decomposition_clear();
-    void thrust_decomposition_ned(float*, float*, float*);
-    void thrust_decomposition_alt_hold_body(float*, float*, float*);
+    void thrust_decomposition_ned(float*, float*, float*, float*, float*);
+    void thrust_decomposition_alt_hold_body(float*, float*, float*, float*, float*);
 };
 
 extern const AP_HAL::HAL& hal;
