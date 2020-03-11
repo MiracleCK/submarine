@@ -712,9 +712,12 @@ void Sub::set_neutral_controls()
 {
     uint32_t tnow = AP_HAL::millis();
 
-    for (uint8_t i = 0; i < 6; i++) {
-        RC_Channels::set_override(i, 1500, tnow);
-    }
+    channel_roll->set_override(1500, tnow);
+    channel_pitch->set_override(1500, tnow);
+    channel_yaw->set_override(1500, tnow);
+    channel_forward->set_override(1500, tnow);
+    channel_lateral->set_override(1500, tnow);
+    channel_throttle->set_override(1500, tnow);
 
     // Clear pitch/roll trim settings
     pitchTrim = 0;
