@@ -178,9 +178,9 @@ void AP_Compass_QMC5883L::timer()
 	  return ;
   }
 
-    auto x = -static_cast<int16_t>(le16toh(buffer.rx));
+    auto x = static_cast<int16_t>(le16toh(buffer.rx));
     auto y = static_cast<int16_t>(le16toh(buffer.ry));
-    auto z = -static_cast<int16_t>(le16toh(buffer.rz));
+    auto z = static_cast<int16_t>(le16toh(buffer.rz));
 
 #if 0
     printf("mag.x:%d\n",x);

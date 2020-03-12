@@ -263,10 +263,16 @@ void Sub::guided_set_angle(const Quaternion &q, float climb_rate_cms)
 // should be called at 100hz or more
 void Sub::guided_run()
 {
+#if 1
     if (pos_reset_flag ==1) {
-        const Vector3f pos_target = inertial_nav.get_position();
-        pos_control.set_alt_target(0);
-        pos_control.set_xy_target(pos_target.x,pos_target.y);
+        ahrs.get_location(target_loc);
+        target_loc.alt = 0;
+        if (!wp_nav.set_wp_destination(target_loc)) {
+            printf("reset pos_target fail! \r\n");
+        }
+        // const Vector3f pos_target = inertial_nav.get_position();
+        // pos_control.set_alt_target(0);
+        // pos_control.set_xy_target(pos_target.x,pos_target.y);
         pos_reset_flag = 0;
     } else if (pos_reset_flag ==2) {
         if (!wp_nav.set_wp_destination(target_loc)) {
@@ -274,6 +280,7 @@ void Sub::guided_run()
         }
         pos_reset_flag = 0;
     }
+#endif
     // call the correct auto controller
     switch (guided_mode) {
 
