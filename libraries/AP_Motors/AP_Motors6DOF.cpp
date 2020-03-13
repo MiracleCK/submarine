@@ -383,7 +383,7 @@ void AP_Motors6DOF::output_to_motors()
     // send output to each motor
     for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
         if (motor_enabled[i]) {
-            rc_write(i, motor_out[i]);
+            rc_write(_motor_mapping[i] - 1, motor_out[i]);
         }
     }
 }
