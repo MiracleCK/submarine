@@ -277,7 +277,8 @@ void Sub::althold_run_rate()
     static bool engageStopZ = true;
     // Get last user velocity direction to check for zero derivative points
     static bool lastVelocityZWasNegative = false;
-    if (fabsf(channel_throttle->norm_input()-0.5f) > 0.05f) { // Throttle input above 5%
+    if (fabsf(channel_throttle->norm_input()-0.5f) > 0.05f ||                    // Throttle input above 5%
+        (!is_ned_pilot && fabsf(channel_forward->norm_input()-0.5f) > 0.05f)) {  // Forward input above 5%
         if (!is_ned_pilot) {
             thrust_decomposition_clear(); // all should linear thrust should be body frame
         }
