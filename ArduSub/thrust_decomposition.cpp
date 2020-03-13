@@ -65,7 +65,7 @@ void Sub::thrust_decomposition_alt_hold_body(float* roll, float* pitch, float* f
 // no need to do decomposition
 
 void Sub::thrust_decomposition_init(bool is_ned, control_mode_t mode) {
-    if (mode == MANUAL) {
+    if (mode != STABILIZE && mode != ALT_HOLD) {
         if (!is_ned_pilot_cleared) {
             thrust_decomposition_clear();
             is_ned_pilot_cleared = true;
