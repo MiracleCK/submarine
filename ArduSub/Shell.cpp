@@ -138,9 +138,9 @@ void cmd_param(int argc, char *argv[])
     }
 
     if (!strcmp(argv[0], "pos")) {
-        target_loc.lng = (int32_t)argv[1];
-        target_loc.lat = (int32_t)argv[2];
-        target_loc.alt = 0;
+        // target_loc.lng = (int32_t)argv[1];
+        // target_loc.lat = (int32_t)argv[2];
+        // target_loc.alt = 0;
         hal.shell->printf("alt lng lat = %d %d %d \r\n",  target_loc.alt, target_loc.lng, target_loc.lat);
         pos_reset_flag = 2;
         return;
