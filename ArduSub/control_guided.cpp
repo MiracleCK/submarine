@@ -171,6 +171,7 @@ bool Sub::guided_set_destination(const Vector3f& destination)
 // or if the fence is enabled and guided waypoint is outside the fence
 bool Sub::guided_set_destination(const Location& dest_loc)
 {
+    printf("guided_set_destination %d %d\r\n", dest_loc.lat, dest_loc.lng);
     // ensure we are in position control mode
     if (guided_mode != Guided_WP) {
         guided_pos_control_start();
@@ -259,28 +260,44 @@ void Sub::guided_set_angle(const Quaternion &q, float climb_rate_cms)
     guided_angle_state.update_time_ms = AP_HAL::millis();
 }
 
+bool is_guiding = false;
+Location test_dest_loc;
+int loc_index = 0;
+
 // guided_run - runs the guided controller
 // should be called at 100hz or more
 void Sub::guided_run()
 {
-#if 1
-    if (pos_reset_flag ==1) {
-        ahrs.get_location(target_loc);
-        target_loc.alt = 0;
-        if (!wp_nav.set_wp_destination(target_loc)) {
-            printf("reset pos_target fail! \r\n");
+    if (motors.armed()) {
+        if (loc_index > 1) {
+            loc_index = 0;
         }
-        // const Vector3f pos_target = inertial_nav.get_position();
-        // pos_control.set_alt_target(0);
-        // pos_control.set_xy_target(pos_target.x,pos_target.y);
-        pos_reset_flag = 0;
-    } else if (pos_reset_flag ==2) {
-        if (!wp_nav.set_wp_destination(target_loc)) {
-            printf("set pos_target fail! \r\n");
+
+        if (loc_index == 0) {
+            test_dest_loc.alt = 0;
+            test_dest_loc.lat = 338111439;
+            test_dest_loc.lng = -1183947317;
+        } else {
+            test_dest_loc.alt = 0;
+            test_dest_loc.lat = 338093473;
+            test_dest_loc.lng = -1183947588;
         }
-        pos_reset_flag = 0;
+
+        if (!is_guiding) {
+            guided_set_destination(test_dest_loc);
+            is_guiding = true;
+            printf("start guiding with loc %d\r\n", loc_index);
+        } else if (wp_nav.reached_wp_destination()) {
+            printf("guided reached loc %d\r\n", loc_index);
+            is_guiding = false;
+            loc_index++;
+        }
+    } else {
+        is_guiding = false;
     }
-#endif
+
+    // reached_destination
+
     // call the correct auto controller
     switch (guided_mode) {
 
