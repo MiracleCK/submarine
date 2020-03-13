@@ -259,11 +259,43 @@ void Sub::guided_set_angle(const Quaternion &q, float climb_rate_cms)
     guided_angle_state.update_time_ms = AP_HAL::millis();
 }
 
+bool is_guiding = false;
+Location test_dest_loc;
+int loc_index = 0;
+
 // guided_run - runs the guided controller
 // should be called at 100hz or more
 void Sub::guided_run()
 {
-#if 1
+    if (motors.armed()) {
+        if (loc_index > 1) {
+            loc_index = 0;
+        }
+
+        if (loc_index == 0) {
+            test_dest_loc.alt = 0;
+            test_dest_loc.lat = -353627030;
+            test_dest_loc.lng = 149164150;
+        } else {
+            test_dest_loc.alt = 0;    
+            test_dest_loc.lat = -353635720;
+            test_dest_loc.lng = 149164017;
+        }
+
+        if (!is_guiding) {
+            guided_set_destination(test_dest_loc);
+            is_guiding = true;
+            printf("start guiding with loc %d\r\n", loc_index);
+        } else if (wp_nav.reached_wp_destination()) {
+            printf("guided reached loc %d\r\n", loc_index);
+            is_guiding = false;
+            loc_index++;
+        }
+    } else {
+        is_guiding = false;
+    }
+
+#if 0
     if (pos_reset_flag ==1) {
         ahrs.get_location(target_loc);
         target_loc.alt = 0;
