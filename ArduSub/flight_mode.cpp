@@ -4,10 +4,10 @@ extern uint8_t pos_reset_flag;
 // returns true if mode was successfully set
 bool Sub::set_mode(control_mode_t mode, ModeReason reason)
 {
-    printf("mode =%d \r\n", mode);
-    if (mode == MANUAL) {
-        pos_reset_flag = 2;
-    }
+    // printf("mode =%d \r\n", mode);
+    // if (mode == STABILIZE) {
+    //     pos_reset_flag = 2;
+    // }
     // boolean to record if flight mode could be set
     bool success = false;
 

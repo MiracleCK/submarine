@@ -126,6 +126,16 @@ void cmd_param(int argc, char *argv[])
         return;
     }
 
+    if (!strcmp(argv[0], "pos")) {
+        // target_loc.lng = (int32_t)argv[1];
+        // target_loc.lat = (int32_t)argv[2];
+        // target_loc.alt = 0;
+        // hal.shell->printf("alt lng lat = %d %d %d \r\n",  target_loc.alt, target_loc.lng, target_loc.lat);
+        pos_reset_flag = 2;
+        hal.shell->printf("pos_reset_flag = %d \r\n", pos_reset_flag);
+        return;
+    }
+
     if (!strcmp(argv[0], "posrst")) {
         pos_reset_flag = 1;
         hal.shell->printf("pos_reset_flag = %d \r\n", pos_reset_flag);
@@ -134,15 +144,6 @@ void cmd_param(int argc, char *argv[])
 
     if (argc < 3) {
         hal.shell->printf("usage: param set param_short_name value\r\n");
-        return;
-    }
-
-    if (!strcmp(argv[0], "pos")) {
-        // target_loc.lng = (int32_t)argv[1];
-        // target_loc.lat = (int32_t)argv[2];
-        // target_loc.alt = 0;
-        hal.shell->printf("alt lng lat = %d %d %d \r\n",  target_loc.alt, target_loc.lng, target_loc.lat);
-        pos_reset_flag = 2;
         return;
     }
 

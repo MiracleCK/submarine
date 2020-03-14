@@ -10,6 +10,9 @@ bool Sub::stabilize_init()
     return true;
 }
 
+extern uint8_t pos_reset_flag;
+extern Location target_loc;
+extern bool print_pos;
 // stabilize_run - runs the main stabilize controller
 // should be called at 100hz or more
 void Sub::stabilize_run()
@@ -17,6 +20,16 @@ void Sub::stabilize_run()
     uint32_t tnow = AP_HAL::millis();
     float target_roll, target_pitch;
     float target_yaw_rate;
+    print_pos = true;
+    if (position_ok()) {
+        if (pos_reset_flag == 2) {
+            printf("flag = %d \r\n", pos_reset_flag);
+            ahrs.get_location(target_loc);
+            printf("alt lng lat = %4d %4d %4d \r\n",  target_loc.alt, target_loc.lng, target_loc.lat);
+            pos_reset_flag = 3;
+            printf("wp get success! \r\n");
+        }
+    }
 
     // if not armed set throttle to zero and exit immediately
     if (!motors.armed()) {

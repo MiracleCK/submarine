@@ -45,7 +45,6 @@ bool Sub::guided_init(bool ignore_checks)
     // initialise yaw
     set_auto_yaw_mode(get_default_auto_yaw_mode(false));
     // start in position control mode
-    pos_reset_flag =2;
     guided_pos_control_start();
     return true;
 }
@@ -242,6 +241,7 @@ bool Sub::guided_set_destination_posvel(const Vector3f& destination, const Vecto
     return true;
 }
 
+uint16_t timerout = 0;
 // set guided mode angle target
 void Sub::guided_set_angle(const Quaternion &q, float climb_rate_cms)
 {
@@ -264,25 +264,35 @@ bool is_guiding = false;
 Location test_dest_loc;
 int loc_index = 0;
 uint8_t reach_flag = -1;
-
+bool print_pos = true;
 // guided_run - runs the guided controller
 // should be called at 100hz or more
 void Sub::guided_run()
 {
+    timerout ++;
+    // if (timerout >= 400) {
+    if (print_pos == true) {
+        // printf("flag = %d \r\n", pos_reset_flag);
+        ahrs.get_location(test_dest_loc);
+        printf("current postion \r\n");
+        printf("alt =%d lng = %d lat = %d \r\n", test_dest_loc.alt, test_dest_loc.lng, test_dest_loc.lat);
+        timerout = 0;
+        print_pos = false;
+    }
 #if 0    
     if (motors.armed()) {
         if (loc_index > 1) {
             loc_index = 0;
         }
 
-        if (loc_index == 0) {
+        if (loc_index == 0) {    
             test_dest_loc.alt = 0;
-            test_dest_loc.lat = 338111439;
-            test_dest_loc.lng = -1183947317;
+            test_dest_loc.lat = 249978499;
+            test_dest_loc.lng = 1026441142;
         } else {
-            test_dest_loc.alt = 0;
-            test_dest_loc.lat = 338093473;
-            test_dest_loc.lng = -1183947588;
+            test_dest_loc.alt = 0;    
+            test_dest_loc.lat = 249977810;
+            test_dest_loc.lng = 1026442278;
         }
 
         if (!is_guiding) {
@@ -301,11 +311,11 @@ void Sub::guided_run()
 
 #if 1
     if (pos_reset_flag ==1) {
-        ahrs.get_location(target_loc);
-        target_loc.alt = 0;
-        if (!guided_set_destination(target_loc)) {
-            printf("reset pos_target fail! \r\n");
-        }
+        // ahrs.get_location(target_loc);
+        // target_loc.alt = 0;
+        // if (!guided_set_destination(target_loc)) {
+        //     printf("reset pos_target fail! \r\n");
+        // }
         // const Vector3f pos_target = inertial_nav.get_position();
         // pos_control.set_alt_target(0);
         // pos_control.set_xy_target(pos_target.x,pos_target.y);
@@ -321,6 +331,7 @@ void Sub::guided_run()
         if (!guided_set_destination(target_loc)) {
             printf("set pos_target fail! \r\n");
         }
+        printf("wp set success! \r\n");
         pos_reset_flag = 0;
         reach_flag = 0;
     }
@@ -390,6 +401,11 @@ void Sub::guided_pos_control_run()
     // Send to forward/lateral outputs
     motors.set_lateral(lateral_out);
     motors.set_forward(forward_out);
+
+    if (timerout >= 400) {
+        printf("lateral_out = %4.4f forward_out = %4.4f \r\n", lateral_out, forward_out);
+        timerout = 0;
+    }
 
     // call z-axis position controller (wpnav should have already updated it's alt target)
     pos_control.update_z_controller();
