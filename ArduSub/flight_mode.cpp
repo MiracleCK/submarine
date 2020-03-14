@@ -1,9 +1,13 @@
 #include "Sub.h"
-
+extern uint8_t pos_reset_flag;
 // change flight mode and perform any necessary initialisation
 // returns true if mode was successfully set
 bool Sub::set_mode(control_mode_t mode, ModeReason reason)
 {
+    printf("mode =%d \r\n", mode);
+    if (mode == MANUAL) {
+        pos_reset_flag = 2;
+    }
     // boolean to record if flight mode could be set
     bool success = false;
 

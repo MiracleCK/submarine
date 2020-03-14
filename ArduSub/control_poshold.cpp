@@ -32,10 +32,18 @@ bool Sub::poshold_init()
     return true;
 }
 
+extern uint8_t pos_reset_flag;
+extern Location target_loc;
 // poshold_run - runs the PosHold controller
 // should be called at 100hz or more
 void Sub::poshold_run()
 {
+    if (pos_reset_flag == 2) {
+        printf("flag = %d \r\n", pos_reset_flag);
+        ahrs.get_location(target_loc);
+        printf("alt lng lat = %4d %4d %4d \r\n",  target_loc.alt, target_loc.lng, target_loc.lat);
+        pos_reset_flag = 3;
+    }
     uint32_t tnow = AP_HAL::millis();
 
     // if not armed set throttle to zero and exit immediately

@@ -45,6 +45,7 @@ bool Sub::guided_init(bool ignore_checks)
     // initialise yaw
     set_auto_yaw_mode(get_default_auto_yaw_mode(false));
     // start in position control mode
+    pos_reset_flag =2;
     guided_pos_control_start();
     return true;
 }
@@ -262,11 +263,13 @@ void Sub::guided_set_angle(const Quaternion &q, float climb_rate_cms)
 bool is_guiding = false;
 Location test_dest_loc;
 int loc_index = 0;
+uint8_t reach_flag = -1;
 
 // guided_run - runs the guided controller
 // should be called at 100hz or more
 void Sub::guided_run()
 {
+#if 0    
     if (motors.armed()) {
         if (loc_index > 1) {
             loc_index = 0;
@@ -274,12 +277,12 @@ void Sub::guided_run()
 
         if (loc_index == 0) {
             test_dest_loc.alt = 0;
-            test_dest_loc.lat = -353627030;
-            test_dest_loc.lng = 149164150;
+            test_dest_loc.lat = 338111439;
+            test_dest_loc.lng = -1183947317;
         } else {
-            test_dest_loc.alt = 0;    
-            test_dest_loc.lat = -353635720;
-            test_dest_loc.lng = 149164017;
+            test_dest_loc.alt = 0;
+            test_dest_loc.lat = 338093473;
+            test_dest_loc.lng = -1183947588;
         }
 
         if (!is_guiding) {
@@ -294,23 +297,37 @@ void Sub::guided_run()
     } else {
         is_guiding = false;
     }
+#endif
 
-#if 0
+#if 1
     if (pos_reset_flag ==1) {
         ahrs.get_location(target_loc);
         target_loc.alt = 0;
-        if (!wp_nav.set_wp_destination(target_loc)) {
+        if (!guided_set_destination(target_loc)) {
             printf("reset pos_target fail! \r\n");
         }
         // const Vector3f pos_target = inertial_nav.get_position();
         // pos_control.set_alt_target(0);
         // pos_control.set_xy_target(pos_target.x,pos_target.y);
         pos_reset_flag = 0;
-    } else if (pos_reset_flag ==2) {
-        if (!wp_nav.set_wp_destination(target_loc)) {
+    } else if (pos_reset_flag ==3) {
+        // target_loc.lng = 1026442595;
+        // target_loc.lat = 249984122;
+        // target_loc.alt = 0;
+        // ahrs.get_location(target_loc);
+        printf("set destination! \r\n");
+        target_loc.alt = 0;
+        printf("alt lng lat = %4d %4d %4d \r\n",  target_loc.alt, target_loc.lng, target_loc.lat);
+        if (!guided_set_destination(target_loc)) {
             printf("set pos_target fail! \r\n");
         }
         pos_reset_flag = 0;
+        reach_flag = 0;
+    }
+    
+    if (wp_nav.reached_wp_destination() && reach_flag == 0) {
+        printf("wp reach! \r\n");
+        reach_flag = -1;
     }
 #endif
     // call the correct auto controller
