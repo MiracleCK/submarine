@@ -9,7 +9,8 @@
 #include <AP_Common/Location.h>
 
 Location target_loc;
-uint8_t pos_reset_flag = 0;
+bool pos_get_flag = false;
+bool pos_set_flag = false;
 
 extern const AP_HAL::HAL& hal;
 
@@ -126,19 +127,19 @@ void cmd_param(int argc, char *argv[])
         return;
     }
 
-    if (!strcmp(argv[0], "pos")) {
+    if (!strcmp(argv[0], "sps")) {
         // target_loc.lng = (int32_t)argv[1];
         // target_loc.lat = (int32_t)argv[2];
         // target_loc.alt = 0;
         // hal.shell->printf("alt lng lat = %d %d %d \r\n",  target_loc.alt, target_loc.lng, target_loc.lat);
-        pos_reset_flag = 2;
-        hal.shell->printf("pos_reset_flag = %d \r\n", pos_reset_flag);
+        pos_set_flag = true;
+        hal.shell->printf("pos_set_flag = %d \r\n", pos_set_flag);
         return;
     }
 
-    if (!strcmp(argv[0], "posrst")) {
-        pos_reset_flag = 1;
-        hal.shell->printf("pos_reset_flag = %d \r\n", pos_reset_flag);
+    if (!strcmp(argv[0], "gps")) {
+        pos_get_flag = true;
+        hal.shell->printf("pos_reset_flag = %d \r\n", pos_get_flag);
         return;
     }
 

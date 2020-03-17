@@ -24,9 +24,6 @@ struct {
     float climb_rate_cms;
 } static guided_angle_state = {0,0.0f, 0.0f, 0.0f, 0.0f};
 
-extern Location target_loc;
-extern uint8_t pos_reset_flag;
-
 struct Guided_Limit {
     uint32_t timeout_ms;  // timeout (in seconds) from the time that guided is invoked
     float alt_min_cm;   // lower altitude limit in cm above home (0 = no limit)
@@ -67,6 +64,7 @@ void Sub::guided_pos_control_start()
 
     // no need to check return status because terrain data is not used
     wp_nav.set_wp_destination(stopping_point, false);
+    printf("stopping_x stopping_y stopping_z = %f %f %f \r\n", stopping_point.x, stopping_point.y, stopping_point.z);
 
     // initialise yaw
     set_auto_yaw_mode(get_default_auto_yaw_mode(false));
@@ -265,6 +263,10 @@ Location test_dest_loc;
 int loc_index = 0;
 uint8_t reach_flag = -1;
 bool print_pos = true;
+
+extern Location target_loc;
+extern bool pos_get_flag;
+extern bool pos_set_flag;
 // guided_run - runs the guided controller
 // should be called at 100hz or more
 void Sub::guided_run()
@@ -272,11 +274,11 @@ void Sub::guided_run()
     timerout ++;
     // if (timerout >= 400) {
     if (print_pos == true) {
-        // printf("flag = %d \r\n", pos_reset_flag);
+        // printf("flag = %d \r\n", pos_get_flag);
         ahrs.get_location(test_dest_loc);
         printf("current postion \r\n");
-        printf("alt =%d lng = %d lat = %d \r\n", test_dest_loc.alt, test_dest_loc.lng, test_dest_loc.lat);
-        timerout = 0;
+        printf("alt lng lat = %d %d %d \r\n", test_dest_loc.alt, test_dest_loc.lng, test_dest_loc.lat);
+        // timerout = 0;
         print_pos = false;
     }
 #if 0    
@@ -310,35 +312,26 @@ void Sub::guided_run()
 #endif
 
 #if 1
-    if (pos_reset_flag ==1) {
-        // ahrs.get_location(target_loc);
-        // target_loc.alt = 0;
-        // if (!guided_set_destination(target_loc)) {
-        //     printf("reset pos_target fail! \r\n");
-        // }
-        // const Vector3f pos_target = inertial_nav.get_position();
-        // pos_control.set_alt_target(0);
-        // pos_control.set_xy_target(pos_target.x,pos_target.y);
-        pos_reset_flag = 0;
-    } else if (pos_reset_flag ==3) {
+    if (pos_set_flag == true) {
         // target_loc.lng = 1026442595;
         // target_loc.lat = 249984122;
         // target_loc.alt = 0;
         // ahrs.get_location(target_loc);
         printf("set destination! \r\n");
-        target_loc.alt = 0;
+        // target_loc.alt = 0;
         printf("alt lng lat = %4d %4d %4d \r\n",  target_loc.alt, target_loc.lng, target_loc.lat);
         if (!guided_set_destination(target_loc)) {
             printf("set pos_target fail! \r\n");
         }
         printf("wp set success! \r\n");
-        pos_reset_flag = 0;
-        reach_flag = 0;
+
+        reach_flag = true;
+        pos_set_flag = false;
     }
     
-    if (wp_nav.reached_wp_destination() && reach_flag == 0) {
+    if (wp_nav.reached_wp_destination() && reach_flag == true) {
         printf("wp reach! \r\n");
-        reach_flag = -1;
+        reach_flag = false;
     }
 #endif
     // call the correct auto controller
@@ -397,6 +390,8 @@ void Sub::guided_pos_control_run()
 
     float lateral_out, forward_out;
     translate_wpnav_rp(lateral_out, forward_out);
+    lateral_out = 0;
+    forward_out = 0;
 
     // Send to forward/lateral outputs
     motors.set_lateral(lateral_out);
@@ -404,6 +399,9 @@ void Sub::guided_pos_control_run()
 
     if (timerout >= 400) {
         printf("lateral_out = %4.4f forward_out = %4.4f \r\n", lateral_out, forward_out);
+        printf("yaw = %4.4f \r\n", get_auto_heading());
+        printf("yaw_sensor = %d \r\n", ahrs.yaw_sensor);
+        printf("yaw_float = %4.4f \r\n", ahrs.yaw);
         timerout = 0;
     }
 
@@ -413,10 +411,12 @@ void Sub::guided_pos_control_run()
     // call attitude controller
     if (auto_yaw_mode == AUTO_YAW_HOLD) {
         // roll & pitch from waypoint controller, yaw rate from pilot
+        printf("auto yaw hold \r\n");
         attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(channel_roll->get_control_in(), channel_pitch->get_control_in(), target_yaw_rate);
     } else {
         // roll, pitch from waypoint controller, yaw heading from auto_heading()
         attitude_control.input_euler_angle_roll_pitch_yaw(channel_roll->get_control_in(), channel_pitch->get_control_in(), get_auto_heading(), true);
+        // attitude_control.input_euler_angle_roll_pitch_yaw(channel_roll->get_control_in(), channel_pitch->get_control_in(), 3000, true);
     }
 }
 

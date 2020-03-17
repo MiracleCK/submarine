@@ -339,6 +339,8 @@ bool AC_WPNav::advance_wp_target_along_track(float dt)
     float track_leash_slack;    // additional distance (in cm) along the track from our track_covered position that our leash will allow
     bool reached_leash_limit = false;   // true when track has reached leash limit and we need to slow down the target point
 
+    set_yaw_cd(get_bearing_cd(_origin, _destination));
+
     // get current location
     const Vector3f &curr_pos = _inav.get_position();
 
@@ -475,12 +477,12 @@ bool AC_WPNav::advance_wp_target_along_track(float dt)
     if (_track_length_xy >= WPNAV_YAW_DIST_MIN) {
         if (_pos_control.get_leash_xy() < WPNAV_YAW_DIST_MIN) {
             // if the leash is short (i.e. moving slowly) and destination is at least 2m horizontally, point along the segment from origin to destination
-            set_yaw_cd(get_bearing_cd(_origin, _destination));
+            // set_yaw_cd(get_bearing_cd(_origin, _destination));
         } else {
             Vector3f horiz_leash_xy = final_target - curr_pos;
             horiz_leash_xy.z = 0;
             if (horiz_leash_xy.length() > MIN(WPNAV_YAW_DIST_MIN, _pos_control.get_leash_xy()*WPNAV_YAW_LEASH_PCT_MIN)) {
-                set_yaw_cd(RadiansToCentiDegrees(atan2f(horiz_leash_xy.y,horiz_leash_xy.x)));
+                // set_yaw_cd(RadiansToCentiDegrees(atan2f(horiz_leash_xy.y,horiz_leash_xy.x)));
             }
         }
     }
