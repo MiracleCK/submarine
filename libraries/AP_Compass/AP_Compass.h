@@ -519,6 +519,16 @@ private:
     ///
     void try_set_initial_location();
     bool _initial_location_set;
+
+    // custom
+public:
+    FUNCTOR_TYPEDEF(compass_sensor_rotation_fn_t, void, Vector3f&);
+    void set_compass_sensor_rotation_callback(compass_sensor_rotation_fn_t callback) {
+        _compass_sensor_rotation_callback = callback;
+    }
+
+private:
+    compass_sensor_rotation_fn_t _compass_sensor_rotation_callback;
 };
 
 namespace AP {

@@ -16,7 +16,12 @@ void AP_Compass_Backend::rotate_field(Vector3f &mag, uint8_t instance)
 {
     Compass::mag_state &state = _compass._state[instance];
     mag.rotate(MAG_BOARD_ORIENTATION);
-    mag.rotate(state.rotation);
+
+    if (_compass._compass_sensor_rotation_callback) {
+        _compass._compass_sensor_rotation_callback(mag);
+    } else {
+        mag.rotate(state.rotation);
+    }
 
     if (!state.external) {
         // and add in AHRS_ORIENTATION setting if not an external compass

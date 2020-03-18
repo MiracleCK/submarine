@@ -614,6 +614,16 @@ private:
     uint32_t _startup_ms;
 
     uint8_t imu_kill_mask;
+
+    // custom
+public:
+    FUNCTOR_TYPEDEF(ins_sensor_rotation_fn_t, void, Vector3f&);
+    void set_ins_sensor_rotation_callback(ins_sensor_rotation_fn_t callback) {
+        _ins_sensor_rotation_callback = callback;
+    }
+
+private:
+    ins_sensor_rotation_fn_t _ins_sensor_rotation_callback;
 };
 
 namespace AP {

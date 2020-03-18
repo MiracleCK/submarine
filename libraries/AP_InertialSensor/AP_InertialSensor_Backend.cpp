@@ -93,7 +93,11 @@ void AP_InertialSensor_Backend::_rotate_and_correct_accel(uint8_t instance, Vect
      */
 
     // rotate for sensor orientation
-    accel.rotate(_imu._accel_orientation[instance]);
+    if (_imu._ins_sensor_rotation_callback) {
+        _imu._ins_sensor_rotation_callback(accel);
+    } else {
+        accel.rotate(_imu._accel_orientation[instance]);
+    }
     
     // apply offsets
     accel -= _imu._accel_offset[instance];
@@ -115,7 +119,11 @@ void AP_InertialSensor_Backend::_rotate_and_correct_accel(uint8_t instance, Vect
 void AP_InertialSensor_Backend::_rotate_and_correct_gyro(uint8_t instance, Vector3f &gyro) 
 {
     // rotate for sensor orientation
-    gyro.rotate(_imu._gyro_orientation[instance]);
+    if (_imu._ins_sensor_rotation_callback) {
+        _imu._ins_sensor_rotation_callback(gyro);
+    } else {
+        gyro.rotate(_imu._gyro_orientation[instance]);
+    }
     
     // gyro calibration is always assumed to have been done in sensor frame
     gyro -= _imu._gyro_offset[instance];

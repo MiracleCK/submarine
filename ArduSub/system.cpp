@@ -111,6 +111,7 @@ void Sub::init_ardupilot()
     gps.set_log_gps_bit(MASK_LOG_GPS);
     gps.init(serial_manager);
 
+    AP::compass().set_compass_sensor_rotation_callback(FUNCTOR_BIND_MEMBER(&Sub::sensor_rotate, void, Vector3f&));
     AP::compass().set_log_bit(MASK_LOG_COMPASS);
     AP::compass().init();
 
@@ -234,11 +235,19 @@ void Sub::startup_INS_ground()
     ahrs.init();
     ahrs.set_vehicle_class(AHRS_VEHICLE_SUBMARINE);
 
+    ins.set_ins_sensor_rotation_callback(FUNCTOR_BIND_MEMBER(&Sub::sensor_rotate, void, Vector3f&));
     // Warm up and calibrate gyro offsets
     ins.init(scheduler.get_loop_rate_hz());
 
     // reset ahrs including gyro bias
     ahrs.reset();
+}
+
+void Sub::sensor_rotate(Vector3f& sensor) {
+    float tmpx = sensor.x;
+    sensor.x = -sensor.z;
+    sensor.z = -sensor.y;
+    sensor.y = tmpx;
 }
 
 // calibrate gyros - returns true if successfully calibrated

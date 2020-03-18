@@ -708,6 +708,8 @@ public:
     void thrust_decomposition_clear();
     void thrust_decomposition_ned(float*, float*, float*, float*, float*);
     void thrust_decomposition_alt_hold_body(float*, float*, float*, float*, float*);
+
+    void sensor_rotate(Vector3f& sensor);
 };
 
 extern const AP_HAL::HAL& hal;

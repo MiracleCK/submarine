@@ -521,19 +521,6 @@ define RC_IN_CHANNEL_YAW 3
 define RC_IN_CHANNEL_FORWARD 2
 define RC_IN_CHANNEL_LATERAL 4
 
-define ROTATE_CUSTOM_IMU {tmp = x; x = -y; y = -tmp;}
-define ROTATE_CUSTOM_MAG {tmp = x; x = z; z = y; y = -tmp; return;}
-
-#      Motor #               Roll   Pitch  Yaw    Throttle   Forward   Lateral
-define CUSTOM_MOTORS_MOT_1  -1.0f,  1.0f,  1.0f,  1.0f,     -1.0f,     1.0f
-define CUSTOM_MOTORS_MOT_2  -1.0f, -1.0f,  1.0f, -1.0f,      1.0f,     1.0f
-define CUSTOM_MOTORS_MOT_3  -1.0f, -1.0f, -1.0f, -1.0f,     -1.0f,    -1.0f
-define CUSTOM_MOTORS_MOT_4  -1.0f,  1.0f, -1.0f,  1.0f,      1.0f,    -1.0f
-define CUSTOM_MOTORS_MOT_5   1.0f, -1.0f, -1.0f,  1.0f,     -1.0f,     1.0f
-define CUSTOM_MOTORS_MOT_6   1.0f, -1.0f,  1.0f,  1.0f,      1.0f,    -1.0f
-define CUSTOM_MOTORS_MOT_7   1.0f,  1.0f, -1.0f, -1.0f,      1.0f,     1.0f
-define CUSTOM_MOTORS_MOT_8   1.0f,  1.0f,  1.0f, -1.0f,     -1.0f,    -1.0f
-
 define MOT_1_MAPPING 5
 define MOT_2_MAPPING 7
 define MOT_3_MAPPING 3
