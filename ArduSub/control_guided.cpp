@@ -390,18 +390,16 @@ void Sub::guided_pos_control_run()
 
     float lateral_out, forward_out;
     translate_wpnav_rp(lateral_out, forward_out);
-    lateral_out = 0;
-    forward_out = 0;
 
     // Send to forward/lateral outputs
     motors.set_lateral(lateral_out);
     motors.set_forward(forward_out);
 
     if (timerout >= 400) {
-        printf("lateral_out = %4.4f forward_out = %4.4f \r\n", lateral_out, forward_out);
-        printf("yaw = %4.4f \r\n", get_auto_heading());
-        printf("yaw_sensor = %d \r\n", ahrs.yaw_sensor);
-        printf("yaw_float = %4.4f \r\n", ahrs.yaw);
+        // printf("lateral_out = %4.4f forward_out = %4.4f \r\n", lateral_out, forward_out);
+        // printf("yaw = %4.4f \r\n", get_auto_heading());
+        // printf("yaw_sensor = %d \r\n", ahrs.yaw_sensor);
+        // printf("yaw_float = %4.4f \r\n", ahrs.yaw);
         timerout = 0;
     }
 
@@ -411,7 +409,7 @@ void Sub::guided_pos_control_run()
     // call attitude controller
     if (auto_yaw_mode == AUTO_YAW_HOLD) {
         // roll & pitch from waypoint controller, yaw rate from pilot
-        printf("auto yaw hold \r\n");
+        // printf("auto yaw hold \r\n");
         attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(channel_roll->get_control_in(), channel_pitch->get_control_in(), target_yaw_rate);
     } else {
         // roll, pitch from waypoint controller, yaw heading from auto_heading()

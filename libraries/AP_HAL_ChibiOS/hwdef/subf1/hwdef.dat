@@ -522,11 +522,11 @@ define HAL_BARO_ALLOW_INIT_NO_BARO TRUE
 
 # define channel map
 define RC_IN_CHANNEL_PITCH 6
-define RC_IN_CHANNEL_ROLL 4
+define RC_IN_CHANNEL_ROLL 1
 define RC_IN_CHANNEL_THROTTLE 0
 define RC_IN_CHANNEL_YAW 3
 define RC_IN_CHANNEL_FORWARD 2
-define RC_IN_CHANNEL_LATERAL 1
+define RC_IN_CHANNEL_LATERAL 4
 
 # ROTATE_CUSTOM_IMU is the same as MAG, no need define
 define ROTATE_CUSTOM_IMU {tmp = y; y = x; x = tmp; z = -z; return;}

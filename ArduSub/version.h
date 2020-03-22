@@ -9,9 +9,9 @@
 #define THISFIRMWARE "subf1 v0.0.5dev"
 
 // the following line is parsed by the autotest scripts
-#define FIRMWARE_VERSION 0,0,5,FIRMWARE_VERSION_TYPE_DEV
+#define FIRMWARE_VERSION 0,0,6,FIRMWARE_VERSION_TYPE_DEV
 
 #define FW_MAJOR 0
 #define FW_MINOR 0
-#define FW_PATCH 5
+#define FW_PATCH 6
 #define FW_TYPE FIRMWARE_VERSION_TYPE_DEV
