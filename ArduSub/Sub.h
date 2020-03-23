@@ -495,11 +495,8 @@ private:
     bool acro_init(void);
     void acro_run();
     void get_pilot_desired_angle_rates(int16_t roll_in, int16_t pitch_in, int16_t yaw_in, float &roll_out, float &pitch_out, float &yaw_out);
-    void get_alt_hold_pilot_desired_rate_lean_angles(float roll_rate_in, float pitch_rate_in, float &roll_out, float &pitch_out);
-    void get_alt_hold_pilot_desired_angle_rates(int16_t roll_in, int16_t pitch_in, int16_t yaw_in, float &roll_out, float &pitch_out, float &yaw_out);
     bool althold_init(void);
     void althold_run();
-    void althold_run_rate();
     bool auto_init(void);
     void auto_run();
     void auto_wp_start(const Vector3f& destination);
@@ -710,6 +707,11 @@ public:
     void thrust_decomposition_alt_hold_body(float*, float*, float*, float*, float*);
 
     void sensor_rotate(Vector3f& sensor);
+
+    void althold_run_rate();
+    void althold_run_rate_2();
+    void get_alt_hold_pilot_desired_rate_lean_angles(float roll_rate_in, float pitch_rate_in, float &roll_out, float &pitch_out);
+    void get_alt_hold_pilot_desired_angle_rates(int16_t roll_in, int16_t pitch_in, int16_t yaw_in, float &roll_out, float &pitch_out, float &yaw_out);
 };
 
 extern const AP_HAL::HAL& hal;
