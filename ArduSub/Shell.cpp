@@ -71,7 +71,8 @@ const param_name_t params[] = {
     {"aceo", "ACRO_EXPO"},
     {"actr", "ACRO_TRAINER"},
     {"battm", "BATT_MONITOR"},
-    {"battb", "BATT_BUS"}
+    {"battb", "BATT_BUS"},
+    {"aab", "ATC_ANGLE_BOOST"}
 };
 
 static int params_cnt = sizeof(params) / sizeof(params[0]);

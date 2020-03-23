@@ -792,6 +792,9 @@ void Sub::load_parameters()
     AP_Param::set_default_by_name("MOT_LTR_FACT", -1);
     AP_Param::set_default_by_name("MOT_TFP_FACT", -1);
     AP_Param::set_default_by_name("MOT_TLR_FACT", 1);
+
+    // disable angle boost
+    AP_Param::set_default_by_name("ATC_ANGLE_BOOST", 0);
 }
 
 void Sub::convert_old_parameters()
