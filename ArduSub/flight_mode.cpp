@@ -50,6 +50,10 @@ bool Sub::set_mode(control_mode_t mode, ModeReason reason)
         success = guided_init();
         break;
 
+    case RTL:
+        success = rtl_init();
+        break;
+
     case SURFACE:
         success = surface_init();
         break;
@@ -141,6 +145,10 @@ void Sub::update_flight_mode()
 
     case GUIDED:
         guided_run();
+        break;
+
+    case RTL:
+        rtl_run();
         break;
 
     case SURFACE:

@@ -533,6 +533,10 @@ private:
     void guided_limit_set(uint32_t timeout_ms, float alt_min_cm, float alt_max_cm, float horiz_max_cm);
     void guided_limit_init_time_and_pos();
     bool guided_limit_check();
+    void rtl_run();
+    bool rtl_init(bool ignore_checks = false);
+    void rtl_pos_control_start();
+    bool rtl_set_destination(const Location& dest_loc);
 
     bool poshold_init(void);
     void poshold_run();

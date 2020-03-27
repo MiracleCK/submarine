@@ -731,7 +731,7 @@ bool Sub::verify_yaw()
 bool Sub::do_guided(const AP_Mission::Mission_Command& cmd)
 {
     // only process guided waypoint if we are in guided mode
-    if (control_mode != GUIDED && !(control_mode == AUTO && auto_mode == Auto_NavGuided)) {
+    if (control_mode != GUIDED && !(control_mode == AUTO && auto_mode == Auto_NavGuided) && control_mode != RTL) {
         return false;
     }
 
@@ -739,8 +739,13 @@ bool Sub::do_guided(const AP_Mission::Mission_Command& cmd)
     switch (cmd.id) {
 
     case MAV_CMD_NAV_WAYPOINT: {
-        // set wp_nav's destination
-        return guided_set_destination(cmd.content.location);
+        if (control_mode == RTL) {
+            printf("rtl mode! \r\n");
+            return rtl_set_destination(cmd.content.location);
+        } else {
+            // set wp_nav's destination
+            return guided_set_destination(cmd.content.location);
+        }
     }
 
     case MAV_CMD_CONDITION_YAW:

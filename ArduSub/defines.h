@@ -34,16 +34,15 @@ enum control_mode_t : uint8_t {
     STABILIZE =     0,  // manual angle with manual depth/throttle
     ACRO =          1,  // manual body-frame angular rate with manual depth/throttle
     ALT_HOLD =      2,  // manual angle with automatic depth/throttle
-    // GUIDED =        2,
     AUTO =          3,  // fully automatic waypoint control using mission commands
-    GUIDED =        4,  // fully automatic fly to coordinate or fly at velocity/direction using GCS immediate commands
-    // ALT_HOLD =      4,
+    // GUIDED =        4,  // fully automatic fly to coordinate or fly at velocity/direction using GCS immediate commands
+    RTL =           4,
+    // RTL =           6,  // automatic return to launching point
+    GUIDED =        6,
     CIRCLE =        7,  // automatic circular flight with automatic throttle
     SURFACE =       9,  // automatically return to surface, pilot maintains horizontal control
     POSHOLD =      16,  // automatic position hold with manual override, with automatic throttle
-    // MANUAL =       16,
     MANUAL =       19,  // Pass-through input with no stabilization
-    // POSHOLD =      19,
     MOTOR_DETECT = 20   // Automatically detect motors orientation
 };
 
