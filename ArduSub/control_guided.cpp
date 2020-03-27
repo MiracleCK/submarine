@@ -169,6 +169,7 @@ bool Sub::guided_set_destination(const Vector3f& destination)
 // or if the fence is enabled and guided waypoint is outside the fence
 bool Sub::guided_set_destination(const Location& dest_loc)
 {
+    printf("guided_set_destination %d %d\r\n", dest_loc.lat, dest_loc.lng);
     // ensure we are in position control mode
     if (guided_mode != Guided_WP) {
         guided_pos_control_start();
@@ -328,12 +329,14 @@ void Sub::guided_run()
         reach_flag = true;
         pos_set_flag = false;
     }
-    
+#endif
     if (wp_nav.reached_wp_destination() && reach_flag == true) {
         printf("wp reach! \r\n");
         reach_flag = false;
     }
-#endif
+
+    // reached_destination
+
     // call the correct auto controller
     switch (guided_mode) {
 
