@@ -6,13 +6,13 @@ extern uint8_t pos_set_flag;
 // returns true if mode was successfully set
 bool Sub::set_mode(control_mode_t mode, ModeReason reason)
 {
-    printf("mode =%d \r\n", mode);
-    if (mode == STABILIZE) {
-        pos_get_flag = true;
-    }
-    if (mode == GUIDED) {
-        pos_set_flag = true;
-    }
+    // printf("mode =%d \r\n", mode);
+    // if (mode == STABILIZE) {
+    //     pos_get_flag = true;
+    // }
+    // if (mode == GUIDED) {
+    //     pos_set_flag = true;
+    // }
     // boolean to record if flight mode could be set
     bool success = false;
 

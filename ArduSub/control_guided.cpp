@@ -311,7 +311,7 @@ void Sub::guided_run()
     }
 #endif
 
-#if 1
+#if 0
     if (pos_set_flag == true) {
         // target_loc.lng = 1026442595;
         // target_loc.lat = 249984122;
