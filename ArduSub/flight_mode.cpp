@@ -13,6 +13,7 @@ bool Sub::set_mode(control_mode_t mode, ModeReason reason)
     // if (mode == GUIDED) {
     //     pos_set_flag = true;
     // }
+    
     // boolean to record if flight mode could be set
     bool success = false;
 
