@@ -537,6 +537,10 @@ private:
     bool rtl_init(bool ignore_checks = false);
     void rtl_pos_control_start();
     bool rtl_set_destination(const Location& dest_loc);
+    bool is_startup_mode_auto_switch = true;
+    bool is_mode_auto_switch_enabled = true;
+    bool smart_mode_auto_switch();
+    bool is_waypoint_running = false;
 
     bool poshold_init(void);
     void poshold_run();

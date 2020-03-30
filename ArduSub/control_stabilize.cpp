@@ -17,14 +17,18 @@ uint16_t stabilize_timer = 0;
 // should be called at 100hz or more
 void Sub::stabilize_run()
 {
+    if (smart_mode_auto_switch()) {
+        return;
+    }
+
     uint32_t tnow = AP_HAL::millis();
     float target_roll, target_pitch;
     float target_yaw_rate;
 
     stabilize_timer ++;
     if (stabilize_timer >= 400) {
-        printf("yaw_sensor = %d \r\n", ahrs.yaw_sensor);
-        printf("yaw_float = %4.4f \r\n", ahrs.yaw);
+        // printf("yaw_sensor = %d \r\n", ahrs.yaw_sensor);
+        // printf("yaw_float = %4.4f \r\n", ahrs.yaw);
 
         stabilize_timer = 0;
     }

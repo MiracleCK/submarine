@@ -68,6 +68,8 @@ void Sub::guided_pos_control_start()
 
     // initialise yaw
     set_auto_yaw_mode(get_default_auto_yaw_mode(false));
+    printf("guided mode! \r\n");
+    is_mode_auto_switch_enabled = false;
 }
 
 // initialise guided mode's velocity controller
@@ -192,6 +194,8 @@ bool Sub::guided_set_destination(const Location& dest_loc)
         return false;
     }
 
+    is_waypoint_running = true;
+
     // log target
     Log_Write_GuidedTarget(guided_mode, Vector3f(dest_loc.lat, dest_loc.lng, dest_loc.alt),Vector3f());
     return true;
@@ -273,7 +277,13 @@ extern bool pos_set_flag;
 void Sub::guided_run()
 {
     timerout ++;
-    // if (timerout >= 400) {
+    if (timerout >= 400) {
+        // printf("running guided! \r\n");
+        // printf("reached_destination = %d \r\n", wp_nav.reached_wp_destination());
+        timerout = 0;
+    }
+
+#if 0
     if (print_pos == true) {
         // printf("flag = %d \r\n", pos_get_flag);
         ahrs.get_location(test_dest_loc);
@@ -282,7 +292,7 @@ void Sub::guided_run()
         // timerout = 0;
         print_pos = false;
     }
-#if 0    
+    
     if (motors.armed()) {
         if (loc_index > 1) {
             loc_index = 0;
@@ -329,10 +339,35 @@ void Sub::guided_run()
         reach_flag = true;
         pos_set_flag = false;
     }
-#endif
+
     if (wp_nav.reached_wp_destination() && reach_flag == true) {
         printf("wp reach! \r\n");
         reach_flag = false;
+    }
+#endif
+
+    // static uint32_t last_ran_overtime = 0;
+
+    // if ((AP_HAL::millis() - last_ran_overtime) > 5000) {
+    //     last_ran_overtime = AP_HAL::millis();
+
+    //     if (is_waypoint_running != true) {
+    //         is_mode_auto_switch_enabled = true;
+    //     }
+    // }
+
+    if (smart_mode_auto_switch()) {
+        return;
+    }
+
+    if (wp_nav.reached_wp_destination()) {
+        if (is_waypoint_running == true) {
+            gcs().send_mission_item_reached_message(1);
+            is_waypoint_running = false;
+            is_mode_auto_switch_enabled = true;
+        }
+    } else {
+        is_mode_auto_switch_enabled = false;
     }
 
     // reached_destination

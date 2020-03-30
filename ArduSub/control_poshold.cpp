@@ -39,6 +39,10 @@ extern Location target_loc;
 // should be called at 100hz or more
 void Sub::poshold_run()
 {
+    if (smart_mode_auto_switch()) {
+        return;
+    }
+    
     if (position_ok()) {
         if (pos_get_flag == true) {
             printf("flag = %d \r\n", pos_get_flag);

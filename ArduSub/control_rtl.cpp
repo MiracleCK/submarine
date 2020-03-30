@@ -39,10 +39,6 @@ void Sub::rtl_pos_control_start()
 
 void Sub::rtl_run()
 {
-    if (wp_nav.reached_wp_destination()) {
-        printf("wp reach! \r\n");
-    }
-
     // if motors not enabled set throttle to zero and exit immediately
     if (!motors.armed()) {
         motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::GROUND_IDLE);

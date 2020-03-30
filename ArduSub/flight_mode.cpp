@@ -248,3 +248,68 @@ void Sub::notify_flight_mode(control_mode_t mode)
         break;
     }
 }
+
+// auto switch mode according to sensor healthy
+// and stop auto switch when mode set by GCS or RC
+//
+// true: auto switched
+// false: not do auto switch
+bool Sub::smart_mode_auto_switch() {
+    if (!is_mode_auto_switch_enabled) {
+        return false;
+    }
+
+    ModeReason reason = ModeReason::STARTUP;
+    bool is_success = false;
+    bool is_mode_auto = false;
+
+    if (control_mode == GUIDED || control_mode == RTL) {
+        is_mode_auto = true;
+    }
+
+    if (!is_startup_mode_auto_switch) {
+        reason = ModeReason::BAD_DEPTH;
+    }
+
+    switch (control_mode) {
+        case MANUAL: {
+            if (!sub.set_mode(POSHOLD, reason)) {
+                is_success = sub.set_mode(STABILIZE, reason);
+            } else {
+                is_success = true;
+            }
+        } break;
+
+        case STABILIZE: {
+            is_success = sub.set_mode(POSHOLD, reason);
+        } break;
+
+        case POSHOLD: {
+            if(!position_ok()) {
+                is_success = sub.set_mode(STABILIZE, reason);
+            }
+        } break;
+
+        case RTL:
+        case GUIDED: {
+            if (!position_ok()) {
+                is_success = sub.set_mode(STABILIZE, reason);
+            } else {
+                if (is_mode_auto == true) {
+                    is_success = sub.set_mode(POSHOLD, reason);
+                } else {
+                    is_success = sub.set_mode(GUIDED, reason);
+                }
+            }
+        } break;
+
+        default:
+            break;
+    }
+
+    if (is_success) {
+        is_startup_mode_auto_switch = false;
+    }
+
+    return is_success;
+}
