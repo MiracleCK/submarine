@@ -14,6 +14,14 @@ bool Sub::set_mode(control_mode_t mode, ModeReason reason)
     //     pos_set_flag = true;
     // }
     
+    // if set_mode called by MAVLink or joystick
+    // we do not do smart mode auto switch again
+    // and should handle set mode failed
+    bool is_should_exit_auto_switch = false;
+    if (reason == ModeReason::GCS_COMMAND || reason == ModeReason::RC_COMMAND) {
+        is_should_exit_auto_switch = true;
+    }
+
     // boolean to record if flight mode could be set
     bool success = false;
 
@@ -23,6 +31,9 @@ bool Sub::set_mode(control_mode_t mode, ModeReason reason)
         prev_control_mode_reason = control_mode_reason;
 
         control_mode_reason = reason;
+
+        is_mode_auto_switch_enabled = !is_should_exit_auto_switch;
+
         return true;
     }
 
@@ -104,6 +115,8 @@ bool Sub::set_mode(control_mode_t mode, ModeReason reason)
         // but it should be harmless to disable the fence temporarily in these situations as well
         fence.manual_recovery_start();
 #endif
+
+        is_mode_auto_switch_enabled = !is_should_exit_auto_switch;
     } else {
         // Log error that we failed to enter desired flight mode
         AP::logger().Write_Error(LogErrorSubsystem::FLIGHT_MODE, LogErrorCode(mode));
@@ -261,14 +274,9 @@ bool Sub::smart_mode_auto_switch() {
 
     ModeReason reason = ModeReason::STARTUP;
     bool is_success = false;
-    bool is_mode_auto = false;
-
-    if (control_mode == GUIDED || control_mode == RTL) {
-        is_mode_auto = true;
-    }
 
     if (!is_startup_mode_auto_switch) {
-        reason = ModeReason::BAD_DEPTH;
+        reason = ModeReason::SMART_MODE;
     }
 
     switch (control_mode) {
@@ -286,29 +294,18 @@ bool Sub::smart_mode_auto_switch() {
 
         case POSHOLD: {
             if(!position_ok()) {
-                is_success = sub.set_mode(STABILIZE, reason);
+                is_success = sub.set_mode(STABILIZE, ModeReason::GCS_FAILSAFE);
             }
         } break;
 
+        // RTL and GUIDED mode should be switched by GCS
         case RTL:
         case GUIDED: {
-            if (!position_ok()) {
-                is_success = sub.set_mode(STABILIZE, reason);
-            } else {
-                if (is_mode_auto == true) {
-                    is_success = sub.set_mode(POSHOLD, reason);
-                } else {
-                    is_success = sub.set_mode(GUIDED, reason);
-                }
-            }
+            is_success = sub.set_mode(MANUAL, reason);
         } break;
 
         default:
             break;
-    }
-
-    if (is_success) {
-        is_startup_mode_auto_switch = false;
     }
 
     return is_success;

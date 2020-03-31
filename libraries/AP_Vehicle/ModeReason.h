@@ -53,4 +53,7 @@ enum class ModeReason : uint8_t {
   UNAVAILABLE,
   AUTOROTATION_START,
   AUTOROTATION_BAILOUT,
+
+  GUIDED_DONE = 254,
+  SMART_MODE = 255,
 };

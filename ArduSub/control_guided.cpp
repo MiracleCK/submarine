@@ -43,6 +43,9 @@ bool Sub::guided_init(bool ignore_checks)
     set_auto_yaw_mode(get_default_auto_yaw_mode(false));
     // start in position control mode
     guided_pos_control_start();
+
+    is_waypoint_running = false;
+    
     return true;
 }
 
@@ -69,7 +72,6 @@ void Sub::guided_pos_control_start()
     // initialise yaw
     set_auto_yaw_mode(get_default_auto_yaw_mode(false));
     printf("guided mode! \r\n");
-    is_mode_auto_switch_enabled = false;
 }
 
 // initialise guided mode's velocity controller
@@ -262,7 +264,7 @@ void Sub::guided_set_angle(const Quaternion &q, float climb_rate_cms)
     guided_angle_state.climb_rate_cms = climb_rate_cms;
     guided_angle_state.update_time_ms = AP_HAL::millis();
 }
-
+bool is_reached_early = false;
 bool is_guiding = false;
 Location test_dest_loc;
 int loc_index = 0;
@@ -356,18 +358,21 @@ void Sub::guided_run()
     //     }
     // }
 
-    if (smart_mode_auto_switch()) {
-        return;
-    }
+    // todo: handle guided cannot reach
+    // todo: maybe  not need to use is_waypoint_running
+    // test find is_reached_early is always false
 
     if (wp_nav.reached_wp_destination()) {
         if (is_waypoint_running == true) {
             gcs().send_mission_item_reached_message(1);
             is_waypoint_running = false;
             is_mode_auto_switch_enabled = true;
+            printf("is_reached_early %d\r\n", is_reached_early);
+            // switch to manual then auto select a mode
+            sub.set_mode(MANUAL, ModeReason::GUIDED_DONE);
+        } else {
+            is_reached_early = true;
         }
-    } else {
-        is_mode_auto_switch_enabled = false;
     }
 
     // reached_destination

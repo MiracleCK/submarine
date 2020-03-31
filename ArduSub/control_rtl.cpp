@@ -6,10 +6,21 @@ bool Sub::rtl_init(bool ignore_checks)
     if (!position_ok() && !ignore_checks) {
         return false;
     }
+
+    // would not response to auto set home
+    if (!ahrs.home_is_set() || !ahrs.home_is_locked()) {
+        return false;
+    }
+
     // initialise yaw
     set_auto_yaw_mode(get_default_auto_yaw_mode(false));
     // start in position control mode
-    guided_pos_control_start();
+    rtl_pos_control_start();
+
+    is_waypoint_running = false;
+
+    rtl_set_destination(ahrs.get_home());
+
     return true;
 }
 
@@ -39,6 +50,17 @@ void Sub::rtl_pos_control_start()
 
 void Sub::rtl_run()
 {
+    if (wp_nav.reached_wp_destination()) {
+        if (is_waypoint_running == true) {
+            gcs().send_mission_item_reached_message(1);
+            is_waypoint_running = false;
+            is_mode_auto_switch_enabled = true;
+
+            // switch to manual then auto select a mode
+            sub.set_mode(MANUAL, ModeReason::GUIDED_DONE);
+        }
+    }
+
     // if motors not enabled set throttle to zero and exit immediately
     if (!motors.armed()) {
         motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::GROUND_IDLE);
@@ -115,6 +137,8 @@ bool Sub::rtl_set_destination(const Location& dest_loc)
         // failure is propagated to GCS with NAK
         return false;
     }
+
+    is_waypoint_running = true;
 
     // log target
     Log_Write_GuidedTarget(guided_mode, Vector3f(dest_loc.lat, dest_loc.lng, dest_loc.alt),Vector3f());
