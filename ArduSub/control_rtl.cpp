@@ -47,17 +47,31 @@ void Sub::rtl_pos_control_start()
     // initialise yaw
     set_auto_yaw_mode(get_default_auto_yaw_mode(false));
 }
-
+int test_rtl_run_cnt = 0;
+bool is_rtl_print = false;
 void Sub::rtl_run()
 {
+    is_rtl_print = false;
+    if (test_rtl_run_cnt > 1000) {
+        test_rtl_run_cnt = 0;
+        is_rtl_print = true;
+    } else {
+        test_rtl_run_cnt++;
+    }
+
     if (wp_nav.reached_wp_destination()) {
         if (is_waypoint_running == true) {
+            printf("reached RTL destination\r\n");
             gcs().send_mission_item_reached_message(1);
             is_waypoint_running = false;
             is_mode_auto_switch_enabled = true;
 
             // switch to manual then auto select a mode
             sub.set_mode(MANUAL, ModeReason::GUIDED_DONE);
+        }
+    } else if (is_waypoint_running && motors.armed()) {
+        if (is_rtl_print) {
+            printf("running to HOME\r\n");
         }
     }
 
@@ -112,10 +126,18 @@ void Sub::rtl_run()
 bool Sub::rtl_set_destination(const Location& dest_loc)
 {
     // Location ekf_position;
+    // Location dest_loc = ddest_loc;
+    // Location cur_loc;
+    // if (ahrs.get_location(cur_loc)) {
+    //     dest_loc.alt = cur_loc.alt;
+    //     printf("rtl_set_destination use cur alt\r\n");
+    // }
+
+    printf("rtl_set_destination %d %d %d\r\n", dest_loc.lat, dest_loc.lng, dest_loc.alt);
 
     // ensure we are in position control mode
     if (guided_mode != Guided_WP) {
-        guided_pos_control_start();
+        rtl_pos_control_start();
     }
 
 #if AC_FENCE == ENABLED

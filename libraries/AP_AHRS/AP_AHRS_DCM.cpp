@@ -25,7 +25,7 @@
 #include <GCS_MAVLink/GCS.h>
 #include <AP_GPS/AP_GPS.h>
 #include <AP_Baro/AP_Baro.h>
-
+#include <stdio.h>
 extern const AP_HAL::HAL& hal;
 
 // this is the speed in m/s above which we first get a yaw lock with
@@ -1077,6 +1077,7 @@ bool AP_AHRS_DCM::airspeed_estimate(float *airspeed_ret) const
 
 bool AP_AHRS_DCM::set_home(const Location &loc)
 {
+    printf("set home %d %d %d\r\n", loc.lat, loc.lng, loc.alt);
     // check location is valid
     if (loc.lat == 0 && loc.lng == 0 && loc.alt == 0) {
         return false;
@@ -1098,6 +1099,7 @@ bool AP_AHRS_DCM::set_home(const Location &loc)
     Log_Write_Home_And_Origin();
 
     // send new home and ekf origin to GCS
+    printf("send message MSG_HOME and MES_ORIGIN\r\n");
     gcs().send_message(MSG_HOME);
     gcs().send_message(MSG_ORIGIN);
 

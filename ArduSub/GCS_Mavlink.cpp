@@ -726,6 +726,7 @@ void GCS_MAVLINK_Sub::handleMessage(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_SET_HOME_POSITION: {
         mavlink_set_home_position_t packet;
         mavlink_msg_set_home_position_decode(&msg, &packet);
+        printf("handle msg MAVLINK_MSG_ID_SET_HOME_POSITION\r\n");
         if ((packet.latitude == 0) && (packet.longitude == 0) && (packet.altitude == 0)) {
             if (!sub.set_home_to_current_location(true)) {
                 // ignore this failure
