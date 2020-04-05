@@ -55,15 +55,19 @@ void AP_BattMonitor_SMBus_Maxell::timer()
     }
 
     // read cell voltages
-    for (uint8_t i = 0; i < BATTMONITOR_SMBUS_MAXELL_NUM_CELLS; i++) {
-        if (read_word(maxell_cell_ids[i], data)) {
-            _has_cell_voltages = true;
-            _state.cell_voltages.cells[i] = data;
-            _last_cell_update_ms[i] = tnow;
-        } else if ((tnow - _last_cell_update_ms[i]) > AP_BATTMONITOR_SMBUS_TIMEOUT_MICROS) {
-            _state.cell_voltages.cells[i] = UINT16_MAX;
-        }
-    }
+    // for (uint8_t i = 0; i < BATTMONITOR_SMBUS_MAXELL_NUM_CELLS; i++) {
+    //     if (read_word(maxell_cell_ids[i], data)) {
+    //         _has_cell_voltages = true;
+    //         _state.cell_voltages.cells[i] = data;
+    //         _last_cell_update_ms[i] = tnow;
+    //     } else if ((tnow - _last_cell_update_ms[i]) > AP_BATTMONITOR_SMBUS_TIMEOUT_MICROS) {
+    //         _state.cell_voltages.cells[i] = UINT16_MAX;
+    //     }
+    // }
+    // M2 use below code
+    _has_cell_voltages = true;
+    memset(_state.cell_voltages.cells, 0, sizeof(_state.cell_voltages.cells));
+    _state.cell_voltages.cells[0] = _state.voltage * 1000;
 
     // timeout after 5 seconds
     if ((tnow - _state.last_time_micros) > AP_BATTMONITOR_SMBUS_TIMEOUT_MICROS) {
