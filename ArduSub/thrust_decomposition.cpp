@@ -1,6 +1,33 @@
 
 #include "Sub.h"
 
+void Sub::thrust_decomposition_ned_rot_matrix(float* roll, float* pitch, float* forward, float* lateral, float* throttle) {
+    
+    Matrix3f ned_to_body = ahrs.get_rotation_body_to_ned().transposed();
+
+    Matrix3f yaw_to_ned;
+    float yr = ahrs.get_yaw();
+    float cy = cosf(yr);
+    float sy = sinf(yr);
+    yaw_to_ned.a.x = cy;
+    yaw_to_ned.a.y = -sy;
+    yaw_to_ned.a.z = 0;
+    yaw_to_ned.b.x = sy;
+    yaw_to_ned.b.y = cy;
+    yaw_to_ned.b.z = 0;
+    yaw_to_ned.c.x = 0;
+    yaw_to_ned.c.y = 0;
+    yaw_to_ned.c.z = 1;
+
+    Vector3f thrust = Vector3f(*forward, *lateral, -(*throttle));
+    thrust = yaw_to_ned * thrust;
+    thrust = ned_to_body * thrust;
+
+    *forward = thrust.x;
+    *lateral = thrust.y;
+    *throttle = -thrust.z;
+}
+
 void Sub::thrust_decomposition_ned(float* roll, float* pitch, float* forward, float* lateral, float* throttle) {
     // _custom_thrust_factor can be derived from
     // forward thrust, front is +
@@ -86,7 +113,7 @@ void Sub::thrust_decomposition_init(bool is_ned, control_mode_t mode) {
     if (is_ned) {
         hal.shell->printf("set decomposition to NED\r\n");
         motors.set_thrust_decomposition_callback(
-            FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_ned, void, float*, float*, float*, float*, float*));
+            FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_ned_rot_matrix, void, float*, float*, float*, float*, float*));
     } else {
         hal.shell->printf("set decomposition to body\r\n");
         motors.set_thrust_decomposition_callback(
