@@ -285,6 +285,172 @@ void test_matrix_rotate(void)
     }
 }
 
+void print_matrix_3f(const char* name, Matrix3f& matrix) {
+    hal.console->printf("matrix %s\r\n", name);
+    hal.console->printf("%f %f %f\r\n", matrix.a.x, matrix.a.y, matrix.a.z);
+    hal.console->printf("%f %f %f\r\n", matrix.b.x, matrix.b.y, matrix.b.z);
+    hal.console->printf("%f %f %f\r\n", matrix.c.x, matrix.c.y, matrix.c.z);
+}
+
+void thrust_decomposition(Vector3f euler, Vector3f thrust, Vector3f& thrust_decomp) {
+    
+    Matrix3f ned_to_body;
+    ned_to_body.from_euler(euler.x, euler.y, euler.z);
+    ned_to_body = ned_to_body.transposed();
+
+    Matrix3f yaw_to_ned;
+    float cy = cosf(euler.z);
+    float sy = sinf(euler.z);
+    yaw_to_ned.a.x = cy;
+    yaw_to_ned.a.y = -sy;
+    yaw_to_ned.a.z = 0;
+    yaw_to_ned.b.x = sy;
+    yaw_to_ned.b.y = cy;
+    yaw_to_ned.b.z = 0;
+    yaw_to_ned.c.x = 0;
+    yaw_to_ned.c.y = 0;
+    yaw_to_ned.c.z = 1;
+
+    print_matrix_3f("yaw to ned", yaw_to_ned);
+    print_matrix_3f("ned to body", ned_to_body);
+
+    Vector3f tmp = Vector3f(thrust.x, thrust.y, -thrust.z);
+    thrust_decomp = yaw_to_ned * tmp;
+    hal.console->printf("thrust decomp after yaw to ned\r\n");
+    hal.console->printf("%f %f %f\r\n", thrust_decomp.x, thrust_decomp.y, thrust_decomp.z);
+    thrust_decomp = ned_to_body * thrust_decomp;
+
+    thrust_decomp.z = -thrust_decomp.z;
+}
+
+void test_matrix_decomposition_r0p0y(void) {
+    // roll 0 pitch 0 yaw ±45 ±90 ±135 ±180
+    // thurst should not decomp
+    hal.console->printf("\r\ntest roll 0° pitch 0° yaw changed\r\n");
+    
+    float yaw_array[] = {45, 90, 135, 180};
+    Vector3f thrust = Vector3f(3, 4, 5);
+    Vector3f thrust_decomp;
+
+    for (uint8_t i = 0; i < sizeof(yaw_array) / sizeof(float); i++) {
+        thrust_decomposition(Vector3f(0, 0, ToRad(yaw_array[i])), thrust, thrust_decomp);
+        hal.console->printf("yaw %f decomp, [%f %f %f]\r\n", 
+                yaw_array[i],
+                thrust_decomp.x, thrust_decomp.y, thrust_decomp.z);
+    }
+
+    for (uint8_t i = 0; i < sizeof(yaw_array) / sizeof(float); i++) {
+        thrust_decomposition(Vector3f(0, 0, ToRad(-yaw_array[i])), thrust, thrust_decomp);
+        hal.console->printf("yaw %f decomp, [%f %f %f]\r\n", 
+                -yaw_array[i],
+                thrust_decomp.x, thrust_decomp.y, thrust_decomp.z);
+    }
+}
+
+void test_matrix_decomposition_p0y0r(void) {
+    // thurst should decomp
+    // roll 45 
+    //     forward not decomp
+    //     lateral should be lateral and throttle
+    //     throttle should be lateral and throttle
+    // roll 90
+    //     forward not decomp
+    //     lateral should be -throttle
+    //     throttle should be lateral
+    // roll 180 
+    //     forward not decomp
+    //     lateral should be -lateral
+    //     throttle should be -throttle
+    hal.console->printf("\r\ntest pitch 0° yaw 0° roll changed\r\n");
+    
+    float roll_array[] = {45, 90, 135, 180};
+    Vector3f thrust = Vector3f(3, 4, 5);
+    Vector3f thrust_decomp;
+
+    for (uint8_t i = 0; i < sizeof(roll_array) / sizeof(float); i++) {
+        thrust_decomposition(Vector3f(ToRad(roll_array[i]), 0, 0), thrust, thrust_decomp);
+        hal.console->printf("roll %f decomp, [%f %f %f]\r\n", 
+                roll_array[i],
+                thrust_decomp.x, thrust_decomp.y, thrust_decomp.z);
+    }
+
+    for (uint8_t i = 0; i < sizeof(roll_array) / sizeof(float); i++) {
+        thrust_decomposition(Vector3f(ToRad(-roll_array[i]), 0, 0), thrust, thrust_decomp);
+        hal.console->printf("roll %f decomp, [%f %f %f]\r\n", 
+                -roll_array[i],
+                thrust_decomp.x, thrust_decomp.y, thrust_decomp.z);
+    }
+}
+
+void test_matrix_decomposition_r0y0p(void) {
+    // thurst should decomp
+    // pitch 45 
+    //     forward should be forward and throttle
+    //     lateral not decomp
+    //     throttle should be forward and throttle
+    // roll 90
+    //     forward should be throttle
+    //     lateral not decomp
+    //     throttle should be -forward
+    // roll 180 
+    //     forward should be -forward
+    //     lateral not decomp
+    //     throttle should be -throttle
+    hal.console->printf("\r\ntest pitch 0° yaw 0° roll changed\r\n");
+    
+    float pitch_array[] = {45, 90, 135, 180};
+    Vector3f thrust = Vector3f(3, 4, 5);
+    Vector3f thrust_decomp;
+
+    for (uint8_t i = 0; i < sizeof(pitch_array) / sizeof(float); i++) {
+        thrust_decomposition(Vector3f(0, ToRad(pitch_array[i]), 0), thrust, thrust_decomp);
+        hal.console->printf("pitch %f decomp, [%f %f %f]\r\n", 
+                pitch_array[i],
+                thrust_decomp.x, thrust_decomp.y, thrust_decomp.z);
+    }
+
+    for (uint8_t i = 0; i < sizeof(pitch_array) / sizeof(float); i++) {
+        thrust_decomposition(Vector3f(0, ToRad(pitch_array[i]), 0), thrust, thrust_decomp);
+        hal.console->printf("pitch %f decomp, [%f %f %f]\r\n", 
+                -pitch_array[i],
+                thrust_decomp.x, thrust_decomp.y, thrust_decomp.z);
+    }
+}
+
+void test_matrix_decomposition_real(void) {
+    Vector3f thrust_decomp;
+    thrust_decomposition(Vector3f(ToRad(153.2109), ToRad(88.8527), ToRad(-44.1103)),
+        Vector3f(3, 4, 5), thrust_decomp);
+    hal.console->printf("real angle decomp, [%f %f %f]\r\n", 
+                thrust_decomp.x, thrust_decomp.y, thrust_decomp.z);
+
+    thrust_decomposition(Vector3f(ToRad(3.3677), ToRad(88.8527), ToRad(166.1753)),
+        Vector3f(3, 4, 5), thrust_decomp);
+    hal.console->printf("old roll/yaw decomp, [%f %f %f]\r\n", 
+                thrust_decomp.x, thrust_decomp.y, thrust_decomp.z);
+
+    thrust_decomposition(Vector3f(ToRad(153.2109), ToRad(90), ToRad(-44.1103)),
+        Vector3f(3, 4, 5), thrust_decomp);
+    hal.console->printf("real roll/yaw pitch90 decomp, [%f %f %f]\r\n", 
+                thrust_decomp.x, thrust_decomp.y, thrust_decomp.z);
+
+    thrust_decomposition(Vector3f(ToRad(3.3677), ToRad(90), ToRad(166.1753)),
+        Vector3f(3, 4, 5), thrust_decomp);
+    hal.console->printf("old roll/yaw pitch90 decomp, [%f %f %f]\r\n", 
+                thrust_decomp.x, thrust_decomp.y, thrust_decomp.z);
+}
+
+void test_matrix_decomposition(void) {
+    hal.console->printf("matrix decomposition tests\r\n");
+
+    // test_matrix_decomposition_r0p0y();
+    // test_matrix_decomposition_p0y0r();
+    // test_matrix_decomposition_r0y0p();
+    test_matrix_decomposition_real();
+    
+    hal.console->printf("matrix decomposition test done \r\n");
+}
+
 /*
  *  euler angle tests
  */
@@ -299,6 +465,7 @@ void setup(void)
     test_quaternion_eulers();
     test_matrix_eulers();
     test_matrix_rotate();
+    test_matrix_decomposition();
 }
 
 void loop(void) {}
