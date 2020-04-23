@@ -146,6 +146,8 @@ void Sub::init_ardupilot()
     USERHOOK_INIT
 #endif
 
+    // set callback first
+    barometer.set_baro_pos_correct_callback(FUNCTOR_BIND_MEMBER(&Sub::baro_pos_correct, void, float*));
     // Init baro and determine if we have external (depth) pressure sensor
     barometer.set_log_baro_bit(MASK_LOG_IMU);
     barometer.calibrate(false);
@@ -248,6 +250,18 @@ void Sub::sensor_rotate(Vector3f& sensor) {
     sensor.x = -sensor.z;
     sensor.z = -sensor.y;
     sensor.y = tmpx;
+}
+
+void Sub::baro_pos_correct(float* altitude) {
+    Matrix3f body_to_ned = ahrs.get_rotation_body_to_ned();
+    Vector3f sensor_pos(0.02525, 0, 0.0555); // M2 baro sensor is front 25.25mm, below 55.55mm
+
+    sensor_pos = body_to_ned * sensor_pos;
+    
+    *altitude += sensor_pos.z;
+    if (*altitude > 0) {
+        *altitude = 0.0f;
+    }
 }
 
 // calibrate gyros - returns true if successfully calibrated
