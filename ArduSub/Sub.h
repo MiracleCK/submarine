@@ -705,6 +705,7 @@ public:
     void thrust_decomposition_clear();
     void thrust_decomposition_ned(float*, float*, float*, float*, float*);
     void thrust_decomposition_ned_rot_matrix(float*, float*, float*, float*, float*);
+    void thrust_decomposition_body_rot_matrix(float*, float*, float*, float*, float*);
     void thrust_decomposition_alt_hold_body(float*, float*, float*, float*, float*);
 
     void sensor_rotate(Vector3f& sensor);
@@ -713,6 +714,8 @@ public:
     void althold_run_rate_2();
     void get_alt_hold_pilot_desired_rate_lean_angles(float roll_rate_in, float pitch_rate_in, float &roll_out, float &pitch_out);
     void get_alt_hold_pilot_desired_angle_rates(int16_t roll_in, int16_t pitch_in, int16_t yaw_in, float &roll_out, float &pitch_out, float &yaw_out);
+private:
+    void thrust_decomposition_att_error(Vector3f euler, Vector3f thrusts, Vector3f& thrust_decomp);
 };
 
 extern const AP_HAL::HAL& hal;

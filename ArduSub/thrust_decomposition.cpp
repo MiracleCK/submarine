@@ -1,24 +1,7 @@
 
 #include "Sub.h"
 
-void Sub::thrust_decomposition_ned_rot_matrix(float* roll, float* pitch, float* forward, float* lateral, float* throttle) {
-    float roll_rad = ahrs.get_roll(), pitch_rad = ahrs.get_pitch(), yaw_rad = ahrs.get_yaw();
-
-    Vector3f euler(roll_rad, pitch_rad, yaw_rad);
-    Vector3f thrusts(*forward, *lateral, -(*throttle));
-    Vector3f decomped;
-
-    thrust_decomposition_att_error(euler, thrusts, decomped);
-
-    *forward = decomped.x;
-    *lateral = decomped.y;
-    *throttle = -decomped.z;
-
-    *roll = roll_rad;
-    *pitch = pitch_rad;
-}
-
-void thrust_decomposition_att_error(Vector3f euler, Vector3f thrusts, Vector3f& thrust_decomp) {
+void Sub::thrust_decomposition_att_error(Vector3f euler, Vector3f thrusts, Vector3f& thrust_decomp) {
     // NED quat is [1 0 0 0] and matrix is
     //  -     -
     // | 1 0 0 |
@@ -82,6 +65,40 @@ void thrust_decomposition_att_error(Vector3f euler, Vector3f thrusts, Vector3f& 
     vec_quat.rotation_matrix(ned_to_body);
     
     thrust_decomp = ned_to_body * Vector3f(thrusts.x, thrusts.y, thrusts.z);
+}
+
+void Sub::thrust_decomposition_ned_rot_matrix(float* roll, float* pitch, float* forward, float* lateral, float* throttle) {
+    float roll_rad = ahrs.get_roll(), pitch_rad = ahrs.get_pitch(), yaw_rad = ahrs.get_yaw();
+
+    Vector3f euler(roll_rad, pitch_rad, yaw_rad);
+    Vector3f thrusts(*forward, *lateral, -(*throttle));
+    Vector3f decomped;
+
+    thrust_decomposition_att_error(euler, thrusts, decomped);
+
+    *forward = decomped.x;
+    *lateral = decomped.y;
+    *throttle = -decomped.z;
+
+    *roll = roll_rad;
+    *pitch = pitch_rad;
+}
+
+void Sub::thrust_decomposition_body_rot_matrix(float* roll, float* pitch, float* forward, float* lateral, float* throttle) {
+    float roll_rad = ahrs.get_roll(), pitch_rad = ahrs.get_pitch(), yaw_rad = ahrs.get_yaw();
+
+    Vector3f euler(roll_rad, pitch_rad, yaw_rad);
+    Vector3f thrusts(0, 0, -(*throttle));
+    Vector3f decomped;
+
+    thrust_decomposition_att_error(euler, thrusts, decomped);
+
+    *forward += decomped.x;
+    *lateral += decomped.y;
+    *throttle = -decomped.z;
+
+    *roll = roll_rad;
+    *pitch = pitch_rad;
 }
 
 void Sub::thrust_decomposition_ned(float* roll, float* pitch, float* forward, float* lateral, float* throttle) {
@@ -173,7 +190,7 @@ void Sub::thrust_decomposition_init(bool is_ned, control_mode_t mode) {
     } else {
         hal.shell->printf("set decomposition to body\r\n");
         motors.set_thrust_decomposition_callback(
-            FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_alt_hold_body, void, float*, float*, float*, float*, float*));
+            FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_body_rot_matrix, void, float*, float*, float*, float*, float*));
     }
 }
 
