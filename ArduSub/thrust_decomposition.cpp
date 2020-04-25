@@ -2,30 +2,86 @@
 #include "Sub.h"
 
 void Sub::thrust_decomposition_ned_rot_matrix(float* roll, float* pitch, float* forward, float* lateral, float* throttle) {
+    float roll_rad = ahrs.get_roll(), pitch_rad = ahrs.get_pitch(), yaw_rad = ahrs.get_yaw();
+
+    Vector3f euler(roll_rad, pitch_rad, yaw_rad);
+    Vector3f thrusts(*forward, *lateral, -(*throttle));
+    Vector3f decomped;
+
+    thrust_decomposition_att_error(euler, thrusts, decomped);
+
+    *forward = decomped.x;
+    *lateral = decomped.y;
+    *throttle = -decomped.z;
+
+    *roll = roll_rad;
+    *pitch = pitch_rad;
+}
+
+void thrust_decomposition_att_error(Vector3f euler, Vector3f thrusts, Vector3f& thrust_decomp) {
+    // NED quat is [1 0 0 0] and matrix is
+    //  -     -
+    // | 1 0 0 |
+    // | 0 1 0 |
+    // | 0 0 1 |
+    //  -     -
+    // Would align N axis Z to B axis Z
+    // so transpose matrix and select column 3, Vector3f(0.0f, 0.0f, 1.0f)
+    Vector3f att_from_vec(0.0f, 0.0f, 1.0f);
+
+    Quaternion att_to_quat;
+    att_to_quat.from_euler(euler.x, euler.y, euler.z);
+    att_to_quat.normalize();
+
+    Matrix3f att_to_rot_matrix;
+    att_to_quat.rotation_matrix(att_to_rot_matrix);
+    att_to_rot_matrix.transpose();
+
+    Vector3f att_to_vec = att_to_rot_matrix * Vector3f(0.0f, 0.0f, 1.0f);
+
+    Vector3f vec_cross = att_from_vec % att_to_vec;
+    float vec_dot = constrain_float(att_from_vec * att_to_vec, -1.0f, 1.0f);
+
+    Quaternion vec_quat;
+
+    float eps = 1e-5f;
+    if (vec_cross.length() < eps && vec_dot < 0) {
+        vec_cross.x = fabsf(att_from_vec.x);
+        vec_cross.y = fabsf(att_from_vec.y);
+        vec_cross.z = fabsf(att_from_vec.z);
+        if (vec_cross.x < vec_cross.y) {
+            if (vec_cross.x < vec_cross.z) {
+                vec_cross.x = 1;
+                vec_cross.y = vec_cross.z = 0;
+            } else {
+                vec_cross.x = vec_cross.y = 0;
+                vec_cross.z = 1;
+            }
+        } else {
+            if (vec_cross.y < vec_cross.z) {
+                vec_cross.x = vec_cross.z = 0;
+                vec_cross.y = 1;
+            } else {
+                vec_cross.x = vec_cross.y = 0;
+                vec_cross.z = 1;
+            }
+        }
+        
+        vec_quat.q1 = 0;
+        vec_cross = att_from_vec % vec_cross;
+    } else {
+        vec_quat.q1 = vec_dot + sqrtf(att_from_vec.length_squared() * att_to_vec.length_squared());
+    }
     
-    Matrix3f ned_to_body = ahrs.get_rotation_body_to_ned().transposed();
-
-    Matrix3f yaw_to_ned;
-    float yr = ahrs.get_yaw();
-    float cy = cosf(yr);
-    float sy = sinf(yr);
-    yaw_to_ned.a.x = cy;
-    yaw_to_ned.a.y = -sy;
-    yaw_to_ned.a.z = 0;
-    yaw_to_ned.b.x = sy;
-    yaw_to_ned.b.y = cy;
-    yaw_to_ned.b.z = 0;
-    yaw_to_ned.c.x = 0;
-    yaw_to_ned.c.y = 0;
-    yaw_to_ned.c.z = 1;
-
-    Vector3f thrust = Vector3f(*forward, *lateral, -(*throttle));
-    thrust = yaw_to_ned * thrust;
-    thrust = ned_to_body * thrust;
-
-    *forward = thrust.x;
-    *lateral = thrust.y;
-    *throttle = -thrust.z;
+    vec_quat.q2 = vec_cross.x;
+    vec_quat.q3 = vec_cross.y;
+    vec_quat.q4 = vec_cross.z;
+    vec_quat.normalize();
+    
+    Matrix3f ned_to_body;
+    vec_quat.rotation_matrix(ned_to_body);
+    
+    thrust_decomp = ned_to_body * Vector3f(thrusts.x, thrusts.y, thrusts.z);
 }
 
 void Sub::thrust_decomposition_ned(float* roll, float* pitch, float* forward, float* lateral, float* throttle) {
