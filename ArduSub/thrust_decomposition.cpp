@@ -197,3 +197,11 @@ void Sub::thrust_decomposition_init(bool is_ned, control_mode_t mode) {
 void Sub::thrust_decomposition_clear() {
     motors.set_thrust_decomposition_callback(nullptr);
 }
+
+bool Sub::is_need_relax_z_controller(float forward, float lateral, float throttle) {
+    Matrix3f body_to_ned = ahrs.get_rotation_body_to_ned();
+    Vector3f thrusts(forward, lateral, -(throttle - 0.5f) * 2); // thorttle is 0 ~ 1 and body axis down is +
+    Vector3f thrusts_ned = body_to_ned * thrusts;
+
+    return fabsf(thrusts_ned.z) > 0.05f;
+}

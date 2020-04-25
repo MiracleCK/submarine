@@ -344,18 +344,22 @@ void Sub::althold_run_rate_2()
     
     attitude_control.input_rate_bf_roll_pitch_yaw(target_roll_rate, target_pitch_rate, target_yaw_rate);
 
+    float forward = channel_forward->norm_input();
+    float lateral = channel_lateral->norm_input();
+    float throttle = channel_throttle->norm_input();
+
     // Hold actual position until zero derivative is detected
     static bool engageStopZ = true;
     // Get last user velocity direction to check for zero derivative points
     static bool lastVelocityZWasNegative = false;
-    if (fabsf(channel_throttle->norm_input()-0.5f) > 0.05f ||                    // Throttle input above 5%
-        (!is_ned_pilot && fabsf(channel_forward->norm_input()-0.5f) > 0.05f)) {  // Forward input above 5%
+    if (fabsf(throttle - 0.5f) > 0.05f ||                    // Throttle input above 5%
+        (!is_ned_pilot && is_need_relax_z_controller(forward, lateral, throttle))) {  // Forward input above 5%
         if (!is_ned_pilot) {
             thrust_decomposition_clear(); // all should linear thrust should be body frame
         }
 
         // output pilot's throttle
-        attitude_control.set_throttle_out(channel_throttle->norm_input(), false, g.throttle_filt);
+        attitude_control.set_throttle_out(throttle, false, g.throttle_filt);
         // reset z targets to current values
         pos_control.relax_alt_hold_controllers();
         engageStopZ = true;
@@ -379,6 +383,6 @@ void Sub::althold_run_rate_2()
         pos_control.update_z_controller();
     }
 
-    motors.set_forward(channel_forward->norm_input());
-    motors.set_lateral(channel_lateral->norm_input());
+    motors.set_forward(forward);
+    motors.set_lateral(lateral);
 }

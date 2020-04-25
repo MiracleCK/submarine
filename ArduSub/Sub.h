@@ -708,6 +708,8 @@ public:
     void thrust_decomposition_body_rot_matrix(float*, float*, float*, float*, float*);
     void thrust_decomposition_alt_hold_body(float*, float*, float*, float*, float*);
 
+    bool is_need_relax_z_controller(float forward, float lateral, float throttle);
+
     void sensor_rotate(Vector3f& sensor);
 
     void althold_run_rate();
