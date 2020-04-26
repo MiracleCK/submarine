@@ -186,6 +186,11 @@ public:
     HAL_Semaphore &get_semaphore(void) {
         return _rsem;
     }
+
+    FUNCTOR_TYPEDEF(baro_pos_correct_fn_t, void, float*);
+    void set_baro_pos_correct_callback(baro_pos_correct_fn_t callback) {
+        _baro_pos_correct_callback = callback;
+    }
     
 private:
     // singleton
@@ -257,6 +262,8 @@ private:
 
     // semaphore for API access from threads
     HAL_Semaphore_Recursive            _rsem;
+
+    baro_pos_correct_fn_t _baro_pos_correct_callback;
 };
 
 namespace AP {
