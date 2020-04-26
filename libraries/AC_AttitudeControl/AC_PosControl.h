@@ -302,6 +302,8 @@ public:
 
     void write_log();
 
+    void set_log_z(bool log_start) {control_log_start = log_start;}
+
     // provide feedback on whether arming would be a good idea right now:
     bool pre_arm_checks(const char *param_prefix,
                         char *failure_msg,
@@ -433,4 +435,6 @@ protected:
 
     // high vibration handling
     bool        _vibe_comp_enabled;     // true when high vibration compensation is on
+
+    bool control_log_start = false;
 };

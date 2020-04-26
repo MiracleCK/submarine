@@ -68,6 +68,8 @@ public:
         _setup_custom_motors_callback = callback;
     }
 
+    void set_motors_log(bool log_start) {motor_log_start = log_start;}
+
 protected:
     // return current_limit as a number from 0 ~ 1 in the range throttle_min to throttle_max
     float               get_current_limit_max_throttle() override;
@@ -97,6 +99,8 @@ protected:
     AP_Int8                   _custom_thrust_factor[4];
     AP_Float                  _custom_forward_thrust;
     AP_Float                  _custom_negative_thrust_ratio;
+
+    bool motor_log_start = false;
 
     thrust_decomposition_fn_t _thrust_decomposition_callback;
     setup_custom_motors_fn_t  _setup_custom_motors_callback;

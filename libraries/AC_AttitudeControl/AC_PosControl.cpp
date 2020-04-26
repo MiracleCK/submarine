@@ -616,6 +616,22 @@ void AC_PosControl::run_z_controller()
     }
     thr_out += _motors.get_throttle_hover();
 
+    if (control_log_start) {
+        AP::logger().Write("CTLZ", "TimeUS,POS_T,POS_A,POS_E,VEL_T,VEL_A,VEL_E,ACC_T,ACC_A,THR_OUT", "Qfffffffff", 
+                            AP_HAL::micros64(), 
+                             _pos_target.z,
+                             curr_alt,
+                             _pos_error.z,
+                             _vel_target.z,
+                             curr_vel.z,
+                             _vel_error.z,
+                             _accel_target.z,
+                             z_accel_meas,
+                             thr_out);
+
+        control_log_start = false;
+    }
+
     // send throttle to attitude controller with angle boost
     _attitude_control.set_throttle_out(thr_out, true, POSCONTROL_THROTTLE_CUTOFF_FREQ);
 

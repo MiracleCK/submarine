@@ -214,6 +214,9 @@ void Sub::ten_hz_logging_loop()
     if (should_log(MASK_LOG_CTUN)) {
         attitude_control.control_monitor_log();
     }
+
+    pos_control.set_log_z(true);
+    motors.set_motors_log(true);
 }
 
 // twentyfive_hz_logging_loop

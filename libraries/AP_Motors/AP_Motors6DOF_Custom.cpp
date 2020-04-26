@@ -22,6 +22,8 @@
 
 #include <AP_BattMonitor/AP_BattMonitor.h>
 #include <AP_HAL/AP_HAL.h>
+#include <AP_Logger/AP_Logger.h>
+
 #include "AP_Motors6DOF.h"
 
 extern const AP_HAL::HAL& hal;
@@ -78,6 +80,19 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
             printf("thrust decomposition: degree roll %4.2f pitch %4.2f \r\n", ToDeg(roll), ToDeg(pitch));
             printf("thrust decomposition: forward %2.4f lateral %2.4f throttle %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
         }
+    }
+
+    if (motor_log_start) {
+        AP::logger().Write("MDOF", "TimeUS,Roll,Pitch,Yaw,Forward,Lateral,Throttle", "Qffffff", 
+                            AP_HAL::micros64(), 
+                            (double)roll_thrust, 
+                            (double)pitch_thrust,
+                            (double)yaw_thrust, 
+                            (double)forward_thrust,
+                            (double)lateral_thrust,
+                            (double)throttle_thrust);
+
+        motor_log_start = false;
     }
 
     float rpy_out[AP_MOTORS_MAX_NUM_MOTORS]; // buffer so we don't have to multiply coefficients multiple times.
