@@ -704,8 +704,8 @@ public:
     void thrust_decomposition_init(bool, control_mode_t);
     void thrust_decomposition_clear();
     void thrust_decomposition_ned(float*, float*, float*, float*, float*);
-    void thrust_decomposition_ned_rot_matrix(float*, float*, float*, float*, float*);
-    void thrust_decomposition_body_rot_matrix(float*, float*, float*, float*, float*);
+    void thrust_decomposition_ned_rot_matrix(float*, float*, float*, float*, float*, bool);
+    void thrust_decomposition_body_rot_matrix(float*, float*, float*, float*, float*, bool);
     void thrust_decomposition_alt_hold_body(float*, float*, float*, float*, float*);
 
     bool is_need_relax_z_controller(float forward, float lateral, float throttle);
@@ -717,7 +717,7 @@ public:
     void get_alt_hold_pilot_desired_rate_lean_angles(float roll_rate_in, float pitch_rate_in, float &roll_out, float &pitch_out);
     void get_alt_hold_pilot_desired_angle_rates(int16_t roll_in, int16_t pitch_in, int16_t yaw_in, float &roll_out, float &pitch_out, float &yaw_out);
 private:
-    void thrust_decomposition_att_error(Vector3f euler, Vector3f thrusts, Vector3f& thrust_decomp);
+    void thrust_decomposition_att_error(Matrix3f body_to_ned, Vector3f thrusts, Vector3f& thrust_decomp);
     void baro_pos_correct(float *altitude);
 };
 
