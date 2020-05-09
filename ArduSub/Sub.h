@@ -696,6 +696,7 @@ public:
 
     // custom
     bool is_request_reset_rp = false; // request to reset ROLL and PITCH angle to 0
+    bool is_reseting_rp = false;
     bool is_ned_pilot = true;
     bool is_last_ned_pilot = !is_ned_pilot;
     bool is_ned_pilot_cleared = false;

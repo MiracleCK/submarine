@@ -341,8 +341,23 @@ void Sub::althold_run_rate_2()
     get_alt_hold_pilot_desired_angle_rates(
         channel_roll->get_control_in(), channel_pitch->get_control_in(), channel_yaw->get_control_in(), 
         target_roll_rate, target_pitch_rate, target_yaw_rate);
-    
-    attitude_control.input_rate_bf_roll_pitch_yaw(target_roll_rate, target_pitch_rate, target_yaw_rate);
+        
+    if (is_request_reset_rp) {
+        is_request_reset_rp = false;
+        is_reseting_rp = true;
+        target_pitch_rate = 0.0f;
+        target_roll_rate = 0.0f;
+    }
+
+    if (!is_zero(target_roll_rate) || !is_zero(target_pitch_rate)) {
+        is_reseting_rp = false;
+    }
+
+    if (is_reseting_rp) {
+        attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, target_yaw_rate);;
+    } else {
+        attitude_control.input_rate_bf_roll_pitch_yaw(target_roll_rate, target_pitch_rate, target_yaw_rate);
+    }
 
     float forward = channel_forward->norm_input();
     float lateral = channel_lateral->norm_input();
