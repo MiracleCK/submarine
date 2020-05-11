@@ -1,89 +1,194 @@
 
 #include "Sub.h"
 
-void Sub::thrust_decomposition_att_error(Matrix3f body_to_ned, Vector3f thrusts, Vector3f& thrust_decomp) {
-    // NED quat is [1 0 0 0] and matrix is
-    //  -     -
-    // | 1 0 0 |
-    // | 0 1 0 |
-    // | 0 0 1 |
-    //  -     -
-    // Would align N axis Z to B axis Z
-    // so transpose matrix and select column 3, Vector3f(0.0f, 0.0f, 1.0f)
-    Vector3f att_from_vec(0.0f, 0.0f, 1.0f);
-    Vector3f att_to_vec = body_to_ned.transposed() * Vector3f(0.0f, 0.0f, 1.0f);
+float calc_roll0_psi_from_rot(Matrix3f& rot, float &psi_o) {
+    // r: phi
+    // p: theta
+    // y: psi
+    //
+    // theta = M_PI_2
+    //  -                              -      -               -
+    // | 0  (srcy - crsy) (crcy + srsy) |    | 0 s(r-y) c(r-y) |
+    // | 0  (srsy + crcy) (crsy - srcy) | -> | 0 c(r-y) s(y-r) |
+    // |-1   0             0            |    |-1 0      0      |
+    //  -                              -      -               -
+    //
+    // y - r = atan2(s(y-r) - s(r-y), c(r-y) + c(r-y))
+    //
+    // theta = -M_PI_2
+    //  -                                -      -                 -
+    // | 0  (-srcy - crsy) (-crcy + srsy) |    | 0 -s(r+y) -c(r+y) |
+    // | 0  (-srsy + crcy) (-crsy - srcy) | -> | 0  c(r+y) -s(y+r) |
+    // |-1    0              0            |    |-1  0       0      |
+    //  -                                -      -                 -
+    //
+    // y + r = atan2(-s(y+r) -s(r+y), -c(r+y) - c(r+y))
 
-    Vector3f vec_cross = att_from_vec % att_to_vec;
-    float vec_dot = constrain_float(att_from_vec * att_to_vec, -1.0f, 1.0f);
+    float theta = -safe_asin(rot.c.x);
+    float psi;
+    float phi = 0.0f;
 
-    Quaternion vec_quat;
-
-    float eps = 1e-5f;
-    if (vec_cross.length() < eps && vec_dot < 0) {
-        vec_cross.x = fabsf(att_from_vec.x);
-        vec_cross.y = fabsf(att_from_vec.y);
-        vec_cross.z = fabsf(att_from_vec.z);
-        if (vec_cross.x < vec_cross.y) {
-            if (vec_cross.x < vec_cross.z) {
-                vec_cross.x = 1;
-                vec_cross.y = vec_cross.z = 0;
-            } else {
-                vec_cross.x = vec_cross.y = 0;
-                vec_cross.z = 1;
-            }
-        } else {
-            if (vec_cross.y < vec_cross.z) {
-                vec_cross.x = vec_cross.z = 0;
-                vec_cross.y = 1;
-            } else {
-                vec_cross.x = vec_cross.y = 0;
-                vec_cross.z = 1;
-            }
-        }
-        
-        vec_quat.q1 = 0;
-        vec_cross = att_from_vec % vec_cross;
+    if (fabsf(theta - (float)M_PI_2) < 1.0e-3f) {
+        psi = atan2f(rot.b.z - rot.a.y, rot.a.z + rot.b.y);
+    } else if (fabsf(theta + (float)M_PI_2) < 1.0e-3f) {
+        psi = atan2f(rot.b.z + rot.a.y, rot.a.z - rot.b.y);
     } else {
-        vec_quat.q1 = vec_dot + sqrtf(att_from_vec.length_squared() * att_to_vec.length_squared());
+        phi = atan2f(rot.c.y, rot.c.z);
+        psi = atan2f(rot.b.x, rot.a.x);
     }
-    
-    vec_quat.q2 = vec_cross.x;
-    vec_quat.q3 = vec_cross.y;
-    vec_quat.q4 = vec_cross.z;
-    vec_quat.normalize();
-    
-    Matrix3f ned_to_body;
-    vec_quat.rotation_matrix(ned_to_body);
-    
-    thrust_decomp = ned_to_body * Vector3f(thrusts.x, thrusts.y, thrusts.z);
+
+    psi_o = psi;
+
+    if (fabsf(phi - M_PI) < 1.0e-3f || fabsf(phi + M_PI) < 1.0e-3f) {
+        if (signbit(psi)) {
+            psi += M_PI;
+        } else {
+            psi -= M_PI;
+        }
+    }
+
+    return psi;
 }
 
-Vector3f Sub::thrust_decomposition_ned_rot_matrix(Vector3f& euler_rad, Vector3f thrusts) {
+void test_roll0_psi() {
+    float psi_opts[] = {0, 45, 90, 135, 180, -180, -135, -90, -45};
+    float theta_opts[] = {0, 45, 90, 135, 180, -180, -135, -90, -45};
+    float psi, psi_o;
+    Matrix3f rot;
+    for (int i = 0; i < (int)(sizeof(psi_opts)/sizeof(float)); i++) {
+        for (int j = 0; j < (int)(sizeof(theta_opts)/sizeof(float)); j++) {
+            rot.from_euler(ToRad(0), ToRad(theta_opts[j]), ToRad(psi_opts[i]));
+            psi = calc_roll0_psi_from_rot(rot, psi_o);
+            if (fabsf(psi - ToRad(psi_opts[i])) > 1.0e-3f) {
+                printf("\r\ntest failed theta %f psi %f, calc psi_o %f psi %f\r\n", theta_opts[j], psi_opts[i], ToDeg(psi_o), ToDeg(psi));
+                printf("rot a %f %f %f\r\n", rot.a.x, rot.a.y, rot.a.z);
+                printf("rot b %f %f %f\r\n", rot.b.x, rot.b.y, rot.b.z);
+                printf("rot c %f %f %f\r\n", rot.c.x, rot.c.y, rot.c.z);
+            }
+        }
+    }
+}
 
+Vector3f thrust_decomp_ned_roll0(Matrix3f &rot, Vector3f thrusts) {
+    // roll always zero
+    // so wen need only do decomp at forward and throttle DOF
+    // and b -> n rot can be simplified as
+    //  -                                    -      -              -
+    // | cpcy (srspcy - crsy) (crspcy + srsy) |    | cpcy -sy  spcy |
+    // | cpsy (srspsy + crcy) (crspsy - srcy) | -> | cpsy  cy  spsy |
+    // |-sp    srcp            crcp           |    |-sp    0   cp   |
+    //  -                                    -      -              -
+    // so we can got sy cy directly
+    // float psi = calc_roll0_psi_from_rot(rot, psi_o);
+    // Matrix3f yaw_rot(Vector3f(cosf(psi), -sinf(psi), 0), Vector3f(sinf(psi), cosf(psi), 0), Vector3f(0,0,1));
+    Matrix3f yaw_rot(Vector3f(rot.b.y, rot.a.y, 0), Vector3f(-rot.a.y, rot.b.y, 0), Vector3f(0,0,1));
+    
+    thrusts.z = -thrusts.z;
+    Vector3f decomoped = rot.transposed() * yaw_rot * thrusts;
+    decomoped.z = -decomoped.z;
+
+    return decomoped;
+}
+
+void test_thrusts_decomp_roll0(Vector3f thrust, float theta_opts[], float psi_opts[], Vector3f decomped_opts[]) {
+    Vector3f decomped;
+    Matrix3f rot;
+    bool is_test_decomp_success;
+
+    // forward
+    is_test_decomp_success = true;
+    // for (int i = 0; i < (int)(sizeof(psi_opts)/sizeof(float)); i++) {
+    //     for (int j = 0; j < (int)(sizeof(theta_opts)/sizeof(float)); j++) {
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+            rot.from_euler(ToRad(0), ToRad(theta_opts[j]), ToRad(psi_opts[i]));
+            decomped = thrust_decomp_ned_roll0(rot, thrust);
+            if (fabsf(decomped_opts[j].x - decomped.x) > 1.0e-3f ||
+                fabsf(decomped_opts[j].y - decomped.y) > 1.0e-3f ||
+                fabsf(decomped_opts[j].z - decomped.z) > 1.0e-3f) {
+                printf("failed: theta %f psi %f [%f %f %f] -> [%f %f %f]\r\n",
+                    theta_opts[j], psi_opts[i],
+                    thrust.x, thrust.y, thrust.z,
+                    decomped.x, decomped.y, decomped.z);
+                is_test_decomp_success = false;
+            }
+        }
+    }
+    if (is_test_decomp_success) {
+        printf("success\r\n");
+    }
+}
+void test_decomp_roll0() {
+    float psi_opts[] = {0, 45, 90, 135, 180, -180, -135, -90, -45};
+    float theta_opts[] = {0, 45, 90, 135, 180, -180, -135, -90, -45};
+    Vector3f forward_decomp_thrusts(1.0f, 0.0f, 0.0f);
+    Vector3f forward_decomped_opts[] = { // according to theta
+        Vector3f(1.0f, 0.0f, 0.0f), // 0
+        Vector3f(0.707107f, 0.0f, -0.707107f), // 45
+        Vector3f(0.0f, 0.0f, -1.0f), // 90
+        Vector3f(-0.707107f, 0.0f, -0.707107f), // 135
+        Vector3f(-1.0f, 0.0f, 0.0f), // 180
+        Vector3f(-1.0f, 0.0f, 0.0f), // -180
+        Vector3f(-0.707107f, 0.0f, 0.707107f), // -135
+        Vector3f(0.0f, 0.0f, 1.0f), // -90
+        Vector3f(0.707107f, 0.0f, 0.707107f), // -45
+    };
+    Vector3f lateral_decomp_thrusts(0.0f, 1.0f, 0.0f);
+    Vector3f lateral_decomped_opts[] = {
+        Vector3f(0.0f, 1.0f, 0.0f), // 0
+        Vector3f(0.0f, 1.0f, 0.0f), // 45
+        Vector3f(0.0f, 1.0f, 0.0f), // 90
+        Vector3f(0.0f, 1.0f, 0.0f), // 135
+        Vector3f(0.0f, 1.0f, 0.0f), // 180
+        Vector3f(0.0f, 1.0f, 0.0f), // -180
+        Vector3f(0.0f, 1.0f, 0.0f), // -135
+        Vector3f(0.0f, 1.0f, 0.0f), // -90
+        Vector3f(0.0f, 1.0f, 0.0f), // -45
+    };
+    Vector3f throttle_decomp_thrusts(0.0f, 0.0f, 1.0f);
+    Vector3f throttle_decomped_opts[] = {
+        Vector3f(0.0f, 0.0f, 1.0f), // 0
+        Vector3f(0.707107f, 0.0f, 0.707107f), // 45
+        Vector3f(1.0f, 0.0f, 0.0f), // 90
+        Vector3f(0.707107f, 0.0f, -0.707107f), // 135
+        Vector3f(0.0f, 0.0f, -1.0f), // 180
+        Vector3f(0.0f, 0.0f, -1.0f), // -180
+        Vector3f(-0.707107f, 0.0f, -0.707107f), // -135
+        Vector3f(-1.0f, 0.0f, 0.0f), // -90
+        Vector3f(-0.707107f, 0.0f, 0.707107f), // -45
+    };
+    
+    printf("\r\ntest forward thrust decomp\r\n");
+    test_thrusts_decomp_roll0(forward_decomp_thrusts, theta_opts, psi_opts, forward_decomped_opts);
+
+    printf("\r\ntest lateral thrust decomp\r\n");
+    test_thrusts_decomp_roll0(lateral_decomp_thrusts, theta_opts, psi_opts, lateral_decomped_opts);
+
+    printf("\r\ntest throttle thrust decomp\r\n");
+    test_thrusts_decomp_roll0(throttle_decomp_thrusts, theta_opts, psi_opts, throttle_decomped_opts);
+}
+
+Vector3f Sub::thrust_decomposition_ned_roll0(Vector3f& euler_rad, Vector3f thrusts) {
     euler_rad.x = ahrs.get_roll();
     euler_rad.y = ahrs.get_pitch();
     euler_rad.z = ahrs.get_yaw();
 
-    Vector3f decomped;
+    Matrix3f rot = ahrs.get_rotation_body_to_ned();
 
-    thrusts.z = -thrusts.z;
-
-    thrust_decomposition_att_error(ahrs.get_rotation_body_to_ned(), thrusts, decomped);
-
-    decomped.z = - decomped.z;
-
-    return decomped;
+    return thrust_decomp_ned_roll0(rot, thrusts);
 }
 
 Vector3f Sub::thrust_decomposition_body_rot_matrix(Vector3f& euler_rad, Vector3f thrusts) {
     euler_rad.x = ahrs.get_roll();
     euler_rad.y = ahrs.get_pitch();
     euler_rad.z = ahrs.get_yaw();
-    
-    Vector3f thrusts_decomp(0, 0, -thrusts.z);
-    Vector3f decomped;
 
-    thrust_decomposition_att_error(ahrs.get_rotation_body_to_ned(), thrusts_decomp, decomped);
+    // decomp thrust under body frame
+    // only need rot matrix b -> n
+    Matrix3f rot = ahrs.get_rotation_body_to_ned();
+
+    Vector3f thrusts_decomp(0, 0, -thrusts.z);
+    Vector3f decomped = rot.transposed() * thrusts_decomp;
 
     thrusts.x += decomped.x;
     thrusts.y += decomped.y;
@@ -117,7 +222,7 @@ void Sub::thrust_decomposition_init(bool is_ned, control_mode_t mode) {
     if (is_ned) {
         hal.shell->printf("set decomposition to NED\r\n");
         motors.set_thrust_decomposition_callback(
-            FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_ned_rot_matrix, Vector3f, Vector3f&, Vector3f));
+            FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_ned_roll0, Vector3f, Vector3f&, Vector3f));
     } else {
         hal.shell->printf("set decomposition to body\r\n");
         motors.set_thrust_decomposition_callback(

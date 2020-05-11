@@ -353,6 +353,10 @@ void Sub::althold_run_rate_2()
         is_reseting_rp = false;
     }
 
+    if (is_ned_pilot) {
+        target_roll_rate = 0.0f; // NED not allow to change roll
+    }
+
     if (is_reseting_rp) {
         attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, target_yaw_rate);;
     } else {

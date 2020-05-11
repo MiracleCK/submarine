@@ -704,7 +704,7 @@ public:
     void setup_custom_motors();
     void thrust_decomposition_init(bool, control_mode_t);
     void thrust_decomposition_clear();
-    Vector3f thrust_decomposition_ned_rot_matrix(Vector3f& euler_rad, Vector3f thrusts);
+    Vector3f thrust_decomposition_ned_roll0(Vector3f& euler_rad, Vector3f thrusts);
     Vector3f thrust_decomposition_body_rot_matrix(Vector3f& euler_rad, Vector3f thrusts);
     
     bool is_need_relax_z_controller(float forward, float lateral, float throttle);
