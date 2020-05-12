@@ -330,6 +330,8 @@ void Sub::althold_run_rate_2()
         attitude_control.set_throttle_out(0,true,g.throttle_filt);
         attitude_control.relax_attitude_controllers();
         pos_control.relax_alt_hold_controllers(motors.get_throttle_hover());
+
+        is_request_reset_rp = true; // to reset rp when arm
         return;
     }
 
