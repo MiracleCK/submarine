@@ -1,6 +1,14 @@
 
 #include "Sub.h"
 
+static float calc_roll0_psi_from_rot(Matrix3f& rot, float &psi_o);
+static Vector3f thrust_decomp_ned_roll0(Matrix3f &rot, Vector3f thrusts);
+
+static void test_roll0_psi();
+static void test_thrusts_decomp_roll0(Vector3f thrust, float theta_opts[], float psi_opts[], Vector3f decomped_opts[]);
+static void test_decomp_roll0();
+static void test_decomp_body();
+
 float calc_roll0_psi_from_rot(Matrix3f& rot, float &psi_o) {
     // r: phi
     // p: theta
