@@ -141,6 +141,7 @@ public:
 
     // Command an euler roll, pitch, and yaw rate with angular velocity feedforward and smoothing
     void input_euler_rate_roll_pitch_yaw(float euler_roll_rate_cds, float euler_pitch_rate_cds, float euler_yaw_rate_cds);
+    void input_euler_rate_roll0_pitch_yaw(float euler_pitch_rate_cds, float euler_yaw_rate_cds);
 
     // Command an angular velocity with angular velocity feedforward and smoothing
     virtual void input_rate_bf_roll_pitch_yaw(float roll_rate_bf_cds, float pitch_rate_bf_cds, float yaw_rate_bf_cds);
@@ -159,6 +160,8 @@ public:
 
     // Convert a 321-intrinsic euler angle derivative to an angular velocity vector
     void euler_rate_to_ang_vel(const Vector3f& euler_rad, const Vector3f& euler_rate_rads, Vector3f& ang_vel_rads);
+    void euler_rate_to_ang_vel_roll0(const float sin_theta, const float cos_theta,
+        const Vector3f& euler_rate_rads, Vector3f& ang_vel_rads);
 
     // Convert an angular velocity vector to a 321-intrinsic euler angle derivative
     // Returns false if the vehicle is pitched 90 degrees up or down
@@ -283,6 +286,7 @@ public:
 
     // translates body frame acceleration limits to the euler axis
     Vector3f euler_accel_limit(const Vector3f &euler_rad, const Vector3f &euler_accel);
+    Vector3f euler_accel_limit_roll0(const float sin_theta, const Vector3f &euler_accel);
 
     // thrust_heading_rotation_angles - calculates two ordered rotations to move the att_from_quat quaternion to the att_to_quat quaternion.
     // The first rotation corrects the thrust vector and the second rotation corrects the heading vector.

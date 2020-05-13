@@ -361,6 +361,8 @@ void Sub::althold_run_rate_2()
 
     if (is_reseting_rp) {
         attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, target_yaw_rate);;
+    } else if (is_ned_pilot) {
+        attitude_control.input_euler_rate_roll0_pitch_yaw(target_pitch_rate, target_yaw_rate);
     } else {
         attitude_control.input_rate_bf_roll_pitch_yaw(target_roll_rate, target_pitch_rate, target_yaw_rate);
     }
