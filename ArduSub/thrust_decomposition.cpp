@@ -168,6 +168,59 @@ void test_decomp_roll0() {
     test_thrusts_decomp_roll0(throttle_decomp_thrusts, theta_opts, psi_opts, throttle_decomped_opts);
 }
 
+void test_decomp_body() {
+    float phi_opts[] = {0, 45, 90, 135, 180, -180, -135, -90, -45};
+    float psi_opts[] = {0, 45, 90, 135, 180, -180, -135, -90, -45};
+    float theta_opts[] = {0, 45, 90, 135, 180, -180, -135, -90, -45};
+    Vector3f decomped_angle;
+    Vector3f decomped_matrix;
+    Vector3f thrusts(0.0f, 0.0f, 1.0f);
+    Vector3f decomp;
+    Matrix3f rot;
+    float phi, theta, psi;
+
+    decomp = thrusts;
+    decomp.z = -thrusts.z;
+
+    bool is_test_success = true;
+    
+    for (int i = 0; i < (int)(sizeof(phi_opts)/sizeof(float)); i++) {
+        for (int j = 0; j < (int)(sizeof(theta_opts)/sizeof(float)); j++) {
+            for (int k = 0; k < (int)(sizeof(phi_opts)/sizeof(float)); k++) {
+                phi = ToRad(phi_opts[i]);
+                theta = ToRad(theta_opts[j]);
+                psi = ToRad(psi_opts[k]);
+
+                decomped_angle.x = thrusts.x * cosf(theta) + thrusts.z * sinf(theta);
+                decomped_angle.y = thrusts.y * cosf(phi) 
+                                 - thrusts.z * sinf(phi) * cosf(theta) 
+                                 + thrusts.x * sinf(theta) * sinf(phi);
+                decomped_angle.z = thrusts.z * cosf(theta) * cosf(phi) 
+                                 - thrusts.x * sinf(theta) * cosf(phi)
+                                 + thrusts.y * sinf(phi);
+
+                rot.from_euler(phi, theta, psi);
+                decomped_matrix = rot.transposed() * decomp;
+                decomped_matrix.z = -decomped_matrix.z;
+
+                if (fabsf(decomped_angle.x - decomped_matrix.x) > 1.0e-3f ||
+                    fabsf(decomped_angle.y - decomped_matrix.y) > 1.0e-3f ||
+                    fabsf(decomped_angle.z - decomped_matrix.z) > 1.0e-3f) {
+                    printf("failed: phi %f theta %f psi %f, angle [%f %f %f] matrix [%f %f %f]\r\n",
+                        phi_opts[i], theta_opts[j], psi_opts[k],
+                        decomped_angle.x, decomped_angle.y, decomped_angle.z,
+                        decomped_matrix.x, decomped_matrix.y, decomped_matrix.z);
+                    is_test_success = false;
+                }
+            }
+        }
+    }
+
+    if (is_test_success) {
+        printf("sucess\r\n");
+    }
+}
+
 Vector3f Sub::thrust_decomposition_ned_roll0(Vector3f& euler_rad, Vector3f thrusts) {
     euler_rad.x = ahrs.get_roll();
     euler_rad.y = ahrs.get_pitch();
@@ -202,36 +255,44 @@ Vector3f Sub::thrust_decomposition_body_rot_matrix(Vector3f& euler_rad, Vector3f
 
 void Sub::thrust_decomposition_init(bool is_ned, control_mode_t mode) {
     if (mode != STABILIZE && mode != ALT_HOLD) {
-        if (!is_ned_pilot_cleared) {
-            thrust_decomposition_clear();
-            is_ned_pilot_cleared = true;
-            hal.shell->printf("decomposition cleard\r\n");
-        }
-
-        is_last_ned_pilot = is_ned;
+        thrust_decomposition_clear();
         return;
     }
 
-    if (is_last_ned_pilot == is_ned && !is_ned_pilot_cleared) {
+    if ((is_ned && pilot_axis == AXIS_NED) || (!is_ned && pilot_axis == AXIS_CLEARD)) {
         return;
     }
 
-    is_last_ned_pilot = is_ned;
-    is_ned_pilot_cleared = false;
+    thrust_decomposition_select(is_ned, mode);
+}
+
+void Sub::thrust_decomposition_select(bool is_ned, control_mode_t mode) {
+    if ((is_ned && pilot_axis == AXIS_NED) || (!is_ned && pilot_axis == AXIS_BODY)) {
+        return;
+    }
 
     if (is_ned) {
-        hal.shell->printf("set decomposition to NED\r\n");
+        printf("set decomposition to NED\r\n");
         motors.set_thrust_decomposition_callback(
             FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_ned_roll0, Vector3f, Vector3f&, Vector3f));
     } else {
-        hal.shell->printf("set decomposition to body\r\n");
+        printf("set decomposition to body\r\n");
         motors.set_thrust_decomposition_callback(
             FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_body_rot_matrix, Vector3f, Vector3f&, Vector3f));
     }
+
+    pilot_axis = is_ned ? AXIS_NED : AXIS_BODY;
 }
 
 void Sub::thrust_decomposition_clear() {
+    if (pilot_axis == AXIS_CLEARD) {
+        return;
+    }
+
     motors.set_thrust_decomposition_callback(nullptr);
+    
+    pilot_axis = AXIS_CLEARD;
+    printf("decomposition cleard\r\n");
 }
 
 bool Sub::is_need_relax_z_controller(float forward, float lateral, float throttle) {

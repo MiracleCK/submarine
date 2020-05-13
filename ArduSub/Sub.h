@@ -697,12 +697,29 @@ public:
     // custom
     bool is_request_reset_rp = false; // request to reset ROLL and PITCH angle to 0
     bool is_reseting_rp = false;
+
+    // default we use NED coordinate to execute pilot command
+    // is_ned_pilot is the current pilot coordinate
+    // when startup
+    // set coordinate to NED in class constructor
+    // set coordinate to BODY when pilot request
+    // when in BODY
+    // 1) coordinate was clear when z-axis thrust changed by pilot
+    // 2) coordinate was restored when pilot release
+    // Coordinate should alse be check when mode switch
+    // only stabilize and alt hold support NED, other mode should clear it
+    enum pilot_axis_t : uint8_t {
+        AXIS_CLEARD,
+        AXIS_NED,
+        AXIS_BODY
+    };
+
+    pilot_axis_t pilot_axis;
     bool is_ned_pilot = true;
-    bool is_last_ned_pilot = !is_ned_pilot;
-    bool is_ned_pilot_cleared = false;
 
     void setup_custom_motors();
     void thrust_decomposition_init(bool, control_mode_t);
+    void thrust_decomposition_select(bool is_ned, control_mode_t mode);
     void thrust_decomposition_clear();
     Vector3f thrust_decomposition_ned_roll0(Vector3f& euler_rad, Vector3f thrusts);
     Vector3f thrust_decomposition_body_rot_matrix(Vector3f& euler_rad, Vector3f thrusts);

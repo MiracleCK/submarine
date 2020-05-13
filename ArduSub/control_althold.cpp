@@ -355,10 +355,6 @@ void Sub::althold_run_rate_2()
         is_reseting_rp = false;
     }
 
-    if (is_ned_pilot) {
-        target_roll_rate = 0.0f; // NED not allow to change roll
-    }
-
     if (is_reseting_rp) {
         attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, target_yaw_rate);;
     } else if (is_ned_pilot) {
@@ -388,6 +384,8 @@ void Sub::althold_run_rate_2()
         engageStopZ = true;
         lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
     } else { // hold z
+
+        thrust_decomposition_select(is_ned_pilot, ALT_HOLD);
 
         if (ap.at_bottom) {
             pos_control.relax_alt_hold_controllers(); // clear velocity and position targets
