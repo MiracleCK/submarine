@@ -47,18 +47,9 @@ void Sub::rtl_pos_control_start()
     // initialise yaw
     set_auto_yaw_mode(WP_YAW_BEHAVIOR_LOOK_AT_NEXT_WP);
 }
-int test_rtl_run_cnt = 0;
-bool is_rtl_print = false;
+
 void Sub::rtl_run()
 {
-    is_rtl_print = false;
-    if (test_rtl_run_cnt > 1000) {
-        test_rtl_run_cnt = 0;
-        is_rtl_print = true;
-    } else {
-        test_rtl_run_cnt++;
-    }
-
     if (wp_nav.reached_wp_destination()) {
         if (is_waypoint_running == true) {
             printf("reached RTL destination\r\n");
@@ -70,9 +61,7 @@ void Sub::rtl_run()
             sub.set_mode(MANUAL, ModeReason::GUIDED_DONE);
         }
     } else if (is_waypoint_running && motors.armed()) {
-        if (is_rtl_print) {
-            printf("running to HOME\r\n");
-        }
+        // printf("running to HOME\r\n");
     }
 
     // if motors not enabled set throttle to zero and exit immediately
