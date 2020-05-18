@@ -215,6 +215,37 @@ void Sub::get_alt_hold_pilot_desired_angle_rates(int16_t roll_in, int16_t pitch_
     yaw_out = rate_bf_request.z;
 }
 
+bool Sub::attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int16_t yaw) {
+    static bool is_reseting = false;
+
+    // get pilot desired lean angles
+    float target_roll_rate, target_pitch_rate, target_yaw_rate;
+
+    get_alt_hold_pilot_desired_angle_rates(
+        roll, pitch, yaw, 
+        target_roll_rate, target_pitch_rate, target_yaw_rate);
+        
+    if (is_reset) {
+        is_reseting = true;
+        target_pitch_rate = 0.0f;
+        target_roll_rate = 0.0f;
+    }
+
+    if (!is_zero(target_roll_rate) || !is_zero(target_pitch_rate)) {
+        is_reseting = false;
+    }
+
+    if (is_reseting) {
+        attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, target_yaw_rate);;
+    } else if (is_ned_pilot) {
+        attitude_control.input_euler_rate_roll0_pitch_yaw(target_pitch_rate, target_yaw_rate);
+    } else {
+        attitude_control.input_rate_bf_roll_pitch_yaw(target_roll_rate, target_pitch_rate, target_yaw_rate);
+    }
+
+    return !is_zero(target_yaw_rate) || !is_zero(target_roll_rate) || !is_zero(target_pitch_rate);
+}
+
 void Sub::althold_run_rate()
 {
     uint32_t tnow = AP_HAL::millis();
@@ -337,30 +368,10 @@ void Sub::althold_run_rate_2()
 
     motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
-    // get pilot desired lean angles
-    float target_roll_rate, target_pitch_rate, target_yaw_rate;
-
-    get_alt_hold_pilot_desired_angle_rates(
-        channel_roll->get_control_in(), channel_pitch->get_control_in(), channel_yaw->get_control_in(), 
-        target_roll_rate, target_pitch_rate, target_yaw_rate);
-        
+    attitude_control_rate(is_request_reset_rp, 
+        channel_roll->get_control_in(), channel_pitch->get_control_in(), channel_yaw->get_control_in());
     if (is_request_reset_rp) {
         is_request_reset_rp = false;
-        is_reseting_rp = true;
-        target_pitch_rate = 0.0f;
-        target_roll_rate = 0.0f;
-    }
-
-    if (!is_zero(target_roll_rate) || !is_zero(target_pitch_rate)) {
-        is_reseting_rp = false;
-    }
-
-    if (is_reseting_rp) {
-        attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, target_yaw_rate);;
-    } else if (is_ned_pilot) {
-        attitude_control.input_euler_rate_roll0_pitch_yaw(target_pitch_rate, target_yaw_rate);
-    } else {
-        attitude_control.input_rate_bf_roll_pitch_yaw(target_roll_rate, target_pitch_rate, target_yaw_rate);
     }
 
     float forward = channel_forward->norm_input();

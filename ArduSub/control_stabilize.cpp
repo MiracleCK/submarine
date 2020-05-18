@@ -1,5 +1,7 @@
 #include "Sub.h"
 
+bool is_stab_use_rate = true;
+
 // stabilize_init - initialise stabilize controller
 bool Sub::stabilize_init()
 {
@@ -15,6 +17,11 @@ bool Sub::stabilize_init()
 void Sub::stabilize_run()
 {
     if (smart_mode_auto_switch()) {
+        return;
+    }
+
+    if (is_stab_use_rate) {
+        stabilize_run_rate();
         return;
     }
 
@@ -62,6 +69,36 @@ void Sub::stabilize_run()
         } else { // call attitude controller holding absolute absolute bearing
             attitude_control.input_euler_angle_roll_pitch_yaw(target_roll, target_pitch, last_pilot_heading, true);
         }
+    }
+
+    // output pilot's throttle
+    attitude_control.set_throttle_out(channel_throttle->norm_input(), false, g.throttle_filt);
+
+    //control_in is range -1000-1000
+    //radio_in is raw pwm value
+    motors.set_forward(channel_forward->norm_input());
+    motors.set_lateral(channel_lateral->norm_input());
+}
+
+void Sub::stabilize_run_rate() {
+    if (smart_mode_auto_switch()) {
+        return;
+    }
+
+    // if not armed set throttle to zero and exit immediately
+    if (!motors.armed()) {
+        motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::GROUND_IDLE);
+        attitude_control.set_throttle_out(0,true,g.throttle_filt);
+        attitude_control.relax_attitude_controllers();
+        return;
+    }
+
+    motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
+
+    attitude_control_rate(is_request_reset_rp, 
+        channel_roll->get_control_in(), channel_pitch->get_control_in(), channel_yaw->get_control_in());
+    if (is_request_reset_rp) {
+        is_request_reset_rp = false;
     }
 
     // output pilot's throttle

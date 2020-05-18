@@ -696,7 +696,6 @@ public:
 
     // custom
     bool is_request_reset_rp = false; // request to reset ROLL and PITCH angle to 0
-    bool is_reseting_rp = false;
 
     // default we use NED coordinate to execute pilot command
     // is_ned_pilot is the current pilot coordinate
@@ -727,6 +726,9 @@ public:
     bool is_need_relax_z_controller(float forward, float lateral, float throttle);
 
     void sensor_rotate(Vector3f& sensor);
+
+    void stabilize_run_rate();
+    bool attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int16_t yaw);
 
     void althold_run_rate();
     void althold_run_rate_2();
