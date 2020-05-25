@@ -221,6 +221,9 @@ void Sub::ten_hz_logging_loop()
 
 // twentyfive_hz_logging_loop
 // should be run at 25hz
+bool is_log_imu_raw = false;
+bool is_log_ekf2_vel = false;
+bool is_log_ekf3_vel = false;
 void Sub::twentyfive_hz_logging()
 {
     if (should_log(MASK_LOG_ATTITUDE_FAST)) {
@@ -238,6 +241,10 @@ void Sub::twentyfive_hz_logging()
     if (should_log(MASK_LOG_IMU) && !should_log(MASK_LOG_IMU_RAW)) {
         logger.Write_IMU();
     }
+
+    is_log_imu_raw = true;
+    is_log_ekf2_vel = true;
+    is_log_ekf3_vel = true;
 }
 
 // three_hz_loop - 3.3hz loop

@@ -15,6 +15,7 @@ extern const AP_HAL::HAL & hal;
 static void cmd_param(BaseSequentialStream *chp, int argc, char *argv[]);
 static void cmd_version(BaseSequentialStream *chp, int argc, char *argv[]);
 static void cmd_cali(BaseSequentialStream *chp, int argc, char *argv[]);
+static void cmd_log(BaseSequentialStream *chp, int argc, char *argv[]);
 static void cmd_commands(const char* name, BaseSequentialStream *chp, int argc, char *argv[]);
 static AP_HAL::Shell::ShellCommand* _shell_commands = NULL;
 
@@ -22,6 +23,7 @@ static ShellCommand chibi_shell_commands[] = {
   {"param", cmd_param},
   {"version", cmd_version},
   {"cali", cmd_cali},
+  {"log", cmd_log},
   {NULL, NULL} // this is the end of commands
 };
 
@@ -57,6 +59,10 @@ void cmd_version(BaseSequentialStream *chp, int argc, char *argv[]) {
 
 void cmd_cali(BaseSequentialStream *chp, int argc, char *argv[]) {
     cmd_commands("cali", chp, argc, argv);
+}
+
+void cmd_log(BaseSequentialStream *chp, int argc, char *argv[]) {
+    cmd_commands("log", chp, argc, argv);
 }
 
 void cmd_commands(const char* name, BaseSequentialStream *chp, int argc, char *argv[]) {

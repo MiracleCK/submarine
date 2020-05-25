@@ -795,6 +795,9 @@ void Sub::load_parameters()
 
     // disable angle boost
     AP_Param::set_default_by_name("ATC_ANGLE_BOOST", 0);
+
+    AP_Param::set_default_by_name("AHRS_EKF_TYPE", 3);
+    AP_Param::set_default_by_name("EK3_ENABLE", 1);
 }
 
 void Sub::convert_old_parameters()

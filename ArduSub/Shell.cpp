@@ -5,6 +5,7 @@
 #include <AP_Math/AP_Math.h>
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Common/AP_FWVersion.h>
+#include <AP_Logger/AP_Logger.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -72,7 +73,11 @@ const param_name_t params[] = {
     {"actr", "ACRO_TRAINER"},
     {"battm", "BATT_MONITOR"},
     {"battb", "BATT_BUS"},
-    {"aab", "ATC_ANGLE_BOOST"}
+    {"aab", "ATC_ANGLE_BOOST"},
+    {"ip1x", "INS_POS1_X"},
+    {"ip1y", "INS_POS1_Y"},
+    {"ip1z", "INS_POS1_Z"},
+    {"iec", "INS_ENABLE_COMP"}
 };
 
 static int params_cnt = sizeof(params) / sizeof(params[0]);
@@ -95,14 +100,19 @@ static int cmd_param_reset(void);
 static void cmd_param_dbg(int argc, char *argv[]);
 
 static void cmd_version(int argc, char *argv[]);
+static void cmd_log(int argc, char *argv[]);
 
 static int radian_to_degree(float value);
 static float degree_to_radian(int value);
+
+bool is_relax_z_when_rot = false;
+uint16_t wait_to_do_z_ctrl = 0; // ms
 
 AP_HAL::Shell::ShellCommand shell_commands[] = {
     {"param", cmd_param},
     {"version", cmd_version},
     {"cali", cmd_cali},
+    {"log", cmd_log},
     {NULL, NULL} // this is the end of commands
 };
 
@@ -116,7 +126,19 @@ void cmd_param(int argc, char *argv[])
         hal.shell->printf("usage: param set|show|dbg [param_short_name value]|dbg_param\r\n");
         return;
     }
-    
+
+    if (!strcmp(argv[0], "rot")) {
+        is_relax_z_when_rot = !is_relax_z_when_rot;
+        hal.shell->printf("set relax z when rot to %d\r\n", is_relax_z_when_rot);
+        return;
+    }
+
+    if (!strcmp(argv[0], "wms")) {
+        wait_to_do_z_ctrl = (uint16_t)strtod(argv[1], NULL);
+        hal.shell->printf("set wait to do z ctrl %dms\r\n", wait_to_do_z_ctrl);
+        return;
+    }
+
     if (!strcmp(argv[0], "show")) // param show
     {
         cmd_param_show(argc - 1, &argv[1]);
@@ -164,6 +186,18 @@ void cmd_version(int argc, char *argv[]) {
     AP_FWVersion ver = AP_FWVersion::get_fwverz();
 
     hal.shell->printf("%s\r\n", ver.fw_string);
+}
+
+void cmd_log(int argc, char *argv[]) {
+    if (argc < 1) { // at least should be param show
+        hal.shell->printf("usage: log eraseall\r\n");
+        return;
+    }
+
+    if (!strcmp(argv[0], "eraseall")) {
+        AP::logger().EraseAll();
+        hal.shell->printf("excute log erase all done.\r\n");
+    }
 }
 
 // param dbg motor|atti|ctrl on|[off] [print_cnt]

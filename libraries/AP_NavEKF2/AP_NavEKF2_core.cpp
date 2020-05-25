@@ -719,11 +719,13 @@ void NavEKF2_core::UpdateStrapdownEquationsNED()
  * "Recursive Attitude Estimation in the Presence of Multi-rate and Multi-delay Vector Measurements"
  * A Khosravian, J Trumpf, R Mahony, T Hamel, Australian National University
 */
+extern bool is_log_ekf2_vel;
 void NavEKF2_core::calcOutputStates()
 {
     // apply corrections to the IMU data
     Vector3f delAngNewCorrected = imuDataNew.delAng;
     Vector3f delVelNewCorrected = imuDataNew.delVel;
+
     correctDeltaAngle(delAngNewCorrected, imuDataNew.delAngDT, imuDataNew.gyro_index);
     correctDeltaVelocity(delVelNewCorrected, imuDataNew.delVelDT, imuDataNew.accel_index);
 
@@ -739,6 +741,22 @@ void NavEKF2_core::calcOutputStates()
     outputDataNew.quat *= deltaQuat;
     outputDataNew.quat.normalize();
 
+    if (is_log_ekf2_vel) {
+        is_log_ekf2_vel = false;
+        AP::logger().Write("NKFV", "TimeUS,VX,VY,VZ,VDT,Bias,Avg,Q1,Q2,Q3,Q4", "Qffffffffff", 
+                        AP_HAL::micros64(),
+                        (double)imuDataNew.delVel.x,
+                        (double)imuDataNew.delVel.y,
+                        (double)imuDataNew.delVel.z,
+                        (double)imuDataNew.delVelDT, 
+                        (double)inactiveBias[imuDataNew.accel_index].accel_zbias, 
+                        (double)dtEkfAvg,
+                        (double)outputDataNew.quat.q1,
+                        (double)outputDataNew.quat.q2,
+                        (double)outputDataNew.quat.q3,
+                        (double)outputDataNew.quat.q4);
+    }
+
     // calculate the body to nav cosine matrix
     Matrix3f Tbn_temp;
     outputDataNew.quat.rotation_matrix(Tbn_temp);
@@ -753,7 +771,7 @@ void NavEKF2_core::calcOutputStates()
     // sum delta velocities to get velocity
     outputDataNew.velocity += delVelNav;
 
-    // Implement third order complementary filter for height and height rate
+    // Implement third order complementary filter for height and height rate 
     // Reference Paper :
     // Optimizing the Gains of the Baro-Inertial Vertical Channel
     // Widnall W.S, Sinha P.K,
@@ -779,14 +797,15 @@ void NavEKF2_core::calcOutputStates()
     // and position of the body frame origin.
     // Note the * operator has been overloaded to operate as a dot product
     if (!accelPosOffset.is_zero()) {
-        // calculate the average angular rate across the last IMU update
-        // note delAngDT is prevented from being zero in readIMUData()
-        Vector3f angRate = imuDataNew.delAng * (1.0f/imuDataNew.delAngDT);
+        // // calculate the average angular rate across the last IMU update
+        // // note delAngDT is prevented from being zero in readIMUData()
+        // Vector3f angRate = imuDataNew.delAng * (1.0f/imuDataNew.delAngDT);
 
-        // Calculate the velocity of the body frame origin relative to the IMU in body frame
-        // and rotate into earth frame. Note % operator has been overloaded to perform a cross product
-        Vector3f velBodyRelIMU = angRate % (- accelPosOffset);
-        velOffsetNED = Tbn_temp * velBodyRelIMU;
+        // // Calculate the velocity of the body frame origin relative to the IMU in body frame
+        // // and rotate into earth frame. Note % operator has been overloaded to perform a cross product
+        // Vector3f velBodyRelIMU = angRate % (- accelPosOffset);
+        // velOffsetNED = Tbn_temp * velBodyRelIMU;
+        velOffsetNED.zero();
 
         // calculate the earth frame position of the body frame origin relative to the IMU
         posOffsetNED = Tbn_temp * (- accelPosOffset);

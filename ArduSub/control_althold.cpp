@@ -224,7 +224,13 @@ bool Sub::attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int1
     get_alt_hold_pilot_desired_angle_rates(
         roll, pitch, yaw, 
         target_roll_rate, target_pitch_rate, target_yaw_rate);
-        
+
+    // if (ahrs.get_pitch() >= ToRad(70)) {
+    //     target_pitch_rate = 0;
+    // } else if (target_pitch_rate > 0){
+    //     target_pitch_rate = 8000;
+    // }
+
     if (is_reset) {
         is_reseting = true;
         target_pitch_rate = 0.0f;
@@ -349,8 +355,17 @@ void Sub::althold_run_rate()
     motors.set_lateral(channel_lateral->norm_input());
 }
 
+extern bool is_relax_z_when_rot;
+extern uint16_t wait_to_do_z_ctrl;
+uint32_t last_relax_z_ms = 0;
 void Sub::althold_run_rate_2()
 {
+    uint32_t tnow = AP_HAL::millis();
+
+    // Hold actual position until zero derivative is detected
+    static bool engageStopZ = false;
+    // Get last user velocity direction to check for zero derivative points
+    static bool lastVelocityZWasNegative = false;
     // initialize vertical speeds and acceleration
     pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
     pos_control.set_max_accel_z(g.pilot_accel_z);
@@ -362,28 +377,32 @@ void Sub::althold_run_rate_2()
         attitude_control.relax_attitude_controllers();
         pos_control.relax_alt_hold_controllers(motors.get_throttle_hover());
 
+        engageStopZ = false;
+        lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
         is_request_reset_rp = true; // to reset rp when arm
         return;
     }
 
     motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
-    attitude_control_rate(is_request_reset_rp, 
+    bool is_rot = attitude_control_rate(is_request_reset_rp, 
         channel_roll->get_control_in(), channel_pitch->get_control_in(), channel_yaw->get_control_in());
     if (is_request_reset_rp) {
         is_request_reset_rp = false;
+    }
+
+    if (!is_relax_z_when_rot) {
+        is_rot = false;
     }
 
     float forward = channel_forward->norm_input();
     float lateral = channel_lateral->norm_input();
     float throttle = channel_throttle->norm_input();
 
-    // Hold actual position until zero derivative is detected
-    static bool engageStopZ = true;
-    // Get last user velocity direction to check for zero derivative points
-    static bool lastVelocityZWasNegative = false;
+    static bool is_z_ctrl_relaxed = false;
     if (fabsf(throttle - 0.5f) > 0.05f ||                    // Throttle input above 5%
-        (!is_ned_pilot && is_need_relax_z_controller(forward, lateral, throttle))) {  // Forward input above 5%
+        (!is_ned_pilot && is_need_relax_z_controller(forward, lateral, throttle)) ||
+        is_rot) {  // Forward input above 5%
         if (!is_ned_pilot) {
             thrust_decomposition_clear(); // all should linear thrust should be body frame
         }
@@ -392,27 +411,35 @@ void Sub::althold_run_rate_2()
         attitude_control.set_throttle_out(throttle, false, g.throttle_filt);
         // reset z targets to current values
         pos_control.relax_alt_hold_controllers();
+        is_z_ctrl_relaxed = true;
+        last_relax_z_ms = tnow;
         engageStopZ = true;
         lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
     } else { // hold z
+        if (tnow >= last_relax_z_ms + wait_to_do_z_ctrl) {
+            if (is_z_ctrl_relaxed) {
+                is_z_ctrl_relaxed = false;
+                pos_control.relax_alt_hold_controllers();
+            }
 
-        thrust_decomposition_select(is_ned_pilot, ALT_HOLD);
+            thrust_decomposition_select(is_ned_pilot, ALT_HOLD);
 
-        if (ap.at_bottom) {
-            pos_control.relax_alt_hold_controllers(); // clear velocity and position targets
-            pos_control.set_alt_target(inertial_nav.get_altitude() + 10.0f); // set target to 10 cm above bottom
+            if (ap.at_bottom) {
+                pos_control.relax_alt_hold_controllers(); // clear velocity and position targets
+                pos_control.set_alt_target(inertial_nav.get_altitude() + 10.0f); // set target to 10 cm above bottom
+            }
+
+            // Detects a zero derivative
+            // When detected, move the altitude set point to the actual position
+            // This will avoid any problem related to joystick delays
+            // or smaller input signals
+            if(engageStopZ && (lastVelocityZWasNegative ^ is_negative(inertial_nav.get_velocity_z()))) {
+                engageStopZ = false;
+                pos_control.relax_alt_hold_controllers();
+            }
+
+            pos_control.update_z_controller();
         }
-
-        // Detects a zero derivative
-        // When detected, move the altitude set point to the actual position
-        // This will avoid any problem related to joystick delays
-        // or smaller input signals
-        if(engageStopZ && (lastVelocityZWasNegative ^ is_negative(inertial_nav.get_velocity_z()))) {
-            engageStopZ = false;
-            pos_control.relax_alt_hold_controllers();
-        }
-
-        pos_control.update_z_controller();
     }
 
     motors.set_forward(forward);

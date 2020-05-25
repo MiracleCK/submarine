@@ -506,6 +506,7 @@ private:
 
     // control enable of detected sensors
     AP_Int8     _enable_mask;
+    AP_Int8     _enable_comp;
     
     // board orientation from AHRS
     enum Rotation _board_orientation;

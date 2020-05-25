@@ -407,6 +407,128 @@ void AP_InertialSensor_Backend::_notify_new_accel_raw_sample(uint8_t instance,
     }
 }
 
+extern bool is_log_imu_raw;
+Vector3f last_gyro(0.0f, 0.0f, 0.0f);
+void AP_InertialSensor_Backend::_notify_new_accel_raw_sample(uint8_t instance,
+                                                             Vector3f accel_o,
+                                                             const Vector3f &gyro,
+                                                             uint64_t sample_us,
+                                                             bool fsync_set)
+{
+    if ((1U<<instance) & _imu.imu_kill_mask) {
+        return;
+    }
+    float dt;
+
+    _update_sensor_rate(_imu._sample_accel_count[instance], _imu._sample_accel_start_us[instance],
+                        _imu._accel_raw_sample_rates[instance]);
+
+    uint64_t last_sample_us = _imu._accel_last_sample_us[instance];
+
+    /*
+      we have two classes of sensors. FIFO based sensors produce data
+      at a very predictable overall rate, but the data comes in
+      bunches, so we use the provided sample rate for deltaT. Non-FIFO
+      sensors don't bunch up samples, but also tend to vary in actual
+      rate, so we use the provided sample_us to get the deltaT. The
+      difference between the two is whether sample_us is provided.
+     */
+    if (sample_us != 0 && _imu._accel_last_sample_us[instance] != 0) {
+        dt = (sample_us - _imu._accel_last_sample_us[instance]) * 1.0e-6f;
+        _imu._accel_last_sample_us[instance] = sample_us;
+    } else {
+        // don't accept below 100Hz
+        if (_imu._accel_raw_sample_rates[instance] < 100) {
+            return;
+        }
+
+        dt = 1.0f / _imu._accel_raw_sample_rates[instance];
+        _imu._accel_last_sample_us[instance] = AP_HAL::micros64();
+        sample_us = _imu._accel_last_sample_us[instance];
+    }
+
+#if AP_MODULE_SUPPORTED
+    // call accel_sample hook if any
+    AP_Module::call_hook_accel_sample(instance, dt, accel, fsync_set);
+#endif    
+
+    Vector3f accel = accel_o;
+
+    // do IMU position compensation
+    Vector3f imu_pos = _imu.get_imu_pos_offset();
+    if (!imu_pos.is_zero() && _imu._enable_comp == 1) {
+        float p = gyro.x; // roll rate
+        float q = gyro.y; // pitch rate
+        float r = gyro.z; // yaw rate
+        float ddt = 1.0f / dt;
+        float dp = (p - last_gyro.x) * ddt;
+        float dq = (q - last_gyro.y) * ddt;
+        float dr = (r - last_gyro.z) * ddt;
+        Vector3f a(q*q + r*r, -(p*q - dr), -(p*r + dq));
+        Vector3f b(-(p*q + dr), p*p + r*r, -(q*r - dp));
+        Vector3f c(-(p*r - dq), -(q*r + dp), p*p + q*q);
+        Matrix3f pos_comp(a, b, c);
+
+        accel = accel_o + pos_comp * imu_pos;
+    }
+
+    Vector3f last_gyro_temp = last_gyro;
+    last_gyro = gyro;
+    
+    _imu.calc_vibration_and_clipping(instance, accel, dt);
+
+    {
+        WITH_SEMAPHORE(_sem);
+
+        uint64_t now = AP_HAL::micros64();
+
+        if (now - last_sample_us > 100000U) {
+            // zero accumulator if sensor was unhealthy for 0.1s
+            _imu._delta_velocity_acc[instance].zero();
+            _imu._delta_velocity_acc_dt[instance] = 0;
+            dt = 0;
+        }
+        
+        // delta velocity
+        _imu._delta_velocity_acc[instance] += accel * dt;
+        _imu._delta_velocity_acc_dt[instance] += dt;
+
+        _imu._accel_filtered[instance] = _imu._accel_filter[instance].apply(accel);
+        if (_imu._accel_filtered[instance].is_nan() || _imu._accel_filtered[instance].is_inf()) {
+            _imu._accel_filter[instance].reset();
+        }
+
+        _imu.set_accel_peak_hold(instance, _imu._accel_filtered[instance]);
+
+        _imu._new_accel_data[instance] = true;
+    }
+
+    if (!_imu.batchsampler.doing_post_filter_logging()) {
+        log_accel_raw(instance, sample_us, accel);
+    } else {
+        log_accel_raw(instance, sample_us, _imu._accel_filtered[instance]);
+    }
+
+    if (is_log_imu_raw) {
+        is_log_imu_raw = false;
+        AP::logger().Write("IMUR", "TimeUS,OAX,OAY,OAZ,AX,AY,AZ,DT,GX,GY,GZ,LGX,LGY,LGZ", "Qfffffffffffff", 
+                            AP_HAL::micros64(),
+                            (double)accel_o.x,
+                            (double)accel_o.y,
+                            (double)accel_o.z,
+                            (double)accel.x,
+                            (double)accel.y,
+                            (double)accel.z,
+                            (double)dt, 
+                            (double)gyro.x,
+                            (double)gyro.y, 
+                            (double)gyro.z,
+                            (double)last_gyro_temp.x,
+                            (double)last_gyro_temp.y,
+                            (double)last_gyro_temp.z);
+    }
+}
+
 void AP_InertialSensor_Backend::_notify_new_accel_sensor_rate_sample(uint8_t instance, const Vector3f &accel)
 {
     if (!_imu.batchsampler.doing_sensor_rate_logging()) {
