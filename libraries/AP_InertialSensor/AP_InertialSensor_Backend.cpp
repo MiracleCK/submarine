@@ -407,8 +407,6 @@ void AP_InertialSensor_Backend::_notify_new_accel_raw_sample(uint8_t instance,
     }
 }
 
-extern bool is_log_imu_raw;
-Vector3f last_gyro(0.0f, 0.0f, 0.0f);
 void AP_InertialSensor_Backend::_notify_new_accel_raw_sample(uint8_t instance,
                                                              Vector3f accel_o,
                                                              const Vector3f &gyro,
@@ -456,14 +454,14 @@ void AP_InertialSensor_Backend::_notify_new_accel_raw_sample(uint8_t instance,
 
     // do IMU position compensation
     Vector3f imu_pos = _imu.get_imu_pos_offset();
-    if (!imu_pos.is_zero() && _imu._enable_comp == 1) {
+    if (!imu_pos.is_zero()) {
         float p = gyro.x; // roll rate
         float q = gyro.y; // pitch rate
         float r = gyro.z; // yaw rate
         float ddt = 1.0f / dt;
-        float dp = (p - last_gyro.x) * ddt;
-        float dq = (q - last_gyro.y) * ddt;
-        float dr = (r - last_gyro.z) * ddt;
+        float dp = (p - _imu.last_gyro.x) * ddt;
+        float dq = (q - _imu.last_gyro.y) * ddt;
+        float dr = (r - _imu.last_gyro.z) * ddt;
         Vector3f a(q*q + r*r, -(p*q - dr), -(p*r + dq));
         Vector3f b(-(p*q + dr), p*p + r*r, -(q*r - dp));
         Vector3f c(-(p*r - dq), -(q*r + dp), p*p + q*q);
@@ -472,8 +470,7 @@ void AP_InertialSensor_Backend::_notify_new_accel_raw_sample(uint8_t instance,
         accel = accel_o + pos_comp * imu_pos;
     }
 
-    Vector3f last_gyro_temp = last_gyro;
-    last_gyro = gyro;
+    _imu.last_gyro = gyro;
     
     _imu.calc_vibration_and_clipping(instance, accel, dt);
 
@@ -507,25 +504,6 @@ void AP_InertialSensor_Backend::_notify_new_accel_raw_sample(uint8_t instance,
         log_accel_raw(instance, sample_us, accel);
     } else {
         log_accel_raw(instance, sample_us, _imu._accel_filtered[instance]);
-    }
-
-    if (is_log_imu_raw) {
-        is_log_imu_raw = false;
-        AP::logger().Write("IMUR", "TimeUS,OAX,OAY,OAZ,AX,AY,AZ,DT,GX,GY,GZ,LGX,LGY,LGZ", "Qfffffffffffff", 
-                            AP_HAL::micros64(),
-                            (double)accel_o.x,
-                            (double)accel_o.y,
-                            (double)accel_o.z,
-                            (double)accel.x,
-                            (double)accel.y,
-                            (double)accel.z,
-                            (double)dt, 
-                            (double)gyro.x,
-                            (double)gyro.y, 
-                            (double)gyro.z,
-                            (double)last_gyro_temp.x,
-                            (double)last_gyro_temp.y,
-                            (double)last_gyro_temp.z);
     }
 }
 

@@ -2,7 +2,6 @@
 
 
 bool use_angle_rate = true;
-bool use_angle_rate_2 = true;
 
 /*
  * control_althold.pde - init and run calls for althold, flight mode
@@ -28,6 +27,10 @@ bool Sub::althold_init()
     last_pilot_pitch = ahrs.pitch_sensor;
     last_pilot_roll = ahrs.roll_sensor;
 
+    is_z_ctrl_relaxed = false;
+    engageStopZ = false;
+    lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());;
+
     return true;
 }
 
@@ -36,11 +39,6 @@ bool Sub::althold_init()
 void Sub::althold_run()
 {
     if (smart_mode_auto_switch()) {
-        return;
-    }
-
-    if (use_angle_rate_2) {
-        althold_run_rate_2();
         return;
     }
 
@@ -116,9 +114,9 @@ void Sub::althold_run()
     }
 
     // Hold actual position until zero derivative is detected
-    static bool engageStopZ = true;
+    // static bool engageStopZ = true;
     // Get last user velocity direction to check for zero derivative points
-    static bool lastVelocityZWasNegative = false;
+    // static bool lastVelocityZWasNegative = false;
     if (fabsf(channel_throttle->norm_input()-0.5f) > 0.05f) { // Throttle input above 5%
         // output pilot's throttle
         attitude_control.set_throttle_out(channel_throttle->norm_input(), false, g.throttle_filt);
@@ -147,24 +145,6 @@ void Sub::althold_run()
 
     motors.set_forward(channel_forward->norm_input());
     motors.set_lateral(channel_lateral->norm_input());
-}
-
-void Sub::get_alt_hold_pilot_desired_rate_lean_angles(float roll_rate_in, float pitch_rate_in,
-    float &roll_out, float &pitch_out)
-{
-    float roll_control_in, pitch_control_in;
-    float angle_max;
-
-    // sanity check angle max parameter
-    angle_max = constrain_int16(aparm.angle_max,1000,8000);
-
-    // map angle to control in
-    float scaler = (float)ROLL_PITCH_INPUT_MAX / angle_max;
-
-    roll_control_in = (last_pilot_roll + roll_rate_in * G_Dt) * scaler;
-    pitch_control_in = (last_pilot_pitch + pitch_rate_in * G_Dt) * scaler;
-
-    get_pilot_desired_lean_angles(roll_control_in, pitch_control_in, roll_out, pitch_out, attitude_control.get_althold_lean_angle_max());
 }
 
 void Sub::get_alt_hold_pilot_desired_angle_rates(int16_t roll_in, int16_t pitch_in, int16_t yaw_in, float &roll_out, float &pitch_out, float &yaw_out)
@@ -225,12 +205,6 @@ bool Sub::attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int1
         roll, pitch, yaw, 
         target_roll_rate, target_pitch_rate, target_yaw_rate);
 
-    // if (ahrs.get_pitch() >= ToRad(70)) {
-    //     target_pitch_rate = 0;
-    // } else if (target_pitch_rate > 0){
-    //     target_pitch_rate = 8000;
-    // }
-
     if (is_reset) {
         is_reseting = true;
         target_pitch_rate = 0.0f;
@@ -254,8 +228,6 @@ bool Sub::attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int1
 
 void Sub::althold_run_rate()
 {
-    uint32_t tnow = AP_HAL::millis();
-
     // initialize vertical speeds and acceleration
     pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
     pos_control.set_max_accel_z(g.pilot_accel_z);
@@ -266,73 +238,47 @@ void Sub::althold_run_rate()
         attitude_control.set_throttle_out(0,true,g.throttle_filt);
         attitude_control.relax_attitude_controllers();
         pos_control.relax_alt_hold_controllers(motors.get_throttle_hover());
-        last_pilot_heading = ahrs.yaw_sensor;
-        last_pilot_pitch = ahrs.pitch_sensor;
-        last_pilot_roll = ahrs.roll_sensor;
+
+        is_z_ctrl_relaxed = false;
+        engageStopZ = false;
+        lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
+        is_request_reset_rp = true; // to reset rp when arm
         return;
     }
 
     motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
-    // get pilot desired lean angles
-    float target_roll, target_pitch;
-    float target_roll_rate, target_pitch_rate, target_yaw_rate;
-
-    get_alt_hold_pilot_desired_angle_rates(
-        channel_roll->get_control_in(), channel_pitch->get_control_in(), channel_yaw->get_control_in(), 
-        target_roll_rate, target_pitch_rate, target_yaw_rate);
-    
-    get_alt_hold_pilot_desired_rate_lean_angles(target_roll_rate, target_pitch_rate, target_roll, target_pitch);
-
+    attitude_control_rate(is_request_reset_rp, 
+        channel_roll->get_control_in(), channel_pitch->get_control_in(), channel_yaw->get_control_in());
     if (is_request_reset_rp) {
-        target_pitch = 0;
-        target_roll = 0;
-
         is_request_reset_rp = false;
     }
 
-    // call attitude controller
-    if (!is_zero(target_yaw_rate)) { // call attitude controller with rate yaw determined by pilot input
-        attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate);
-        last_pilot_heading = ahrs.yaw_sensor;
-        last_pilot_yaw_input_ms = tnow; // time when pilot last changed heading
+    float forward = channel_forward->norm_input();
+    float lateral = channel_lateral->norm_input();
+    float throttle = channel_throttle->norm_input();
 
-    } else { // hold current heading
-
-        // this check is required to prevent bounce back after very fast yaw maneuvers
-        // the inertia of the vehicle causes the heading to move slightly past the point when pilot input actually stopped
-        if (tnow < last_pilot_yaw_input_ms + 250) { // give 250ms to slow down, then set target heading
-            target_yaw_rate = 0; // Stop rotation on yaw axis
-
-            // call attitude controller with target yaw rate = 0 to decelerate on yaw axis
-            attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate);
-            last_pilot_heading = ahrs.yaw_sensor; // update heading to hold
-
-        } else { // call attitude controller holding absolute absolute bearing
-            attitude_control.input_euler_angle_roll_pitch_yaw(target_roll, target_pitch, last_pilot_heading, true);
-        }
-    }
-
-    last_pilot_pitch = target_pitch;
-    last_pilot_roll = target_roll;
-
-    // Hold actual position until zero derivative is detected
-    static bool engageStopZ = true;
-    // Get last user velocity direction to check for zero derivative points
-    static bool lastVelocityZWasNegative = false;
-    if (fabsf(channel_throttle->norm_input()-0.5f) > 0.05f ||                    // Throttle input above 5%
-        (!is_ned_pilot && fabsf(channel_forward->norm_input()-0.5f) > 0.05f)) {  // Forward input above 5%
+    if (fabsf(throttle - 0.5f) > 0.05f ||                    // Throttle input above 5%
+        (!is_ned_pilot && is_need_relax_z_controller(forward, lateral, throttle))) {  // Forward input above 5%
         if (!is_ned_pilot) {
             thrust_decomposition_clear(); // all should linear thrust should be body frame
         }
 
         // output pilot's throttle
-        attitude_control.set_throttle_out(channel_throttle->norm_input(), false, g.throttle_filt);
+        attitude_control.set_throttle_out(throttle, false, g.throttle_filt);
         // reset z targets to current values
         pos_control.relax_alt_hold_controllers();
+        is_z_ctrl_relaxed = true;
         engageStopZ = true;
         lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
     } else { // hold z
+        
+        if (is_z_ctrl_relaxed) {
+            is_z_ctrl_relaxed = false;
+            pos_control.relax_alt_hold_controllers();
+        }
+
+        thrust_decomposition_select(is_ned_pilot, ALT_HOLD);
 
         if (ap.at_bottom) {
             pos_control.relax_alt_hold_controllers(); // clear velocity and position targets
@@ -349,97 +295,6 @@ void Sub::althold_run_rate()
         }
 
         pos_control.update_z_controller();
-    }
-
-    motors.set_forward(channel_forward->norm_input());
-    motors.set_lateral(channel_lateral->norm_input());
-}
-
-extern bool is_relax_z_when_rot;
-extern uint16_t wait_to_do_z_ctrl;
-uint32_t last_relax_z_ms = 0;
-void Sub::althold_run_rate_2()
-{
-    uint32_t tnow = AP_HAL::millis();
-
-    // Hold actual position until zero derivative is detected
-    static bool engageStopZ = false;
-    // Get last user velocity direction to check for zero derivative points
-    static bool lastVelocityZWasNegative = false;
-    // initialize vertical speeds and acceleration
-    pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
-    pos_control.set_max_accel_z(g.pilot_accel_z);
-
-    if (!motors.armed()) {
-        motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::GROUND_IDLE);
-        // Sub vehicles do not stabilize roll/pitch/yaw when not auto-armed (i.e. on the ground, pilot has never raised throttle)
-        attitude_control.set_throttle_out(0,true,g.throttle_filt);
-        attitude_control.relax_attitude_controllers();
-        pos_control.relax_alt_hold_controllers(motors.get_throttle_hover());
-
-        engageStopZ = false;
-        lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
-        is_request_reset_rp = true; // to reset rp when arm
-        return;
-    }
-
-    motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
-
-    bool is_rot = attitude_control_rate(is_request_reset_rp, 
-        channel_roll->get_control_in(), channel_pitch->get_control_in(), channel_yaw->get_control_in());
-    if (is_request_reset_rp) {
-        is_request_reset_rp = false;
-    }
-
-    if (!is_relax_z_when_rot) {
-        is_rot = false;
-    }
-
-    float forward = channel_forward->norm_input();
-    float lateral = channel_lateral->norm_input();
-    float throttle = channel_throttle->norm_input();
-
-    static bool is_z_ctrl_relaxed = false;
-    if (fabsf(throttle - 0.5f) > 0.05f ||                    // Throttle input above 5%
-        (!is_ned_pilot && is_need_relax_z_controller(forward, lateral, throttle)) ||
-        is_rot) {  // Forward input above 5%
-        if (!is_ned_pilot) {
-            thrust_decomposition_clear(); // all should linear thrust should be body frame
-        }
-
-        // output pilot's throttle
-        attitude_control.set_throttle_out(throttle, false, g.throttle_filt);
-        // reset z targets to current values
-        pos_control.relax_alt_hold_controllers();
-        is_z_ctrl_relaxed = true;
-        last_relax_z_ms = tnow;
-        engageStopZ = true;
-        lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
-    } else { // hold z
-        if (tnow >= last_relax_z_ms + wait_to_do_z_ctrl) {
-            if (is_z_ctrl_relaxed) {
-                is_z_ctrl_relaxed = false;
-                pos_control.relax_alt_hold_controllers();
-            }
-
-            thrust_decomposition_select(is_ned_pilot, ALT_HOLD);
-
-            if (ap.at_bottom) {
-                pos_control.relax_alt_hold_controllers(); // clear velocity and position targets
-                pos_control.set_alt_target(inertial_nav.get_altitude() + 10.0f); // set target to 10 cm above bottom
-            }
-
-            // Detects a zero derivative
-            // When detected, move the altitude set point to the actual position
-            // This will avoid any problem related to joystick delays
-            // or smaller input signals
-            if(engageStopZ && (lastVelocityZWasNegative ^ is_negative(inertial_nav.get_velocity_z()))) {
-                engageStopZ = false;
-                pos_control.relax_alt_hold_controllers();
-            }
-
-            pos_control.update_z_controller();
-        }
     }
 
     motors.set_forward(forward);

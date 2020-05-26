@@ -105,9 +105,6 @@ static void cmd_log(int argc, char *argv[]);
 static int radian_to_degree(float value);
 static float degree_to_radian(int value);
 
-bool is_relax_z_when_rot = false;
-uint16_t wait_to_do_z_ctrl = 0; // ms
-
 AP_HAL::Shell::ShellCommand shell_commands[] = {
     {"param", cmd_param},
     {"version", cmd_version},
@@ -124,18 +121,6 @@ void cmd_param(int argc, char *argv[])
 {
     if (argc < 1) { // at least should be param show
         hal.shell->printf("usage: param set|show|dbg [param_short_name value]|dbg_param\r\n");
-        return;
-    }
-
-    if (!strcmp(argv[0], "rot")) {
-        is_relax_z_when_rot = !is_relax_z_when_rot;
-        hal.shell->printf("set relax z when rot to %d\r\n", is_relax_z_when_rot);
-        return;
-    }
-
-    if (!strcmp(argv[0], "wms")) {
-        wait_to_do_z_ctrl = (uint16_t)strtod(argv[1], NULL);
-        hal.shell->printf("set wait to do z ctrl %dms\r\n", wait_to_do_z_ctrl);
         return;
     }
 

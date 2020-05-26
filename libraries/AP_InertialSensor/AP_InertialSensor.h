@@ -506,7 +506,6 @@ private:
 
     // control enable of detected sensors
     AP_Int8     _enable_mask;
-    AP_Int8     _enable_comp;
     
     // board orientation from AHRS
     enum Rotation _board_orientation;
@@ -618,6 +617,8 @@ private:
 
     // custom
 public:
+    Vector3f last_gyro;
+    
     FUNCTOR_TYPEDEF(ins_sensor_rotation_fn_t, void, Vector3f&);
     void set_ins_sensor_rotation_callback(ins_sensor_rotation_fn_t callback) {
         _ins_sensor_rotation_callback = callback;

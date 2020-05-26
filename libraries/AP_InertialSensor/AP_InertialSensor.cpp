@@ -457,8 +457,6 @@ const AP_Param::GroupInfo AP_InertialSensor::var_info[] = {
     // @Path: ../Filter/HarmonicNotchFilter.cpp
     AP_SUBGROUPINFO(_harmonic_notch_filter, "HNTCH_",  41, AP_InertialSensor, HarmonicNotchFilterParams),
 
-    AP_GROUPINFO("ENABLE_COMP",  42, AP_InertialSensor, _enable_comp, 0),
-
     /*
       NOTE: parameter indexes have gaps above. When adding new
       parameters check for conflicts carefully

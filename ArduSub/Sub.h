@@ -715,6 +715,11 @@ public:
 
     pilot_axis_t pilot_axis;
     bool is_ned_pilot = true;
+    bool is_z_ctrl_relaxed = false;
+    // Hold actual position until zero derivative is detected
+    bool engageStopZ = false;
+    // Get last user velocity direction to check for zero derivative points
+    bool lastVelocityZWasNegative = false;
 
     void setup_custom_motors();
     void thrust_decomposition_init(bool, control_mode_t);
