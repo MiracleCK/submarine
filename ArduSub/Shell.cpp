@@ -76,8 +76,7 @@ const param_name_t params[] = {
     {"aab", "ATC_ANGLE_BOOST"},
     {"ip1x", "INS_POS1_X"},
     {"ip1y", "INS_POS1_Y"},
-    {"ip1z", "INS_POS1_Z"},
-    {"iec", "INS_ENABLE_COMP"}
+    {"ip1z", "INS_POS1_Z"}
 };
 
 static int params_cnt = sizeof(params) / sizeof(params[0]);

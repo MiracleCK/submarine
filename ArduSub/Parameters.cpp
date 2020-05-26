@@ -798,6 +798,7 @@ void Sub::load_parameters()
 
     AP_Param::set_default_by_name("AHRS_EKF_TYPE", 3);
     AP_Param::set_default_by_name("EK3_ENABLE", 1);
+    AP_Param::set_default_by_name("INS_POS1_X", 0.093);
 }
 
 void Sub::convert_old_parameters()
