@@ -96,8 +96,6 @@ protected:
           
     AP_Float                  _custom_pitch_thr;
     AP_Float                  _custom_roll_thr;
-    AP_Int8                   _custom_thrust_factor[4];
-    AP_Float                  _custom_forward_thrust;
     AP_Float                  _custom_negative_thrust_ratio;
 
     bool motor_log_start = false;

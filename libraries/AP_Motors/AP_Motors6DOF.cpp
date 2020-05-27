@@ -188,40 +188,41 @@ const AP_Param::GroupInfo AP_Motors6DOF::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("CUSTOM_ROLL", 23, AP_Motors6DOF, _custom_roll_thr, 0.0f),
 
+    // no longer used
     // @Param: FTP_FACT
     // @DisplayName: Forward throttle thrust correct factor
     // @Description: Used to correct forward thrust with throttle thrust of pitch
     // @Values: 1:multi with 1, -1:multi with -1
     // @User: Advanced
-    AP_GROUPINFO("FTP_FACT", 24, AP_Motors6DOF, _custom_thrust_factor[0], 1),
-
+    // AP_GROUPINFO("FTP_FACT", 24, AP_Motors6DOF, _custom_thrust_factor[0], 1),
+    //
     // @Param: LTR_FACT
     // @DisplayName: Lateral throttle thrust correct factor
     // @Description: Used to correct Lateral thrust with throttle thrust of roll
     // @Values: 1:multi with 1, -1:multi with -1
     // @User: Advanced
-    AP_GROUPINFO("LTR_FACT", 25, AP_Motors6DOF, _custom_thrust_factor[1], -1),
-
+    // AP_GROUPINFO("LTR_FACT", 25, AP_Motors6DOF, _custom_thrust_factor[1], -1),
+    //
     // @Param: TFP_FACT
     // @DisplayName: Throttle forward thrust correct factor
     // @Description: Used to correct Throttle thrust with forward thrust of pitch
     // @Values: 1:multi with 1, -1:multi with -1
     // @User: Advanced
-    AP_GROUPINFO("TFP_FACT", 26, AP_Motors6DOF, _custom_thrust_factor[2], -1),
-
+    // AP_GROUPINFO("TFP_FACT", 26, AP_Motors6DOF, _custom_thrust_factor[2], -1),
+    //
     // @Param: TLR_FACT
     // @DisplayName: Throttle lateral thrust correct factor
     // @Description: Used to correct Throttle thrust with lateral thrust of roll
     // @Values: 1:multi with 1, -1:multi with -1
     // @User: Advanced
-    AP_GROUPINFO("TLR_FACT", 27, AP_Motors6DOF, _custom_thrust_factor[3], 1),
-
+    // AP_GROUPINFO("TLR_FACT", 27, AP_Motors6DOF, _custom_thrust_factor[3], 1),
+    //
     // @Param: CFT
     // @DisplayName: User corrected forward thrust
     // @Description: Used to correct forward thrust
     // @Ragne: 1 8
     // @User: Advanced
-    AP_GROUPINFO("CFT", 28, AP_Motors6DOF, _custom_forward_thrust, 0.0f),
+    // AP_GROUPINFO("CFT", 28, AP_Motors6DOF, _custom_forward_thrust, 0.0f),
 
     // @Param: THR_RATIO
     // @DisplayName: Negative thrust ratio
