@@ -22,3 +22,7 @@
 * use `SUB_FRAME_CUSTOM` as the frame type
 * calibration
     + use auto detect orientation accel calibration instead of old one
+* to fix ptching overshoot
+    + sensor position compensation with raw IMU data
+        - implemented in backend
+    + use EKF3, the accel x/y bias estimate, EKF2 only do z bias
