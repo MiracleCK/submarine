@@ -10,19 +10,24 @@
     + but still cannot build with test
 * use `AP_Param::set_default_by_name` to set changed params as default when startup
 * use hwdef to describe rc_in channel map @ cb32fc526d8e8315e5a90c95456164a61360c2c7
+    + we use rcmap to do this now
 * map pwm value to DShot value @323c329a6661593b5b0fa58a6c45b867eb344671
 * simplify and align sensor axis to body @7802a3afbcfbcdc600d836bea6eaec3dda147d49
     + use `ROTATION_CUSTOM_MAG` and `ROTATION_CUSTOM_IMU`
-    + new body need to implement a new custom rotation
+    + new body need to implement a new custom rotation in application layer
 * not use `calculate_orientation` when calibrate compass @ d28942d30056b90a49c3b9afec2f7ce3bf0f4d7a
 * extend shell commands
     + chibios not support change shell command at runtime, only can add new commands when thread created
         - this is the reason `const ShellCommand *scp = scfg->sc_commands;`
     + add a `AP_HAL::Shell`, and then implement chibi shell in `AP_HAL_ChibiOS`
 * use `SUB_FRAME_CUSTOM` as the frame type
+    + use this as the condition to call custom motor
+    + should implement `setup_custom_motors` in application
 * calibration
     + use auto detect orientation accel calibration instead of old one
 * to fix ptching overshoot
     + sensor position compensation with raw IMU data
         - implemented in backend
     + use EKF3, the accel x/y bias estimate, EKF2 only do z bias
+* support 360° NED rotation of pitch, with roll always 0°
+    + `input_euler_rate_roll0_pitch_yaw`
