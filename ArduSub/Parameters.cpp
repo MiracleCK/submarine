@@ -734,27 +734,41 @@ void Sub::load_parameters()
     // AP_Param::set_default_by_name("PSC_VELZ_P", 10);
     // AP_Param::set_default_by_name("PSC_ACCZ_P", 0.5);
     // AP_Param::set_default_by_name("PSC_ACCZ_I", 0.1);
-    // AP_Param::set_default_by_name("PSC_ACCZ_D", 0);      
+    // AP_Param::set_default_by_name("PSC_ACCZ_D", 0);    
+
+    // input channels map
+    // use RCMAP to do this
+    // and should change throttle channel trim
+    uint8_t chan_throttle = 1;
+    uint8_t chan_pitch = 2;
+    uint8_t chan_roll = 7;
+
+    AP_Param::set_default_by_name("RCMAP_PITCH", chan_pitch);
+    AP_Param::set_default_by_name("RCMAP_ROLL", chan_roll);
+    AP_Param::set_default_by_name("RCMAP_YAW", 4);
+    AP_Param::set_default_by_name("RCMAP_FORWARD", 3);
+    AP_Param::set_default_by_name("RCMAP_LATERAL", 5);
+    AP_Param::set_default_by_name("RCMAP_THROTTLE", chan_throttle);
 
     char rc_param_name[13]; // len is the max_size of below param name
     int rc_param_buf_len = sizeof(rc_param_name);
 
     // exchange throttle channel according to hwdef
-    if (RC_IN_CHANNEL_THROTTLE != 2 && RC_IN_CHANNEL_THROTTLE < 8) {
-        snprintf(rc_param_name, rc_param_buf_len, "RC%d_TRIM", RC_IN_CHANNEL_THROTTLE+1);
+    if (chan_throttle != 2 && chan_throttle < 8) {
+        snprintf(rc_param_name, rc_param_buf_len, "RC%d_TRIM", chan_throttle);
         AP_Param::set_default_by_name(rc_param_name, 1100);
 
         AP_Param::set_default_by_name("RC3_TRIM", 1500); // default throttle is RC3
     }
 
     // to consistent with algorithm output, reverse input channel
-    if (RC_IN_CHANNEL_ROLL < 8) {
-        snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", RC_IN_CHANNEL_ROLL+1);
+    if (chan_roll < 8) {
+        snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", chan_roll);
         AP_Param::set_default_by_name(rc_param_name, 1);
     }
 
-    if (RC_IN_CHANNEL_PITCH < 8) {
-        snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", RC_IN_CHANNEL_PITCH+1);
+    if (chan_pitch < 8) {
+        snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", chan_pitch);
         AP_Param::set_default_by_name(rc_param_name, 1);
     }
 

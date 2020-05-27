@@ -120,25 +120,6 @@
 #include <SITL/SITL.h>
 #endif
 
-#ifndef RC_IN_CHANNEL_PITCH
-    #define RC_IN_CHANNEL_PITCH 0
-#endif
-#ifndef RC_IN_CHANNEL_ROLL
-    #define RC_IN_CHANNEL_ROLL 1
-#endif
-#ifndef RC_IN_CHANNEL_THROTTLE
-    #define RC_IN_CHANNEL_THROTTLE 2
-#endif
-#ifndef RC_IN_CHANNEL_YAW
-    #define RC_IN_CHANNEL_YAW 3
-#endif
-#ifndef RC_IN_CHANNEL_FORWARD
-    #define RC_IN_CHANNEL_FORWARD 4
-#endif
-#ifndef RC_IN_CHANNEL_LATERAL
-    #define RC_IN_CHANNEL_LATERAL 5
-#endif
-
 class Sub : public AP_Vehicle {
 public:
     friend class GCS_MAVLINK_Sub;
@@ -166,6 +147,9 @@ private:
 
     // main loop scheduler
     AP_Scheduler scheduler{FUNCTOR_BIND_MEMBER(&Sub::fast_loop, void)};
+
+    // mapping between input channels
+    RCMapper rcmap;
 
     // primary input control channels
     RC_Channel *channel_roll;
