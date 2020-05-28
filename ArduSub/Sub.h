@@ -148,9 +148,6 @@ private:
     // main loop scheduler
     AP_Scheduler scheduler{FUNCTOR_BIND_MEMBER(&Sub::fast_loop, void)};
 
-    // mapping between input channels
-    RCMapper rcmap;
-
     // primary input control channels
     RC_Channel *channel_roll;
     RC_Channel *channel_pitch;
