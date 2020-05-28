@@ -93,10 +93,6 @@ protected:
     // custom
     
     AP_Int8                   _motor_mapping[AP_MOTORS_MAX_NUM_MOTORS];
-          
-    AP_Float                  _custom_pitch_thr;
-    AP_Float                  _custom_roll_thr;
-    AP_Float                  _custom_negative_thrust_ratio;
 
     bool motor_log_start = false;
 

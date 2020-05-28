@@ -53,14 +53,6 @@ const param_name_t params[] = {
     {"m6d", "MOT_6_DIRECTION"},
     {"m7d", "MOT_7_DIRECTION"},
     {"m8d", "MOT_8_DIRECTION"},
-    {"mff", "MOT_FTP_FACT"},
-    {"mlf", "MOT_LTR_FACT"},
-    {"mtff", "MOT_TFP_FACT"},
-    {"mtlf", "MOT_TLR_FACT"},
-    {"mcp", "MOT_CUSTOM_PIT"},
-    {"mcr", "MOT_CUSTOM_ROLL"},
-    {"mcft", "MOT_CFT"},
-    {"mtr", "MOT_THR_RATIO"},
     {"amax", "ANGLE_MAX"},
     {"atx", "AHRS_TRIM_X"},
     {"aty", "AHRS_TRIM_Y"},
@@ -240,9 +232,7 @@ int cmd_param_set(const char *name, float value)
 
     if (!strcmp((const char*)key, "AHRS_TRIM_X") 
      || !strcmp((const char*)key, "AHRS_TRIM_Y") 
-     || !strcmp((const char*)key, "AHRS_TRIM_Z")
-     || !strcmp((const char*)key, "MOT_CUSTOM_PIT")
-     || !strcmp((const char*)key, "MOT_CUSTOM_ROLL")) {
+     || !strcmp((const char*)key, "AHRS_TRIM_Z")) {
         value = degree_to_radian(value);
     }
 
@@ -290,9 +280,7 @@ int cmd_param_show(int argc, char *argv[])
         if (argc <= 0 || strcmp(argv[0], "radian")) {
             if (!strcmp((const char*)key, "AHRS_TRIM_X") ||
             !strcmp((const char*)key, "AHRS_TRIM_Y") ||
-            !strcmp((const char*)key, "AHRS_TRIM_Z") ||
-            !strcmp((const char*)key, "MOT_CUSTOM_PIT") ||
-            !strcmp((const char*)key, "MOT_CUSTOM_ROLL")) {
+            !strcmp((const char*)key, "AHRS_TRIM_Z")) {
                 value = radian_to_degree(value);
             }
         }

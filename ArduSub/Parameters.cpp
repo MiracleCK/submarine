@@ -798,10 +798,6 @@ void Sub::load_parameters()
         AP_Param::set_default_by_name("MOT_8_MAPPING", MOT_8_MAPPING);
     #endif
 
-    #ifdef MOT_NEGATIVE_THURST_RATIO
-        AP_Param::set_default_by_name("MOT_THR_RATIO", MOT_NEGATIVE_THURST_RATIO);
-    #endif
-
     // disable angle boost
     AP_Param::set_default_by_name("ATC_ANGLE_BOOST", 0);
 

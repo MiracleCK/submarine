@@ -170,57 +170,11 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
     // correct nagative thurst with param ratio
     // M2 programed MOT_n      1   2   3   4   5   6   7   8
     //             propeller   R   L   R   L   L   R   R   L
-    int motor_lr_factor[8] = {-1,  1, -1,  1,  1, -1, -1,  1}; // L/R propeller factor, to make positive thrust with positive sign
-    float thrust_rpyt_out_max = 1;
-    if (!is_zero(_custom_negative_thrust_ratio)) {
-        for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
-            if (motor_enabled[i]) {
-                _thrust_rpyt_out[i] = rpy_out[i] + linear_out[i];
-                if ((_thrust_rpyt_out[i] < 0) != (motor_lr_factor[i] < 0)) {
-                    _thrust_rpyt_out[i] = _thrust_rpyt_out[i] / _custom_negative_thrust_ratio;
-                }
-                if (fabsf(_thrust_rpyt_out[i]) > thrust_rpyt_out_max) {
-                    thrust_rpyt_out_max = fabsf(_thrust_rpyt_out[i]);
-                }
-            }
-        }
-
-        if (is_param_print() && is_dbg_motor) {
-            float ratio_rpyt_out[8];
-            for (i = 0; i < 8; i++) {
-                ratio_rpyt_out[i] = _thrust_rpyt_out[i];
-            }
-
-            to_designer_order_out(ratio_rpyt_out);
-            
-            printf("\r\nratio rpyt out:\r\n");
-            for (i = 0; i < 8; i++) {
-                printf("%2.4f ", ratio_rpyt_out[i]);
-            }
-        }
-
-        // normalize
-        for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
-            if (motor_enabled[i]) {
-                _thrust_rpyt_out[i] = constrain_float(_thrust_rpyt_out[i] / thrust_rpyt_out_max,-1.0f,1.0f);
-            }
-        }
-
-        if (is_param_print() && is_dbg_motor) {
-            motor_vector_force_debug(rpy_out, linear_out, _thrust_rpyt_out, _custom_negative_thrust_ratio);
-        }
-
-        // thurst analize should not effected by direction
-        // motor direction
-        for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
-            if (motor_enabled[i]) {
-                _thrust_rpyt_out[i] = constrain_float(_motor_reverse[i] * _thrust_rpyt_out[i],-1.0f,1.0f);
-            }
-        }
-    } else {
-        if (is_param_print() && is_dbg_motor) {
-            motor_vector_force_debug(rpy_out, linear_out, _thrust_rpyt_out, _custom_negative_thrust_ratio);
-        }
+    // int motor_lr_factor[8] = {-1,  1, -1,  1,  1, -1, -1,  1}; // L/R propeller factor, to make positive thrust with positive sign
+    // float thrust_rpyt_out_max = 1;
+    
+    if (is_param_print() && is_dbg_motor) {
+        motor_vector_force_debug(rpy_out, linear_out, _thrust_rpyt_out, 0.0f);
     }
 
     const AP_BattMonitor &battery = AP::battery();
