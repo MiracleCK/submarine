@@ -462,7 +462,7 @@ define STORAGE_FLASH_PAGE 22
 # found on SPI. You must have a ramtron entry in the SPI device table.
 
 # Enable RAMTROM parameter storage.
-define HAL_WITH_RAMTRON 1
+#define HAL_WITH_RAMTRON 1
 
 # Setup for the possibility of an IMU heater since the pixhawk2 cube has
 # an IMU heater.
