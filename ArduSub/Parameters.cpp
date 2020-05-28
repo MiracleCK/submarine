@@ -706,53 +706,73 @@ void Sub::load_parameters()
     #endif
     
     AP_Param::set_default_by_name("FRAME_CONFIG", AP_Motors6DOF::SUB_FRAME_CUSTOM);
-    
-    AP_Param::set_default_by_name("MOT_PWM_TYPE", 4); // DShot150
-
-    AP_Param::set_default_by_name("ANGLE_MAX", 8000);
 
     // AP_Param::set_by_name("BATT_MONITOR", 5);
     AP_Param::set_and_save_by_name("BATT_MONITOR", 7);
     AP_Param::set_and_save_by_name("BATT_BUS", 1); // need save, if not would be changed by batt library
 
     // add pid param
+
+    ///////////////////////////////////////////////////////////////
+    // attitude control
+    //
+    // limit euler angle max in NED
+    AP_Param::set_default_by_name("ANGLE_MAX", 8000);
+    //
+    // attitude ctrl thrust to motor pid
+    AP_Param::set_default_by_name("ATC_RAT_RLL_P", 0.24);
+    AP_Param::set_default_by_name("ATC_RAT_RLL_I", 0.3);
+    AP_Param::set_default_by_name("ATC_RAT_RLL_D", 0);
+    AP_Param::set_default_by_name("ATC_RAT_PIT_P", 0.5);
+    AP_Param::set_default_by_name("ATC_RAT_PIT_I", 0.15);
+    AP_Param::set_default_by_name("ATC_RAT_PIT_D", 0);
+    AP_Param::set_default_by_name("ATC_RAT_YAW_P", 0.4);
+    AP_Param::set_default_by_name("ATC_RAT_YAW_I", 0.2);
+    AP_Param::set_default_by_name("ATC_RAT_YAW_D", 0);
+    //
+    // att control would use these to do ang vel ctrl
+    AP_Param::set_default_by_name("ATC_ANG_RLL_P", 6);
+    AP_Param::set_default_by_name("ATC_ANG_PIT_P", 6);
+    AP_Param::set_default_by_name("ATC_ANG_YAW_P", 6);
+    //
+    // use forward feed to ctrl smooth
+    AP_Param::set_default_by_name("ATC_RATE_FF_ENAB", 1);
+    //
+    // disable angle boost to allow 90°
+    AP_Param::set_default_by_name("ATC_ANGLE_BOOST", 0);
+
+    ///////////////////////////////////////////////////////////////
+    // z controller
+    AP_Param::set_default_by_name("PSC_POSZ_P", 20);
+    AP_Param::set_default_by_name("PSC_VELZ_P", 10);
+    AP_Param::set_default_by_name("PSC_ACCZ_P", 0.5);
+    AP_Param::set_default_by_name("PSC_ACCZ_I", 0.1);
+    AP_Param::set_default_by_name("PSC_ACCZ_D", 0);    
+
+    ///////////////////////////////////////////////////////////////
+    // pilot input pitch/roll/yaw rot rate
+    AP_Param::set_default_by_name("ACRO_RP_P", ACRO_YAW_P);
     AP_Param::set_default_by_name("ACRO_YAW_P", 6);
-
-    // AP_Param::set_default_by_name("ATC_ANG_RLL_P", 6);
-    // AP_Param::set_default_by_name("ATC_ANG_PIT_P", 6);
-    // AP_Param::set_default_by_name("ATC_ANG_YAW_P", 6);
-    // AP_Param::set_default_by_name("ATC_RAT_RLL_P", 0.3);
-    // AP_Param::set_default_by_name("ATC_RAT_RLL_I", 0.7);
-    // AP_Param::set_default_by_name("ATC_RAT_RLL_D", 0);
-    // AP_Param::set_default_by_name("ATC_RAT_PIT_P", 0.7);
-    // AP_Param::set_default_by_name("ATC_RAT_PIT_I", 0.5);
-    // AP_Param::set_default_by_name("ATC_RAT_PIT_D", 0);
-    // AP_Param::set_default_by_name("ATC_RAT_YAW_P", 0.6);
-    // AP_Param::set_default_by_name("ATC_RAT_YAW_I", 5);
-    // AP_Param::set_default_by_name("ATC_RAT_YAW_D", 0);
-    // AP_Param::set_default_by_name("PSC_POSZ_P", 20);
-    // AP_Param::set_default_by_name("PSC_VELZ_P", 10);
-    // AP_Param::set_default_by_name("PSC_ACCZ_P", 0.5);
-    // AP_Param::set_default_by_name("PSC_ACCZ_I", 0.1);
-    // AP_Param::set_default_by_name("PSC_ACCZ_D", 0);    
-
+    AP_Param::set_default_by_name("ACRO_EXPO", ACRO_EXPO_DEFAULT);
+    //
     // input channels map
     // use RCMAP to do this
     // and should change throttle channel trim
     uint8_t chan_throttle = 1;
     uint8_t chan_pitch = 2;
     uint8_t chan_roll = 7;
-
+    //
     AP_Param::set_default_by_name("RCMAP_PITCH", chan_pitch);
     AP_Param::set_default_by_name("RCMAP_ROLL", chan_roll);
     AP_Param::set_default_by_name("RCMAP_YAW", 4);
     AP_Param::set_default_by_name("RCMAP_FORWARD", 3);
     AP_Param::set_default_by_name("RCMAP_LATERAL", 5);
     AP_Param::set_default_by_name("RCMAP_THROTTLE", chan_throttle);
-
+    //
+    // change throttle channel trim
     char rc_param_name[13]; // len is the max_size of below param name
     int rc_param_buf_len = sizeof(rc_param_name);
-
+    //
     // exchange throttle channel according to hwdef
     if (chan_throttle != 2 && chan_throttle < 8) {
         snprintf(rc_param_name, rc_param_buf_len, "RC%d_TRIM", chan_throttle);
@@ -760,49 +780,39 @@ void Sub::load_parameters()
 
         AP_Param::set_default_by_name("RC3_TRIM", 1500); // default throttle is RC3
     }
-
+    //
     // to consistent with algorithm output, reverse input channel
     if (chan_roll < 8) {
         snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", chan_roll);
         AP_Param::set_default_by_name(rc_param_name, 1);
     }
-
+    //
     if (chan_pitch < 8) {
         snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", chan_pitch);
         AP_Param::set_default_by_name(rc_param_name, 1);
     }
 
+    ///////////////////////////////////////////////////////////////
+    // motor
+    //
+    // ESC type
+    AP_Param::set_default_by_name("MOT_PWM_TYPE", 4); // DShot150
+    //
     // mapping logic motor to physical
-    #ifdef MOT_1_MAPPING
-        AP_Param::set_default_by_name("MOT_1_MAPPING", MOT_1_MAPPING);
-    #endif
-    #ifdef MOT_2_MAPPING
-        AP_Param::set_default_by_name("MOT_2_MAPPING", MOT_2_MAPPING);
-    #endif
-    #ifdef MOT_3_MAPPING
-        AP_Param::set_default_by_name("MOT_3_MAPPING", MOT_3_MAPPING);
-    #endif
-    #ifdef MOT_4_MAPPING
-        AP_Param::set_default_by_name("MOT_4_MAPPING", MOT_4_MAPPING);
-    #endif
-    #ifdef MOT_5_MAPPING
-        AP_Param::set_default_by_name("MOT_5_MAPPING", MOT_5_MAPPING);
-    #endif
-    #ifdef MOT_6_MAPPING
-        AP_Param::set_default_by_name("MOT_6_MAPPING", MOT_6_MAPPING);
-    #endif
-    #ifdef MOT_7_MAPPING
-        AP_Param::set_default_by_name("MOT_7_MAPPING", MOT_7_MAPPING);
-    #endif
-    #ifdef MOT_8_MAPPING
-        AP_Param::set_default_by_name("MOT_8_MAPPING", MOT_8_MAPPING);
-    #endif
+    AP_Param::set_default_by_name("MOT_1_MAPPING", 5);
+    AP_Param::set_default_by_name("MOT_2_MAPPING", 7);
+    AP_Param::set_default_by_name("MOT_3_MAPPING", 3);
+    AP_Param::set_default_by_name("MOT_4_MAPPING", 4);
+    AP_Param::set_default_by_name("MOT_5_MAPPING", 2);
+    AP_Param::set_default_by_name("MOT_6_MAPPING", 1);
+    AP_Param::set_default_by_name("MOT_7_MAPPING", 8);
+    AP_Param::set_default_by_name("MOT_8_MAPPING", 6);
 
-    // disable angle boost
-    AP_Param::set_default_by_name("ATC_ANGLE_BOOST", 0);
-
+    ///////////////////////////////////////////////////////////////
+    // to fix pitch overshoot issue
     AP_Param::set_default_by_name("AHRS_EKF_TYPE", 3);
     AP_Param::set_default_by_name("EK3_ENABLE", 1);
+    AP_Param::set_default_by_name("EK2_ENABLE", 0);
     AP_Param::set_default_by_name("INS_POS1_X", 0.093);
 }
 
