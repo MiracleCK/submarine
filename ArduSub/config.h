@@ -48,7 +48,7 @@
 //
 
 #ifndef RCMAP_ENABLED
-# define RCMAP_ENABLED DISABLED
+# define RCMAP_ENABLED ENABLED
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
