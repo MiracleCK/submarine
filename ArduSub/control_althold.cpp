@@ -218,7 +218,11 @@ bool Sub::attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int1
     if (is_reseting) {
         attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, target_yaw_rate);;
     } else if (is_ned_pilot) {
-        attitude_control.input_euler_rate_roll0_pitch_yaw(target_pitch_rate, target_yaw_rate);
+        target_roll_rate *= 50;
+        target_pitch_rate *= 50;
+        attitude_control.input_euler_rate_roll_limited_pitch_yaw(target_roll_rate, target_pitch_rate, target_yaw_rate);
+        // attitude_control.input_euler_rate_roll0_pitch_yaw(target_pitch_rate, target_yaw_rate);
+        // attitude_control.input_euler_rate_roll_pitch_yaw(target_roll_rate, target_pitch_rate, target_yaw_rate);
     } else {
         attitude_control.input_rate_bf_roll_pitch_yaw(target_roll_rate, target_pitch_rate, target_yaw_rate);
     }

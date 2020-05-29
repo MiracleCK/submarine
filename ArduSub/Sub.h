@@ -707,6 +707,7 @@ public:
     void thrust_decomposition_select(bool is_ned, control_mode_t mode);
     void thrust_decomposition_clear();
     Vector3f thrust_decomposition_ned_roll0(Vector3f& euler_rad, Vector3f thrusts);
+    Vector3f thrust_decomposition_ned(Vector3f& euler_rad, Vector3f thrusts);
     Vector3f thrust_decomposition_body_rot_matrix(Vector3f& euler_rad, Vector3f thrusts);
     
     bool is_need_relax_z_controller(float forward, float lateral, float throttle);

@@ -719,6 +719,11 @@ void Sub::load_parameters()
     // limit euler angle max in NED
     AP_Param::set_default_by_name("ANGLE_MAX", 8000);
     //
+    // smooth rate input
+    // AP_Param::set_default_by_name("ATC_INPUT_TC", 0.005);
+    AP_Param::set_default_by_name("ATC_RATE_P_MAX", 90); // 90 deg/s, used by reset to 0 and atc ff
+    AP_Param::set_default_by_name("ATC_RATE_R_MAX", 90); // 90 deg/s, used by reset to 0 and atc ff
+    //
     // attitude ctrl thrust to motor pid
     AP_Param::set_default_by_name("ATC_RAT_RLL_P", 0.24);
     AP_Param::set_default_by_name("ATC_RAT_RLL_I", 0.3);
@@ -751,7 +756,7 @@ void Sub::load_parameters()
 
     ///////////////////////////////////////////////////////////////
     // pilot input pitch/roll/yaw rot rate
-    AP_Param::set_default_by_name("ACRO_RP_P", ACRO_YAW_P);
+    AP_Param::set_default_by_name("ACRO_RP_P", ACRO_RP_P);
     AP_Param::set_default_by_name("ACRO_YAW_P", 6);
     AP_Param::set_default_by_name("ACRO_EXPO", ACRO_EXPO_DEFAULT);
     //
@@ -774,23 +779,16 @@ void Sub::load_parameters()
     int rc_param_buf_len = sizeof(rc_param_name);
     //
     // exchange throttle channel according to hwdef
-    if (chan_throttle != 2 && chan_throttle < 8) {
-        snprintf(rc_param_name, rc_param_buf_len, "RC%d_TRIM", chan_throttle);
-        AP_Param::set_default_by_name(rc_param_name, 1100);
-
-        AP_Param::set_default_by_name("RC3_TRIM", 1500); // default throttle is RC3
-    }
+    snprintf(rc_param_name, rc_param_buf_len, "RC%d_TRIM", chan_throttle);
+    AP_Param::set_default_by_name(rc_param_name, 1100);
+    AP_Param::set_default_by_name("RC3_TRIM", 1500); // default throttle is RC3
     //
     // to consistent with algorithm output, reverse input channel
-    if (chan_roll < 8) {
-        snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", chan_roll);
-        AP_Param::set_default_by_name(rc_param_name, 1);
-    }
+    snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", chan_roll);
+    AP_Param::set_default_by_name(rc_param_name, 1);
     //
-    if (chan_pitch < 8) {
-        snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", chan_pitch);
-        AP_Param::set_default_by_name(rc_param_name, 1);
-    }
+    snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", chan_pitch);
+    AP_Param::set_default_by_name(rc_param_name, 1);
 
     ///////////////////////////////////////////////////////////////
     // motor
@@ -812,7 +810,7 @@ void Sub::load_parameters()
     // to fix pitch overshoot issue
     AP_Param::set_default_by_name("AHRS_EKF_TYPE", 3);
     AP_Param::set_default_by_name("EK3_ENABLE", 1);
-    AP_Param::set_default_by_name("EK2_ENABLE", 0);
+    // AP_Param::set_default_by_name("EK2_ENABLE", 0);
     AP_Param::set_default_by_name("INS_POS1_X", 0.093);
 }
 
