@@ -757,6 +757,8 @@ void Sub::load_parameters()
     #ifdef MOT_8_MAPPING
         AP_Param::set_default_by_name("MOT_8_MAPPING", MOT_8_MAPPING);
     #endif
+
+    AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", 1); // look at next wp
 }
 
 void Sub::convert_old_parameters()

@@ -13,7 +13,7 @@ bool Sub::rtl_init(bool ignore_checks)
     }
 
     // initialise yaw
-    set_auto_yaw_mode(get_default_auto_yaw_mode(false));
+    set_auto_yaw_mode(get_default_auto_yaw_mode(true));
     // start in position control mode
     rtl_pos_control_start();
 
@@ -45,7 +45,7 @@ void Sub::rtl_pos_control_start()
     printf("stopping_x stopping_y stopping_z = %f %f %f \r\n", stopping_point.x, stopping_point.y, stopping_point.z);
 
     // initialise yaw
-    set_auto_yaw_mode(WP_YAW_BEHAVIOR_LOOK_AT_NEXT_WP);
+    set_auto_yaw_mode(get_default_auto_yaw_mode(true));
 }
 
 void Sub::rtl_run()
