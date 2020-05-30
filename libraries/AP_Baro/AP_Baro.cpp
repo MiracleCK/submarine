@@ -168,6 +168,28 @@ const AP_Param::GroupInfo AP_Baro::var_info[] = {
     AP_GROUPINFO("PROBE_EXT", 14, AP_Baro, _baro_probe_ext, HAL_BARO_PROBE_EXT_DEFAULT),
 #endif
 
+    // @Param: POS1_X
+    // @DisplayName: IMU accelerometer X position
+    // @Description: X position of the first IMU Accelerometer in body frame. Positive X is forward of the origin. Attention: The IMU should be located as close to the vehicle c.g. as practical so that the value of this parameter is minimised. Failure to do so can result in noisy navigation velocity measurements due to vibration and IMU gyro noise. If the IMU cannot be moved and velocity noise is a problem, a location closer to the IMU can be used as the body frame origin.
+    // @Units: m
+    // @Range: -10 10
+    // @User: Advanced
+
+    // @Param: POS1_Y
+    // @DisplayName: IMU accelerometer Y position
+    // @Description: Y position of the first IMU accelerometer in body frame. Positive Y is to the right of the origin. Attention: The IMU should be located as close to the vehicle c.g. as practical so that the value of this parameter is minimised. Failure to do so can result in noisy navigation velocity measurements due to vibration and IMU gyro noise. If the IMU cannot be moved and velocity noise is a problem, a location closer to the IMU can be used as the body frame origin.
+    // @Units: m
+    // @Range: -10 10
+    // @User: Advanced
+
+    // @Param: POS1_Z
+    // @DisplayName: IMU accelerometer Z position
+    // @Description: Z position of the first IMU accelerometer in body frame. Positive Z is down from the origin. Attention: The IMU should be located as close to the vehicle c.g. as practical so that the value of this parameter is minimised. Failure to do so can result in noisy navigation velocity measurements due to vibration and IMU gyro noise. If the IMU cannot be moved and velocity noise is a problem, a location closer to the IMU can be used as the body frame origin.
+    // @Units: m
+    // @Range: -10 10
+    // @User: Advanced
+    AP_GROUPINFO("POS1", 15, AP_Baro, _baro_pos, 0.0f),
+
     AP_GROUPEND
 };
 
@@ -780,7 +802,7 @@ void AP_Baro::update(void)
             sensors[i].alt_ok = !(isnan(altitude) || isinf(altitude));
             if (sensors[i].alt_ok) {
                 if (altitude < 0 && _baro_pos_correct_callback != nullptr) {
-                    _baro_pos_correct_callback(&altitude);
+                    _baro_pos_correct_callback(_baro_pos, &altitude);
                 }
                 sensors[i].altitude = altitude + _alt_offset_active;
             }

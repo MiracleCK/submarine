@@ -187,7 +187,7 @@ public:
         return _rsem;
     }
 
-    FUNCTOR_TYPEDEF(baro_pos_correct_fn_t, void, float*);
+    FUNCTOR_TYPEDEF(baro_pos_correct_fn_t, void, Vector3f, float*);
     void set_baro_pos_correct_callback(baro_pos_correct_fn_t callback) {
         _baro_pos_correct_callback = callback;
     }
@@ -264,6 +264,9 @@ private:
     HAL_Semaphore_Recursive            _rsem;
 
     baro_pos_correct_fn_t _baro_pos_correct_callback;
+
+    // baro position offset in body frame
+    AP_Vector3f _baro_pos;
 };
 
 namespace AP {

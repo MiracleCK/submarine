@@ -723,7 +723,7 @@ public:
     void get_alt_hold_pilot_desired_angle_rates(int16_t roll_in, int16_t pitch_in, int16_t yaw_in, float &roll_out, float &pitch_out, float &yaw_out);
 private:
     void thrust_decomposition_att_error(Matrix3f body_to_ned, Vector3f thrusts, Vector3f& thrust_decomp);
-    void baro_pos_correct(float *altitude);
+    void baro_pos_correct(Vector3f sensor_pos, float *altitude);
 };
 
 extern const AP_HAL::HAL& hal;
