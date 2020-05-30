@@ -262,7 +262,7 @@ void Sub::althold_run_rate()
     float lateral = channel_lateral->norm_input();
     float throttle = channel_throttle->norm_input();
 
-    if (fabsf(throttle - 0.5f) > 0.05f ||                    // Throttle input above 5%
+    if ((is_ned_pilot && fabsf(throttle - 0.5f) > 0.05f) ||                    // Throttle input above 5%
         (!is_ned_pilot && is_need_relax_z_controller(forward, lateral, throttle))) {  // Forward input above 5%
         if (!is_ned_pilot) {
             thrust_decomposition_clear(); // all should linear thrust should be body frame
