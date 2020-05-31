@@ -801,7 +801,7 @@ void AP_Baro::update(void)
             // sanity check altitude
             sensors[i].alt_ok = !(isnan(altitude) || isinf(altitude));
             if (sensors[i].alt_ok) {
-                if (altitude < 0 && _baro_pos_correct_callback != nullptr) {
+                if (_baro_pos_correct_callback != nullptr) {
                     _baro_pos_correct_callback(_baro_pos, &altitude);
                 }
                 sensors[i].altitude = altitude + _alt_offset_active;
