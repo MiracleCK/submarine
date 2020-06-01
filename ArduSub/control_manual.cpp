@@ -34,7 +34,8 @@ void Sub::manual_run()
     motors.set_roll(channel_roll->norm_input());
     motors.set_pitch(channel_pitch->norm_input());
     motors.set_yaw(channel_yaw->norm_input() * g.acro_yaw_p / ACRO_YAW_P);
-    motors.set_throttle(channel_throttle->norm_input());
+    motors.set_throttle(motors.get_throttle_hover()); // should be 0.5f in sub
+    motors.set_throttle_pilot(motors.get_throttle_bidirectional(channel_throttle->norm_input()));
     motors.set_forward(channel_forward->norm_input());
     motors.set_lateral(channel_lateral->norm_input());
 }

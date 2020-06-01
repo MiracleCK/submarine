@@ -258,23 +258,14 @@ void Sub::althold_run_rate()
         is_request_reset_rp = false;
     }
 
-    float forward = channel_forward->norm_input();
-    float lateral = channel_lateral->norm_input();
-    float throttle = channel_throttle->norm_input();
-
-    if ((is_ned_pilot && fabsf(throttle - 0.5f) > 0.05f) ||                    // Throttle input above 5%
-        (!is_ned_pilot && is_need_relax_z_controller(forward, lateral, throttle))) {  // Forward input above 5%
-        if (!is_ned_pilot) {
-            thrust_decomposition_clear(); // all should linear thrust should be body frame
-        }
-
+    if (is_affect_z) {
         // output pilot's throttle
         if (!is_ned_pilot) { // only pilot input should affect
-            motors.set_throttle_bf(constrain_float(2 * (throttle - 0.5f), -1.0f, 1.0f));
-            attitude_control.set_throttle_out(0.5, false, g.throttle_filt); // throttle should be zero
+            motors.set_throttle_pilot(motors.get_throttle_bidirectional(pilot_trans_thrusts.z));
+            attitude_control.set_throttle_out(motors.get_throttle_hover(), false, g.throttle_filt); // throttle should be zero
         } else {
-            motors.set_throttle_bf(0.0f);
-            attitude_control.set_throttle_out(throttle, false, g.throttle_filt);
+            motors.set_throttle_pilot(0.0f);
+            attitude_control.set_throttle_out(pilot_trans_thrusts.z, false, g.throttle_filt);
         }
         // reset z targets to current values
         pos_control.relax_alt_hold_controllers();
@@ -289,12 +280,10 @@ void Sub::althold_run_rate()
         }
 
         if (!is_ned_pilot) {
-            motors.set_throttle_bf(constrain_float(2 * (throttle - 0.5f), -1.0f, 1.0f)); // here means throttle not affect z pos
+            motors.set_throttle_pilot(motors.get_throttle_bidirectional(pilot_trans_thrusts.z)); // here means throttle not affect z pos
         } else {
-            motors.set_throttle_bf(0.0f);
+            motors.set_throttle_pilot(0.0f);
         }
-
-        thrust_decomposition_select(is_ned_pilot, ALT_HOLD);
 
         if (ap.at_bottom) {
             pos_control.relax_alt_hold_controllers(); // clear velocity and position targets
@@ -313,6 +302,6 @@ void Sub::althold_run_rate()
         pos_control.update_z_controller();
     }
 
-    motors.set_forward(forward);
-    motors.set_lateral(lateral);
+    motors.set_forward(pilot_trans_thrusts.x);
+    motors.set_lateral(pilot_trans_thrusts.y);
 }

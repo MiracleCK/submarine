@@ -286,49 +286,50 @@ Vector3f Sub::thrust_decomposition_body_rot_matrix(Vector3f& euler_rad, Vector3f
 // throttle set by pilot
 // no need to do decomposition
 
-void Sub::thrust_decomposition_init(bool is_ned, control_mode_t mode) {
+void Sub::thrust_decomposition_select(bool is_ned, control_mode_t mode, bool is_affect_z_pos) {
+    pilot_axis_t target_axis;
+
     if (mode != STABILIZE && mode != ALT_HOLD) {
-        thrust_decomposition_clear();
+        target_axis = AXIS_CLEARD;
+    } else if (is_ned) {
+        target_axis = AXIS_NED;
+    } else {
+        if (mode == ALT_HOLD) {
+            if (is_affect_z_pos) {
+                target_axis = AXIS_CLEARD;
+            } else {
+                target_axis = AXIS_BODY;
+            }
+        } else {
+            target_axis = AXIS_CLEARD;
+        }
+    }
+
+    if (pilot_axis == target_axis) {
         return;
     }
 
-    if ((is_ned && pilot_axis == AXIS_NED) || (!is_ned && pilot_axis == AXIS_CLEARD)) {
-        return;
-    }
-
-    thrust_decomposition_select(is_ned, mode);
-}
-
-void Sub::thrust_decomposition_select(bool is_ned, control_mode_t mode) {
-    if ((is_ned && pilot_axis == AXIS_NED) || (!is_ned && pilot_axis == AXIS_BODY)) {
-        return;
-    }
-
-    if (is_ned) {
+    if (target_axis == AXIS_NED) {
         printf("set decomposition to NED\r\n");
         motors.set_thrust_decomposition_callback(
             FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_ned, Vector3f, Vector3f&, Vector3f, float));
-    } else {
+    } else if (target_axis == AXIS_BODY) {
         printf("set decomposition to body\r\n");
         motors.set_thrust_decomposition_callback(
             FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_body_rot_matrix, Vector3f, Vector3f&, Vector3f, float));
+    } else {
+        printf("decomposition cleard\r\n");
+        motors.set_thrust_decomposition_callback(nullptr);
     }
 
-    pilot_axis = is_ned ? AXIS_NED : AXIS_BODY;
+    pilot_axis = target_axis;
 }
 
-void Sub::thrust_decomposition_clear() {
-    if (pilot_axis == AXIS_CLEARD) {
-        return;
+bool Sub::is_affect_z_pos(bool is_ned, float forward, float lateral, float throttle) {
+    if (is_ned) {
+        return (fabsf(throttle - 0.5f) > 0.05f);
     }
 
-    motors.set_thrust_decomposition_callback(nullptr);
-    
-    pilot_axis = AXIS_CLEARD;
-    printf("decomposition cleard\r\n");
-}
-
-bool Sub::is_need_relax_z_controller(float forward, float lateral, float throttle) {
     Matrix3f body_to_ned = ahrs.get_rotation_body_to_ned();
     Vector3f thrusts(forward, lateral, -(throttle - 0.5f) * 2); // thorttle is 0 ~ 1 and body axis down is +
     Vector3f thrusts_ned = body_to_ned * thrusts;

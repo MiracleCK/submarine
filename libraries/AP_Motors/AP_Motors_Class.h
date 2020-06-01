@@ -92,7 +92,7 @@ public:
     void                set_throttle(float throttle_in) { _throttle_in = throttle_in; };   // range 0 ~ 1
     void                set_throttle_avg_max(float throttle_avg_max) { _throttle_avg_max = constrain_float(throttle_avg_max, 0.0f, 1.0f); };   // range 0 ~ 1
     void                set_throttle_filter_cutoff(float filt_hz) { _throttle_filter.set_cutoff_frequency(filt_hz); }
-    void                set_throttle_bf(float throttle_in_bf) { _throttle_in_bf = throttle_in_bf; } // range -1 ~ 1
+    void                set_throttle_pilot(float throttle_in_bf) { _throttle_in_bf = throttle_in_bf; } // range -1 ~ 1
     void                set_forward(float forward_in) { _forward_in = forward_in; }; // range -1 ~ +1
     void                set_lateral(float lateral_in) { _lateral_in = lateral_in; };     // range -1 ~ +1
 
@@ -103,6 +103,7 @@ public:
     float               get_throttle_out() const { return _throttle_out; }
     float               get_throttle() const { return constrain_float(_throttle_filter.get(), 0.0f, 1.0f); }
     float               get_throttle_bidirectional() const { return constrain_float(2 * (_throttle_filter.get() - 0.5f), -1.0f, 1.0f); }
+    float               get_throttle_bidirectional(float throttle) const { return constrain_float(2 * (throttle - 0.5f), -1.0f, 1.0f); }
     float               get_forward() const { return _forward_in; }
     float               get_lateral() const { return _lateral_in; }
     virtual float       get_throttle_hover() const = 0;

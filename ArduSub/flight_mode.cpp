@@ -115,7 +115,16 @@ bool Sub::set_mode(const uint8_t new_mode, const ModeReason reason)
 // called at 100hz or more
 void Sub::update_flight_mode()
 {
-    thrust_decomposition_init(is_ned_pilot, control_mode);
+    if (motors.armed()) {
+        pilot_trans_thrusts.x = channel_forward->norm_input();
+        pilot_trans_thrusts.y = channel_lateral->norm_input();
+        pilot_trans_thrusts.z = channel_throttle->norm_input();
+
+        is_affect_z = is_affect_z_pos(is_ned_pilot, pilot_trans_thrusts.x, pilot_trans_thrusts.y, pilot_trans_thrusts.z);
+        thrust_decomposition_select(is_ned_pilot, control_mode, is_affect_z);
+    } else {
+        pilot_trans_thrusts(0, 0, 0);
+    }
 
     switch (control_mode) {
     case ACRO:
@@ -177,8 +186,6 @@ void Sub::exit_mode(control_mode_t old_control_mode, control_mode_t new_control_
         camera_mount.set_mode_to_default();
 #endif  // MOUNT == ENABLED
     }
-
-    thrust_decomposition_init(is_ned_pilot, new_control_mode);
 }
 
 // returns true or false whether mode requires GPS

@@ -703,14 +703,15 @@ public:
     bool lastVelocityZWasNegative = false;
 
     void setup_custom_motors();
-    void thrust_decomposition_init(bool, control_mode_t);
-    void thrust_decomposition_select(bool is_ned, control_mode_t mode);
-    void thrust_decomposition_clear();
-    Vector3f thrust_decomposition_ned_roll0(Vector3f& euler_rad, Vector3f thrusts);
-    Vector3f thrust_decomposition_ned(Vector3f& euler_rad, Vector3f thrusts);
-    Vector3f thrust_decomposition_body_rot_matrix(Vector3f& euler_rad, Vector3f thrusts);
     
-    bool is_need_relax_z_controller(float forward, float lateral, float throttle);
+    bool is_affect_z;
+    Vector3f pilot_trans_thrusts;
+    void thrust_decomposition_select(bool is_ned, control_mode_t mode, bool is_affect_z_pos = false);
+    Vector3f thrust_decomposition_ned_roll0(Vector3f& euler_rad, Vector3f thrusts, float throttle_bf);
+    Vector3f thrust_decomposition_ned(Vector3f& euler_rad, Vector3f thrusts, float throttle_bf);
+    Vector3f thrust_decomposition_body_rot_matrix(Vector3f& euler_rad, Vector3f thrusts, float throttle_bf);
+    
+    bool is_affect_z_pos(bool is_ned, float forward, float lateral, float throttle);
 
     void sensor_rotate(Vector3f& sensor);
 

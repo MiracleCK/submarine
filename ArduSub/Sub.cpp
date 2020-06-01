@@ -48,11 +48,6 @@ Sub::Sub()
 #if CONFIG_HAL_BOARD != HAL_BOARD_SITL
     failsafe.pilot_input = true;
 #endif
-   
-    // Notice: the mode should be the same as control_mode init
-    // MANUAL mode not need to do this init
-    // place this code here to tell use we should do this when mode is not MANUAL
-    thrust_decomposition_init(is_ned_pilot, MANUAL);
 }
 
 Sub sub;
