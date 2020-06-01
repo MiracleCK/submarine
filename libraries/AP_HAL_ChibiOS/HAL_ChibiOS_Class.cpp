@@ -122,6 +122,7 @@ HAL_ChibiOS::HAL_ChibiOS() :
         &analogIn,
         &storageDriver,
         &uartADriver,
+        //&uartFDriver,
         &gpioDriver,
         &rcinDriver,
         &rcoutDriver,
@@ -192,6 +193,7 @@ static void main_loop()
 
     hal.uartB->begin(38400);
     hal.uartC->begin(57600);
+    //hal.console->begin(57600);
     hal.analogin->init();
     hal.scheduler->init();
 

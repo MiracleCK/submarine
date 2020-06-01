@@ -70,6 +70,7 @@ protected:
     AP_Int8             _motor_reverse[AP_MOTORS_MAX_NUM_MOTORS];
     AP_Float            _forwardVerticalCouplingFactor;
     AP_Int8             _motor_mapping[AP_MOTORS_MAX_NUM_MOTORS];
+    AP_Int16             _motor_deadzone[AP_MOTORS_MAX_NUM_MOTORS];
 
     float               _throttle_factor[AP_MOTORS_MAX_NUM_MOTORS]; // each motors contribution to throttle (climb/descent)
     float               _forward_factor[AP_MOTORS_MAX_NUM_MOTORS]; // each motors contribution to forward/backward

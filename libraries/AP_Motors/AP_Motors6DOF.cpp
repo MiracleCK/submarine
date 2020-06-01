@@ -177,6 +177,62 @@ const AP_Param::GroupInfo AP_Motors6DOF::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("8_MAPPING", 21, AP_Motors6DOF, _motor_mapping[7], 8),
 
+	// @Param: 1_DEADZONE
+    // @DisplayName: Motor dead zone
+    // @Description: Used to correct motor dead zone
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("1_DEADZONE", 22, AP_Motors6DOF, _motor_deadzone[0], 0),
+
+    // @Param: 2_DEADZONE
+    // @DisplayName: Motor dead zone
+    // @Description: Used to correct motor dead zone
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("2_DEADZONE", 23, AP_Motors6DOF, _motor_deadzone[1], 0),
+
+    // @Param: 3_DEADZONE
+    // @DisplayName: Motor dead zone
+    // @Description: Used to correct motor dead zone
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("3_DEADZONE", 24, AP_Motors6DOF, _motor_deadzone[2], 0),
+
+    // @Param: 4_DEADZONE
+    // @DisplayName: Motor dead zone
+    // @Description: Used to correct motor dead zone
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("4_DEADZONE", 25, AP_Motors6DOF, _motor_deadzone[3], 0),
+
+    // @Param: 5_DEADZONE
+    // @DisplayName: Motor dead zone
+    // @Description: Used to correct motor dead zone
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("5_DEADZONE", 26, AP_Motors6DOF, _motor_deadzone[4], 0),
+
+    // @Param: 6_DEADZONE
+    // @DisplayName: Motor dead zone
+    // @Description: Used to correct motor dead zone
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("6_DEADZONE", 27, AP_Motors6DOF, _motor_deadzone[5], 0),
+
+    // @Param: 7_DEADZONE
+    // @DisplayName: Motor dead zone
+    // @Description: Used to correct motor dead zone
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("7_DEADZONE", 28, AP_Motors6DOF, _motor_deadzone[6], 0),
+
+    // @Param: 8_DEADZONE
+    // @DisplayName: Motor dead zone
+    // @Description: Used to correct motor dead zone
+    // @Ragne: 1 8
+    // @User: Standard
+    AP_GROUPINFO("8_DEADZONE", 29, AP_Motors6DOF, _motor_deadzone[7], 0),
+    
     AP_GROUPEND
 };
 
@@ -350,6 +406,17 @@ void AP_Motors6DOF::output_to_motors()
     // send output to each motor
     for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
         if (motor_enabled[i]) {
+        	if(_motor_deadzone[i] > 0) {
+        		int16_t min, max;
+
+        		min = 1500 - _motor_deadzone[i];
+        		max = 1500 + _motor_deadzone[i];
+	        	if(motor_out[i] > min && motor_out[i] < 1500)
+	        		motor_out[i] = min;
+	        	if(motor_out[i] > 1500 && motor_out[i] < max)
+	        		motor_out[i] = max;
+        	}
+        	//printf("motor %d pwm %d\r\n", i, motor_out[i]);
             rc_write(_motor_mapping[i] - 1, motor_out[i]);
         }
     }

@@ -757,6 +757,31 @@ void Sub::load_parameters()
     #ifdef MOT_8_MAPPING
         AP_Param::set_default_by_name("MOT_8_MAPPING", MOT_8_MAPPING);
     #endif
+
+    #ifdef MOT_1_DEADZONE
+        AP_Param::set_default_by_name("MOT_1_DEADZONE", MOT_1_DEADZONE);
+    #endif
+    #ifdef MOT_2_DEADZONE
+        AP_Param::set_default_by_name("MOT_2_DEADZONE", MOT_2_DEADZONE);
+    #endif
+    #ifdef MOT_3_DEADZONE
+        AP_Param::set_default_by_name("MOT_3_DEADZONE", MOT_3_DEADZONE);
+    #endif
+    #ifdef MOT_4_DEADZONE
+        AP_Param::set_default_by_name("MOT_4_DEADZONE", MOT_4_DEADZONE);
+    #endif
+    #ifdef MOT_5_DEADZONE
+        AP_Param::set_default_by_name("MOT_5_DEADZONE", MOT_5_DEADZONE);
+    #endif
+    #ifdef MOT_6_DEADZONE
+        AP_Param::set_default_by_name("MOT_6_DEADZONE", MOT_6_DEADZONE);
+    #endif
+    #ifdef MOT_7_DEADZONE
+        AP_Param::set_default_by_name("MOT_7_DEADZONE", MOT_7_DEADZONE);
+    #endif
+    #ifdef MOT_8_DEADZONE
+        AP_Param::set_default_by_name("MOT_8_DEADZONE", MOT_8_DEADZONE);
+    #endif
 }
 
 void Sub::convert_old_parameters()
