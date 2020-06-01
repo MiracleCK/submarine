@@ -806,6 +806,8 @@ void Sub::load_parameters()
     AP_Param::set_default_by_name("MOT_7_MAPPING", 8);
     AP_Param::set_default_by_name("MOT_8_MAPPING", 6);
 
+    AP_Param::set_default_by_name("MOT_THST_HOVER", 0.5);
+
     ///////////////////////////////////////////////////////////////
     // to fix pitch overshoot issue
     AP_Param::set_default_by_name("AHRS_EKF_TYPE", 3);

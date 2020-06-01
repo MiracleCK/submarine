@@ -269,7 +269,13 @@ void Sub::althold_run_rate()
         }
 
         // output pilot's throttle
-        attitude_control.set_throttle_out(throttle, false, g.throttle_filt);
+        if (!is_ned_pilot) { // only pilot input should affect
+            motors.set_throttle_bf(constrain_float(2 * (throttle - 0.5f), -1.0f, 1.0f));
+            attitude_control.set_throttle_out(0.5, false, g.throttle_filt); // throttle should be zero
+        } else {
+            motors.set_throttle_bf(0.0f);
+            attitude_control.set_throttle_out(throttle, false, g.throttle_filt);
+        }
         // reset z targets to current values
         pos_control.relax_alt_hold_controllers();
         is_z_ctrl_relaxed = true;
@@ -280,6 +286,12 @@ void Sub::althold_run_rate()
         if (is_z_ctrl_relaxed) {
             is_z_ctrl_relaxed = false;
             pos_control.relax_alt_hold_controllers();
+        }
+
+        if (!is_ned_pilot) {
+            motors.set_throttle_bf(constrain_float(2 * (throttle - 0.5f), -1.0f, 1.0f)); // here means throttle not affect z pos
+        } else {
+            motors.set_throttle_bf(0.0f);
         }
 
         thrust_decomposition_select(is_ned_pilot, ALT_HOLD);

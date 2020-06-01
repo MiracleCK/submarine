@@ -58,7 +58,7 @@ public:
     // custom
 
     // used to calc thurst decomposition
-    FUNCTOR_TYPEDEF(thrust_decomposition_fn_t, Vector3f, Vector3f&, Vector3f); // forward lateral throttle
+    FUNCTOR_TYPEDEF(thrust_decomposition_fn_t, Vector3f, Vector3f&, Vector3f, float); // forward lateral throttle
     void                set_thrust_decomposition_callback(thrust_decomposition_fn_t callback) {
         _thrust_decomposition_callback = callback;
     }

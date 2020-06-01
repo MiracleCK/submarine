@@ -75,7 +75,7 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
     Vector3f euler_rad(0.0f, 0.0f, 0.0f);
 
     if (_thrust_decomposition_callback) {
-        Vector3f thrusts_decomped = _thrust_decomposition_callback(euler_rad, thrusts);
+        Vector3f thrusts_decomped = _thrust_decomposition_callback(euler_rad, thrusts, _throttle_in_bf);
 
         forward_thrust = thrusts_decomped.x;
         lateral_thrust = thrusts_decomped.y;
@@ -85,10 +85,12 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
             printf("thrust decomposition: degree roll %4.2f pitch %4.2f \r\n", ToDeg(euler_rad.x), ToDeg(euler_rad.y));
             printf("thrust decomposition: forward %2.4f lateral %2.4f throttle %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
         }
+    } else {
+        throttle_thrust = _throttle_in_bf;
     }
 
     if (motor_log_start) {
-        AP::logger().Write("MDOF", "TimeUS,R,P,Y,RT,PT,YT,FTD,FT,LTD,LT,TTD,TT", "Qffffffffffff", 
+        AP::logger().Write("MDOF", "TimeUS,R,P,Y,RT,PT,YT,FTD,FT,LTD,LT,TTD,TT,BTT", "Qfffffffffffff", 
                             AP_HAL::micros64(),
                             (double)ToDeg(euler_rad.x),
                             (double)ToDeg(euler_rad.y),
@@ -101,7 +103,8 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
                             (double)thrusts.y,
                             (double)lateral_thrust,
                             (double)thrusts.z,
-                            (double)throttle_thrust);
+                            (double)throttle_thrust,
+                            (double)_throttle_in_bf);
 
         motor_log_start = false;
     }

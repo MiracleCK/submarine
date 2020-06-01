@@ -238,7 +238,7 @@ void test_decomp_body() {
     }
 }
 
-Vector3f Sub::thrust_decomposition_ned_roll0(Vector3f& euler_rad, Vector3f thrusts) {
+Vector3f Sub::thrust_decomposition_ned_roll0(Vector3f& euler_rad, Vector3f thrusts, float throttle_bf) {
     euler_rad.x = ahrs.get_roll();
     euler_rad.y = ahrs.get_pitch();
     euler_rad.z = ahrs.get_yaw();
@@ -248,7 +248,7 @@ Vector3f Sub::thrust_decomposition_ned_roll0(Vector3f& euler_rad, Vector3f thrus
     return thrust_decomp_ned_roll0(rot, thrusts);
 }
 
-Vector3f Sub::thrust_decomposition_ned(Vector3f& euler_rad, Vector3f thrusts) {
+Vector3f Sub::thrust_decomposition_ned(Vector3f& euler_rad, Vector3f thrusts, float throttle_bf) {
     euler_rad.x = ahrs.get_roll();
     euler_rad.y = ahrs.get_pitch();
     euler_rad.z = ahrs.get_yaw();
@@ -264,7 +264,7 @@ Vector3f Sub::thrust_decomposition_ned(Vector3f& euler_rad, Vector3f thrusts) {
     return thrust_decomp_ned(rot, thrusts);
 }
 
-Vector3f Sub::thrust_decomposition_body_rot_matrix(Vector3f& euler_rad, Vector3f thrusts) {
+Vector3f Sub::thrust_decomposition_body_rot_matrix(Vector3f& euler_rad, Vector3f thrusts, float throttle_bf) {
     euler_rad.x = ahrs.get_roll();
     euler_rad.y = ahrs.get_pitch();
     euler_rad.z = ahrs.get_yaw();
@@ -278,7 +278,7 @@ Vector3f Sub::thrust_decomposition_body_rot_matrix(Vector3f& euler_rad, Vector3f
 
     thrusts.x += decomped.x;
     thrusts.y += decomped.y;
-    thrusts.z = -decomped.z;
+    thrusts.z = throttle_bf - decomped.z;
     
     return thrusts;
 }
@@ -307,11 +307,11 @@ void Sub::thrust_decomposition_select(bool is_ned, control_mode_t mode) {
     if (is_ned) {
         printf("set decomposition to NED\r\n");
         motors.set_thrust_decomposition_callback(
-            FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_ned, Vector3f, Vector3f&, Vector3f));
+            FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_ned, Vector3f, Vector3f&, Vector3f, float));
     } else {
         printf("set decomposition to body\r\n");
         motors.set_thrust_decomposition_callback(
-            FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_body_rot_matrix, Vector3f, Vector3f&, Vector3f));
+            FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_body_rot_matrix, Vector3f, Vector3f&, Vector3f, float));
     }
 
     pilot_axis = is_ned ? AXIS_NED : AXIS_BODY;
