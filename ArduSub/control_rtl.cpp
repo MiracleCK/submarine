@@ -114,6 +114,13 @@ void Sub::rtl_run()
 // or if the fence is enabled and rtl waypoint is outside the fence
 bool Sub::rtl_set_destination(const Location& dest_loc)
 {
+    Location current_pos;
+    Location temp_loc;
+
+    temp_loc = dest_loc;
+    ahrs.get_location(current_pos);
+    temp_loc.alt = current_pos.alt;
+
     // Location ekf_position;
     // Location dest_loc = ddest_loc;
     // Location cur_loc;
@@ -132,7 +139,8 @@ bool Sub::rtl_set_destination(const Location& dest_loc)
 #if AC_FENCE == ENABLED
     // reject destination outside the fence.
     // Note: there is a danger that a target specified as a terrain altitude might not be checked if the conversion to alt-above-home fails
-    if (!fence.check_destination_within_fence(dest_loc)) {
+    // if (!fence.check_destination_within_fence(dest_loc)) {
+    if (!fence.check_destination_within_fence(temp_loc)) {
         AP::logger().Write_Error(LogErrorSubsystem::NAVIGATION, LogErrorCode::DEST_OUTSIDE_FENCE);
         // failure is propagated to GCS with NAK
         return false;
@@ -142,7 +150,8 @@ bool Sub::rtl_set_destination(const Location& dest_loc)
     // ahrs.get_location(ekf_position);
     // dest_loc.alt = ekf_position.alt;
 
-    if (!wp_nav.set_wp_destination(dest_loc)) {
+    // if (!wp_nav.set_wp_destination(dest_loc)) {
+    if (!wp_nav.set_wp_destination(temp_loc)) {
         // failure to set destination can only be because of missing terrain data
         AP::logger().Write_Error(LogErrorSubsystem::NAVIGATION, LogErrorCode::FAILED_TO_SET_DESTINATION);
         // failure is propagated to GCS with NAK
