@@ -245,6 +245,7 @@ Vector3f Sub::thrust_decomposition_ned_roll0(Vector3f& euler_rad, Vector3f thrus
 
     Matrix3f rot = ahrs.get_rotation_body_to_ned();
 
+    thrusts.z += throttle_bf;
     return thrust_decomp_ned_roll0(rot, thrusts);
 }
 
@@ -261,6 +262,7 @@ Vector3f Sub::thrust_decomposition_ned(Vector3f& euler_rad, Vector3f thrusts, fl
 
     rot = rot.transposed() * rot_yaw;
 
+    thrusts.z += throttle_bf;
     return thrust_decomp_ned(rot, thrusts);
 }
 
