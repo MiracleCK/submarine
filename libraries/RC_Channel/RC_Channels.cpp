@@ -82,6 +82,12 @@ bool RC_Channels::read_input(void)
     return success;
 }
 
+void RC_Channels::calc_slew_norm_input_bidirectional(float dt) {
+    for (uint8_t i=0; i<NUM_RC_CHANNELS; i++) {
+        channel(i)->calc_slew_norm_input_bidirectional(dt);
+    }
+}
+
 uint8_t RC_Channels::get_valid_channel_count(void)
 {
     return MIN(NUM_RC_CHANNELS, hal.rcin->num_channels());

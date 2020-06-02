@@ -265,6 +265,15 @@ private:
     void reset_mode_switch();
     void read_mode_switch();
     bool debounce_completed(int8_t position);
+
+    AP_Float _expo;
+    AP_Int16 _slew_rate;
+    
+    float last_slew_norm_input;
+
+public:
+    void calc_slew_norm_input_bidirectional(float dt);
+    float slew_norm_input_bidirectional();
 };
 
 
@@ -394,6 +403,9 @@ private:
 
     // Allow override by default at start
     bool _gcs_overrides_enabled = true;
+
+public:
+    void calc_slew_norm_input_bidirectional(float dt);
 };
 
 RC_Channels &rc();

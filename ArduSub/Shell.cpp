@@ -78,7 +78,13 @@ const param_name_t params[] = {
     {"iasz", "INS_ACCSCAL_Z"},
     {"iafx", "INS_ACCOFFS_X"},
     {"iafy", "INS_ACCOFFS_Y"},
-    {"iafz", "INS_ACCOFFS_Z"}
+    {"iafz", "INS_ACCOFFS_Z"},
+    {"texpo", "RC1_EXPO"},
+    {"tslew", "RC1_SLEWRATE"},
+    {"fexpo", "RC3_EXPO"},
+    {"fslew", "RC3_SLEWRATE"},
+    {"lexpo", "RC5_EXPO"},
+    {"lslew", "RC5_SLEWRATE"}
 };
 
 static int params_cnt = sizeof(params) / sizeof(params[0]);

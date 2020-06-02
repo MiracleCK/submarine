@@ -329,11 +329,11 @@ void Sub::thrust_decomposition_select(bool is_ned, control_mode_t mode, bool is_
 
 bool Sub::is_affect_z_pos(bool is_ned, float forward, float lateral, float throttle) {
     if (is_ned) {
-        return (fabsf(throttle - 0.5f) > 0.05f);
+        return (fabsf(throttle) > 0.05f);
     }
 
     Matrix3f body_to_ned = ahrs.get_rotation_body_to_ned();
-    Vector3f thrusts(forward, lateral, -(throttle - 0.5f) * 2); // thorttle is 0 ~ 1 and body axis down is +
+    Vector3f thrusts(forward, lateral, -throttle); // body axis down is +
     Vector3f thrusts_ned = body_to_ned * thrusts;
 
     return fabsf(thrusts_ned.z) > 0.05f;

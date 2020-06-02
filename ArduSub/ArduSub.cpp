@@ -164,6 +164,8 @@ void Sub::fifty_hz_loop()
 
     // Update rc input/output
     rc().read_input();
+    rc().calc_slew_norm_input_bidirectional(0.02f);
+
     SRV_Channels::output_ch_all();
 }
 

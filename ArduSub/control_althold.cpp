@@ -260,7 +260,7 @@ void Sub::althold_run_rate()
 
     if (is_affect_z) {
         // output pilot's throttle
-        motors.set_throttle_pilot(motors.get_throttle_bidirectional(pilot_trans_thrusts.z));
+        motors.set_throttle_pilot(pilot_trans_thrusts.z);
         attitude_control.set_throttle_out(motors.get_throttle_hover(), false, g.throttle_filt); // throttle should be zero
         
         // reset z targets to current values
@@ -276,7 +276,7 @@ void Sub::althold_run_rate()
         }
 
         if (!is_ned_pilot) {
-            motors.set_throttle_pilot(motors.get_throttle_bidirectional(pilot_trans_thrusts.z)); // here means throttle not affect z pos
+            motors.set_throttle_pilot(pilot_trans_thrusts.z); // here means throttle not affect z pos
         } else {
             motors.set_throttle_pilot(0.0f);
         }

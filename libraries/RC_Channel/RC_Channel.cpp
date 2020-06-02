@@ -96,6 +96,26 @@ const AP_Param::GroupInfo RC_Channel::var_info[] = {
     // @User: Standard
     AP_GROUPINFO_FRAME("OPTION",  6, RC_Channel, option, 0, AP_PARAM_FRAME_COPTER|AP_PARAM_FRAME_ROVER|AP_PARAM_FRAME_PLANE),
 
+    // @Param: EXPO
+    // @DisplayName: RC curve expo
+    // @Description: expo * rc_in^3 + (1 - expo) * rc_in
+    // @Units: PWM
+    // @Range: 0 1
+    // @User: Advanced
+    AP_GROUPINFO("EXPO", 20, RC_Channel, _expo, 0.3f),
+
+    // reserve a slot for kp
+    // 21
+
+    // @Param: SLEWRATE
+    // @DisplayName: RC in slew rate
+    // @Description: Slew rate as a percentage of total range per second. A value of 100 allows the rc to change over its full range in one second.  A value of zero disables the limit. 
+    // @Units: %/s
+    // @Range: 0 1000
+    // @Increment: 1
+    // @User: Advanced
+    AP_GROUPINFO("SLEWRATE", 22, RC_Channel, _slew_rate, 100),
+
     AP_GROUPEND
 };
 
@@ -289,6 +309,35 @@ RC_Channel::norm_input() const
         ret = reverse_mul * (float)(radio_in - radio_trim) / (float)(radio_max  - radio_trim);
     }
     return constrain_float(ret, -1.0f, 1.0f);
+}
+
+void RC_Channel::calc_slew_norm_input_bidirectional(float dt) {
+
+    float in = norm_input();
+    
+    if (radio_min >= radio_max || radio_trim < radio_min || radio_trim >= radio_max) {
+        last_slew_norm_input = in;
+        return;
+    }
+
+    if (radio_trim == radio_min) { // range 0 ~ 1
+        in = constrain_float(2 * (in - 0.5), -1.0f, 1.0f);
+    }
+
+    float in3 = in * in * in;
+    
+    in = _expo * in3 + (1 - _expo) * in;
+
+    if (_slew_rate > 0) {
+        float max_change = (1 - (-1)) * _slew_rate * dt * 0.01f;
+        in = constrain_float(in, last_slew_norm_input - max_change, last_slew_norm_input + max_change);
+    }
+
+    last_slew_norm_input = in;
+}
+
+float RC_Channel::slew_norm_input_bidirectional() {
+    return last_slew_norm_input;
 }
 
 float

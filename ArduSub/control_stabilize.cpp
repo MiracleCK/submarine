@@ -103,10 +103,10 @@ void Sub::stabilize_run_rate() {
 
     // output pilot's throttle
     attitude_control.set_throttle_out(motors.get_throttle_hover(), false, g.throttle_filt); // should be 0.5f in sub
-    motors.set_throttle_pilot(motors.get_throttle_bidirectional(channel_throttle->norm_input()));
+    motors.set_throttle_pilot(pilot_trans_thrusts.z);
 
     //control_in is range -1000-1000
     //radio_in is raw pwm value
-    motors.set_forward(channel_forward->norm_input());
-    motors.set_lateral(channel_lateral->norm_input());
+    motors.set_forward(pilot_trans_thrusts.x);
+    motors.set_lateral(pilot_trans_thrusts.y);
 }
