@@ -763,15 +763,18 @@ void Sub::load_parameters()
     // input channels map
     // use RCMAP to do this
     // and should change throttle channel trim
+    uint8_t chan_forward = 3;
+    uint8_t chan_lateral = 5;
     uint8_t chan_throttle = 1;
     uint8_t chan_pitch = 2;
     uint8_t chan_roll = 7;
+    uint8_t chan_yaw = 4;
     //
     AP_Param::set_default_by_name("RCMAP_PITCH", chan_pitch);
     AP_Param::set_default_by_name("RCMAP_ROLL", chan_roll);
-    AP_Param::set_default_by_name("RCMAP_YAW", 4);
-    AP_Param::set_default_by_name("RCMAP_FORWARD", 3);
-    AP_Param::set_default_by_name("RCMAP_LATERAL", 5);
+    AP_Param::set_default_by_name("RCMAP_YAW", chan_yaw);
+    AP_Param::set_default_by_name("RCMAP_FORWARD", chan_forward);
+    AP_Param::set_default_by_name("RCMAP_LATERAL", chan_lateral);
     AP_Param::set_default_by_name("RCMAP_THROTTLE", chan_throttle);
     //
     // change throttle channel trim
@@ -789,6 +792,14 @@ void Sub::load_parameters()
     //
     snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", chan_pitch);
     AP_Param::set_default_by_name(rc_param_name, 1);
+    //
+    // pilot input curve and slew
+    snprintf(rc_param_name, rc_param_buf_len, "RC%d_SLEWRATE", chan_forward);
+    AP_Param::set_default_by_name(rc_param_name, 150.0f);
+    snprintf(rc_param_name, rc_param_buf_len, "RC%d_SLEWRATE", chan_lateral);
+    AP_Param::set_default_by_name(rc_param_name, 150.0f);
+    snprintf(rc_param_name, rc_param_buf_len, "RC%d_SLEWRATE", chan_throttle);
+    AP_Param::set_default_by_name(rc_param_name, 150.0f);
 
     ///////////////////////////////////////////////////////////////
     // motor
