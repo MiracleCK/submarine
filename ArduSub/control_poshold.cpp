@@ -63,6 +63,7 @@ void Sub::poshold_run()
         attitude_control.set_throttle_out(0,true,g.throttle_filt);
         attitude_control.relax_attitude_controllers();
         pos_control.relax_alt_hold_controllers(motors.get_throttle_hover());
+        last_pilot_heading = ahrs.yaw_sensor;
         return;
     }
 
