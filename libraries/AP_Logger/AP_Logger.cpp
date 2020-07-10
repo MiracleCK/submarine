@@ -924,7 +924,7 @@ AP_Logger::log_write_fmt *AP_Logger::msg_fmt_for_name(const char *name, const ch
         memset((char*)ls_multipliers, '?', MIN(sizeof(ls_format), strlen(f->fmt)));
     }
     if (!validate_structure(&ls, (int16_t)-1)) {
-        Debug("Log structure invalid");
+        Debug("Log structure invalid, %s", ls_name);
         abort();
     }
 #endif
@@ -1140,6 +1140,9 @@ bool AP_Logger::Write_ISBD(const uint16_t isb_seqno,
 // Wrote an event packet
 void AP_Logger::Write_Event(LogEvent id)
 {
+	if(id>=LogEvent::SURFACED) 
+		return ;
+		
     const struct log_Event pkt{
         LOG_PACKET_HEADER_INIT(LOG_EVENT_MSG),
         time_us  : AP_HAL::micros64(),

@@ -1000,8 +1000,8 @@ void AC_PosControl::desired_vel_to_pos(float nav_dt)
     if (_flags.reset_desired_vel_to_pos) {
         _flags.reset_desired_vel_to_pos = false;
     } else {
-        _pos_target.x += _vel_desired.x * nav_dt;
-        _pos_target.y += _vel_desired.y * nav_dt;
+        //_pos_target.x += _vel_desired.x * nav_dt;
+        //_pos_target.y += _vel_desired.y * nav_dt;
     }
 }
 
@@ -1031,12 +1031,34 @@ void AC_PosControl::run_xy_controller(float dt)
         // Constrain the maximum length of _vel_target to the maximum position correction velocity
         // TODO: replace the leash length with a user definable maximum position correction
         if (limit_vector_length(_pos_error.x, _pos_error.y, _leash)) {
-            _pos_target.x = curr_pos.x + _pos_error.x;
-            _pos_target.y = curr_pos.y + _pos_error.y;
+            //_pos_target.x = curr_pos.x + _pos_error.x;
+            //_pos_target.y = curr_pos.y + _pos_error.y;
         }
 
         _vel_target = sqrt_controller(_pos_error, kP, _accel_cms);
     }
+
+    if (1) {
+    	static uint32_t _startup_ms = 0;
+
+        if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+        }
+
+        if(AP_HAL::millis() - _startup_ms > 100) {
+			_startup_ms = AP_HAL::millis();
+			
+		    AP::logger().Write("XYPO", "TimeUS,LEA,PTX,PTY,CPX,CPY,PEX,PEY", "Qfffffff", 
+                            AP_HAL::micros64(), 
+                            _leash,
+                             _pos_target.x,
+                             _pos_target.y,
+                             curr_pos.x,
+                             curr_pos.y,
+                             _pos_error.x,
+                             _pos_error.y);
+	    }
+	}
 
     // add velocity feed-forward
     _vel_target.x += _vel_desired.x;
@@ -1059,6 +1081,29 @@ void AC_PosControl::run_xy_controller(float dt)
     _vel_error.y = _vel_target.y - _vehicle_horiz_vel.y;
     // TODO: constrain velocity error and velocity target
 
+    if (1) {
+    	static uint32_t _startup_ms = 0;
+
+        if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+        }
+
+        if(AP_HAL::millis() - _startup_ms > 100) {
+			_startup_ms = AP_HAL::millis();
+			
+		    AP::logger().Write("XYVE", "TimeUS,VDX,VDY,VTX,VTY,VHVX,VHVY,VEX,VEY", "Qffffffff", 
+                            AP_HAL::micros64(), 
+                             _vel_desired.x,
+                             _vel_desired.y,
+                             _vel_target.x,
+                             _vel_target.y,
+                             _vehicle_horiz_vel.x,
+                             _vehicle_horiz_vel.y,
+                             _vel_error.x,
+                             _vel_error.y);
+	    }
+	}
+
     // call pi controller
     _pid_vel_xy.set_input(_vel_error);
 
@@ -1075,6 +1120,27 @@ void AC_PosControl::run_xy_controller(float dt)
 
     // get d
     vel_xy_d = _pid_vel_xy.get_d();
+
+    if (1) {
+    	static uint32_t _startup_ms = 0;
+
+        if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+        }
+
+        if(AP_HAL::millis() - _startup_ms > 100) {
+			_startup_ms = AP_HAL::millis();
+			
+		    AP::logger().Write("XYPI", "TimeUS,PX,PY,IX,IY,DX,DY", "Qffffff", 
+                            AP_HAL::micros64(), 
+                             vel_xy_p.x,
+                             vel_xy_p.y,
+                             vel_xy_i.x,
+                             vel_xy_i.y,
+                             vel_xy_d.x,
+                             vel_xy_d.y);
+	    }
+	}
 
     // acceleration to correct for velocity error and scale PID output to compensate for optical flow measurement induced EKF noise
     accel_target.x = (vel_xy_p.x + vel_xy_i.x + vel_xy_d.x) * ekfNavVelGainScaler;
@@ -1105,8 +1171,48 @@ void AC_PosControl::run_xy_controller(float dt)
     float accel_max = MIN(GRAVITY_MSS * 100.0f * tanf(ToRad(angle_max * 0.01f)), POSCONTROL_ACCEL_XY_MAX);
     _limit.accel_xy = limit_vector_length(_accel_target.x, _accel_target.y, accel_max);
 
+    if (1) {
+    	static uint32_t _startup_ms = 0;
+
+        if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+        }
+
+        if(AP_HAL::millis() - _startup_ms > 100) {
+			_startup_ms = AP_HAL::millis();
+			
+		    AP::logger().Write("XYAC", "TimeUS,VGS,AGM,ACM,ADX,ADY,ATX,ATY", "Qfffffff", 
+                            AP_HAL::micros64(), 
+                             ekfNavVelGainScaler,
+                             angle_max,
+                             accel_max,
+                             //_limit.accel_xy,
+                             _accel_desired.x,
+                             _accel_desired.y,
+                             _accel_target.x,
+                             _accel_target.y);
+	    }
+	}
+
     // update angle targets that will be passed to stabilize controller
     accel_to_lean_angles(_accel_target.x, _accel_target.y, _roll_target, _pitch_target);
+
+    if (1) {
+    	static uint32_t _startup_ms = 0;
+
+        if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+        }
+
+        if(AP_HAL::millis() - _startup_ms > 100) {
+			_startup_ms = AP_HAL::millis();
+			
+		    AP::logger().Write("XYAN", "TimeUS,RT,PT", "Qff", 
+                            AP_HAL::micros64(), 
+                             _roll_target,
+                             _pitch_target);
+	    }
+	}
 }
 
 // get_lean_angles_to_accel - convert roll, pitch lean angles to lat/lon frame accelerations in cm/s/s

@@ -664,12 +664,14 @@ void Sub::load_parameters()
 
         // erase all parameters
         hal.console->printf("Firmware change: erasing EEPROM...\n");
+        printf("Param version change(%d->%d): erasing EEPROM...\r\n", g.format_version.get(), Parameters::k_format_version);
         StorageManager::erase();
         AP_Param::erase_all();
 
         // save the current format version
         g.format_version.set_and_save(Parameters::k_format_version);
         hal.console->println("done.");
+        printf("done.\r\n");
     }
 
     uint32_t before = AP_HAL::micros();
@@ -709,6 +711,19 @@ void Sub::load_parameters()
 
     // AP_Param::set_default_by_name("BATT_MONITOR", 3); // DShot150
     AP_Param::set_and_save_by_name("BATT_MONITOR", 7);
+
+    AP_Param::set_default_by_name("ATC_RAT_YAW_P", 1.2);
+    AP_Param::set_default_by_name("ATC_RAT_YAW_I", 0);
+    AP_Param::set_default_by_name("ATC_RAT_YAW_D", 0);
+
+	AP_Param::set_default_by_name("PSC_POSXY_P", 1);
+	AP_Param::set_default_by_name("PSC_VELXY_P", 1);
+    AP_Param::set_default_by_name("PSC_VELXY_I", 0);
+    AP_Param::set_default_by_name("PSC_VELXY_D", 0);
+
+    AP_Param::set_default_by_name("EK2_POS_I_GATE", 100);
+
+    AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", 1); // look at next wp
     
     char rc_param_name[13]; // len is the max_size of below param name
     int rc_param_buf_len = sizeof(rc_param_name);
@@ -758,7 +773,30 @@ void Sub::load_parameters()
         AP_Param::set_default_by_name("MOT_8_MAPPING", MOT_8_MAPPING);
     #endif
 
-    AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", 1); // look at next wp
+    #ifdef MOT_1_DIRECTION
+        AP_Param::set_default_by_name("MOT_1_DIRECTION", MOT_1_DIRECTION);
+    #endif
+    #ifdef MOT_2_DIRECTION
+        AP_Param::set_default_by_name("MOT_2_DIRECTION", MOT_2_DIRECTION);
+    #endif
+    #ifdef MOT_3_DIRECTION
+        AP_Param::set_default_by_name("MOT_3_DIRECTION", MOT_3_DIRECTION);
+    #endif
+    #ifdef MOT_4_DIRECTION
+        AP_Param::set_default_by_name("MOT_4_DIRECTION", MOT_4_DIRECTION);
+    #endif
+    #ifdef MOT_5_DIRECTION
+        AP_Param::set_default_by_name("MOT_5_DIRECTION", MOT_5_DIRECTION);
+    #endif
+    #ifdef MOT_6_DIRECTION
+        AP_Param::set_default_by_name("MOT_6_DIRECTION", MOT_6_DIRECTION);
+    #endif
+    #ifdef MOT_7_DIRECTION
+        AP_Param::set_default_by_name("MOT_7_DIRECTION", MOT_7_DIRECTION);
+    #endif
+    #ifdef MOT_8_DIRECTION
+        AP_Param::set_default_by_name("MOT_8_DIRECTION", MOT_8_DIRECTION);
+    #endif
 
     #ifdef MOT_1_DEADZONE
         AP_Param::set_default_by_name("MOT_1_DEADZONE", MOT_1_DEADZONE);

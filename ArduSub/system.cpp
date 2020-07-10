@@ -215,7 +215,7 @@ void Sub::init_ardupilot()
     hal.shell->register_commands(shell_commands);
     
     hal.console->print("\nInit complete");
-    printf("init complete \r\n");
+    printf("\r\ninit complete \r\n");
     // flag that initialisation has completed
     ap.initialised = true;
 

@@ -6,6 +6,28 @@
 
 #if POSHOLD_ENABLED == ENABLED
 
+/// init_target to a position in cm from ekf origin
+void Sub::poshold_init_target(void)
+{
+	const Vector3f& curr_pos = inertial_nav.get_position();
+
+    // initialise pos controller speed, acceleration
+    pos_control.set_max_speed_xy(POSCONTROL_SPEED);
+    pos_control.set_max_accel_xy(POSCONTROL_ACCEL_XY);
+
+    // set target position
+    pos_control.set_xy_target(curr_pos.x, curr_pos.y);
+
+    // set vehicle velocity and acceleration to zero
+    pos_control.set_desired_velocity_xy(0.0f,0.0f);
+    pos_control.set_desired_accel_xy(0.0f,0.0f);
+
+    // initialise position controller if not already active
+    if (!pos_control.is_active_xy()) {
+        pos_control.init_xy_controller();
+    }
+}
+
 // poshold_init - initialise PosHold controller
 bool Sub::poshold_init()
 {
@@ -14,19 +36,9 @@ bool Sub::poshold_init()
         return false;
     }
 
-    // initialize vertical speeds and acceleration
-    pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
-    pos_control.set_max_accel_z(g.pilot_accel_z);
-
-    // initialise position and desired velocity
-    pos_control.set_alt_target(inertial_nav.get_altitude());
-    pos_control.set_desired_velocity_z(inertial_nav.get_velocity_z());
-
-    // set target to current position
-    // only init here as we can switch to PosHold in flight with a velocity <> 0 that will be used as _last_vel in PosControl and never updated again as we inhibit Reset_I
-    loiter_nav.clear_pilot_desired_acceleration();
-    loiter_nav.init_target();
-
+    // initialize controller
+    poshold_init_target();
+    
     last_pilot_heading = ahrs.yaw_sensor;
 
     return true;
@@ -58,20 +70,15 @@ void Sub::poshold_run()
     // if not armed set throttle to zero and exit immediately
     if (!motors.armed()) {
         motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::GROUND_IDLE);
-        loiter_nav.clear_pilot_desired_acceleration();
-        loiter_nav.init_target();
+        poshold_init_target();
         attitude_control.set_throttle_out(0,true,g.throttle_filt);
         attitude_control.relax_attitude_controllers();
-        pos_control.relax_alt_hold_controllers(motors.get_throttle_hover());
         last_pilot_heading = ahrs.yaw_sensor;
         return;
     }
 
     // set motors to full range
     motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
-
-    // run loiter controller
-    loiter_nav.update();
 
     ///////////////////////
     // update xy outputs //
@@ -85,9 +92,12 @@ void Sub::poshold_run()
     if (fabsf(pilot_lateral) > 0.1 || fabsf(pilot_forward) > 0.1) {
         lateral_out = pilot_lateral;
         forward_out = pilot_forward;
-        loiter_nav.clear_pilot_desired_acceleration();
-        loiter_nav.init_target(); // initialize target to current position after repositioning
+        poshold_init_target();
     } else {
+    	// run posxy controller
+    	pos_control.set_leash_length_xy(500.0f);
+    	pos_control.update_xy_controller();
+    	
         translate_wpnav_rp(lateral_out, forward_out);
     }
 
@@ -126,22 +136,5 @@ void Sub::poshold_run()
             attitude_control.input_euler_angle_roll_pitch_yaw(target_roll, target_pitch, last_pilot_heading, true);
         }
     }
-
-    ///////////////////
-    // Update z axis //
-
-    // get pilot desired climb rate
-    float target_climb_rate = get_pilot_desired_climb_rate(channel_throttle->get_control_in());
-    target_climb_rate = constrain_float(target_climb_rate, -get_pilot_speed_dn(), g.pilot_speed_up);
-
-    // call z axis position controller
-    if (ap.at_bottom) {
-        pos_control.relax_alt_hold_controllers(motors.get_throttle_hover()); // clear velocity and position targets, and integrator
-        pos_control.set_alt_target(inertial_nav.get_altitude() + 10.0f); // set target to 10 cm above bottom
-    } else {
-        pos_control.set_alt_target_from_climb_rate_ff(target_climb_rate, G_Dt, false);
-    }
-
-    pos_control.update_z_controller();
 }
 #endif  // POSHOLD_ENABLED == ENABLED

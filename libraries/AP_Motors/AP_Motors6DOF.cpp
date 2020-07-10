@@ -23,6 +23,7 @@
 #include <AP_BattMonitor/AP_BattMonitor.h>
 #include <AP_HAL/AP_HAL.h>
 #include "AP_Motors6DOF.h"
+#include "AP_Logger/AP_Logger.h"
 
 extern const AP_HAL::HAL& hal;
 
@@ -454,6 +455,35 @@ void AP_Motors6DOF::output_armed_stabilizing()
         throttle_thrust = get_throttle_bidirectional();
         forward_thrust = _forward_in;
         lateral_thrust = _lateral_in;
+
+		if(1) {
+	        static uint32_t _startup_ms = 0;
+
+	        if(_startup_ms == 0) {
+				_startup_ms = AP_HAL::millis();
+	        }
+
+	        if(AP_HAL::millis() - _startup_ms > 100) {
+				_startup_ms = AP_HAL::millis();
+				
+			    //printf("roll %f\r\n", _roll_in);
+			    //printf("pitch %f\r\n", _pitch_in);
+			    //printf("yaw %f\r\n", _yaw_in);
+			    //printf("throttle %f\r\n", _throttle_in);
+			    //printf("forward %f\r\n", _forward_in);
+			    //printf("lateral %f\r\n", _lateral_in);
+			    //printf("\r\n");
+
+			    AP::logger().Write("MDOF", "TimeUS,RT,PT,YT,FT,LT,TT", "Qffffff", 
+	                            AP_HAL::micros64(),
+	                            (double)roll_thrust, 
+	                            (double)pitch_thrust,
+	                            (double)yaw_thrust, 
+	                            (double)forward_thrust,
+	                            (double)lateral_thrust,
+	                            (double)throttle_thrust);
+		    }
+		}
 
 #if 0
         forward_thrust = forward_thrust * cosf(_pitch_thr) + throttle_thrust * sinf(_pitch_thr);

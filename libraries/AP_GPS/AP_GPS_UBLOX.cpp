@@ -513,6 +513,26 @@ AP_GPS_UBLOX::read(void)
             break;
         }
     }
+
+#if 0
+	state.status = AP_GPS::GPS_OK_FIX_3D;
+	state.location.lng    = -1183938670; //经度
+	state.location.lat    = 338103130; //纬度
+	state.location.alt    = -13; //海拔
+	state.hdop = 56;
+	state.num_sats = 27;
+	state.ground_speed = 0.0;
+	state.ground_course = 0.0;
+	state.velocity.x = 0.0;
+	state.velocity.y = 0.0;
+	state.velocity.z = 0.0;
+	
+	state.vdop = 86;
+	state.horizontal_accuracy = 0.2;
+	state.vertical_accuracy = 0.2;
+	state.speed_accuracy = 0.04;
+	parsed = true;
+#endif
     return parsed;
 }
 
@@ -996,9 +1016,9 @@ AP_GPS_UBLOX::_parse_gps(void)
         }
         _check_new_itow(_buffer.posllh.itow);
         _last_pos_time        = _buffer.posllh.itow;
-        state.location.lng    = _buffer.posllh.longitude;
-        state.location.lat    = _buffer.posllh.latitude;
-        state.location.alt    = _buffer.posllh.altitude_msl / 10;
+        state.location.lng    = _buffer.posllh.longitude; //经度
+        state.location.lat    = _buffer.posllh.latitude; //纬度
+        state.location.alt    = _buffer.posllh.altitude_msl / 10; //海拔
         state.status          = next_fix;
         _new_position = true;
         state.horizontal_accuracy = _buffer.posllh.horizontal_accuracy*1.0e-3f;
