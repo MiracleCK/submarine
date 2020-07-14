@@ -723,7 +723,8 @@ void Sub::load_parameters()
 
     AP_Param::set_default_by_name("EK2_POS_I_GATE", 100);
 
-    AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", 1); // look at next wp
+    AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", WP_YAW_BEHAVIOR_LOOK_AT_NEXT_WP); // look at next wp
+    //AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", WP_YAW_BEHAVIOR_CORRECT_XTRACK);
     
     char rc_param_name[13]; // len is the max_size of below param name
     int rc_param_buf_len = sizeof(rc_param_name);
