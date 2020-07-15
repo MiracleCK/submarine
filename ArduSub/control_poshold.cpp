@@ -10,6 +10,7 @@
 void Sub::poshold_init_target(void)
 {
 	const Vector3f& curr_pos = inertial_nav.get_position();
+	//const Vector3f& curr_vel = inertial_nav.get_velocity();
 
     // initialise pos controller speed, acceleration
     pos_control.set_max_speed_xy(POSCONTROL_SPEED);
@@ -19,6 +20,7 @@ void Sub::poshold_init_target(void)
     pos_control.set_xy_target(curr_pos.x, curr_pos.y);
 
     // set vehicle velocity and acceleration to zero
+    //pos_control.set_desired_velocity_xy(curr_vel.x, curr_vel.y);
     pos_control.set_desired_velocity_xy(0.0f,0.0f);
     pos_control.set_desired_accel_xy(0.0f,0.0f);
 

@@ -712,12 +712,12 @@ void Sub::load_parameters()
     // AP_Param::set_default_by_name("BATT_MONITOR", 3); // DShot150
     AP_Param::set_and_save_by_name("BATT_MONITOR", 7);
 
-    AP_Param::set_default_by_name("ATC_RAT_YAW_P", 1.2);
+    AP_Param::set_default_by_name("ATC_RAT_YAW_P", 1.0);
     AP_Param::set_default_by_name("ATC_RAT_YAW_I", 0);
     AP_Param::set_default_by_name("ATC_RAT_YAW_D", 0);
 
 	AP_Param::set_default_by_name("PSC_POSXY_P", 1);
-	AP_Param::set_default_by_name("PSC_VELXY_P", 1);
+	AP_Param::set_default_by_name("PSC_VELXY_P", 1.5);
     AP_Param::set_default_by_name("PSC_VELXY_I", 0);
     AP_Param::set_default_by_name("PSC_VELXY_D", 0);
 
