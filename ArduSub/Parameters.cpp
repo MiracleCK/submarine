@@ -712,18 +712,19 @@ void Sub::load_parameters()
     // AP_Param::set_default_by_name("BATT_MONITOR", 3); // DShot150
     AP_Param::set_and_save_by_name("BATT_MONITOR", 7);
 
-    AP_Param::set_default_by_name("ATC_RAT_YAW_P", 1.2);
+    AP_Param::set_default_by_name("ATC_RAT_YAW_P", 1.0);
     AP_Param::set_default_by_name("ATC_RAT_YAW_I", 0);
     AP_Param::set_default_by_name("ATC_RAT_YAW_D", 0);
 
 	AP_Param::set_default_by_name("PSC_POSXY_P", 1);
-	AP_Param::set_default_by_name("PSC_VELXY_P", 1);
+	AP_Param::set_default_by_name("PSC_VELXY_P", 1.5);
     AP_Param::set_default_by_name("PSC_VELXY_I", 0);
     AP_Param::set_default_by_name("PSC_VELXY_D", 0);
 
     AP_Param::set_default_by_name("EK2_POS_I_GATE", 100);
 
-    AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", 1); // look at next wp
+    AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", WP_YAW_BEHAVIOR_LOOK_AT_NEXT_WP); // look at next wp
+    //AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", WP_YAW_BEHAVIOR_CORRECT_XTRACK);
     
     char rc_param_name[13]; // len is the max_size of below param name
     int rc_param_buf_len = sizeof(rc_param_name);

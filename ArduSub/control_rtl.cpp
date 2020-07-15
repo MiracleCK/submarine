@@ -99,13 +99,39 @@ void Sub::rtl_run()
     // call z-axis position controller (wpnav should have already updated it's alt target)
     pos_control.update_z_controller();
 
+    float target_roll, target_pitch;
+
+	// convert pilot input to lean angles
+	get_pilot_desired_lean_angles(channel_roll->get_control_in(), channel_pitch->get_control_in(), target_roll, target_pitch, aparm.angle_max);
+
     // call attitude controller
     if (auto_yaw_mode == AUTO_YAW_HOLD) {
         // roll & pitch from waypoint controller, yaw rate from pilot
-        attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(channel_roll->get_control_in(), channel_pitch->get_control_in(), target_yaw_rate);
+        attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate);
     } else {
+    	float target_yaw = get_auto_heading();
+    	
+    	if(1) {
+	        static uint32_t _startup_ms = 0;
+
+	        if(_startup_ms == 0) {
+				_startup_ms = AP_HAL::millis();
+	        }
+
+	        if(AP_HAL::millis() - _startup_ms > 100) {
+				_startup_ms = AP_HAL::millis();
+				
+			    //printf("yaw angle %f\r\n", target_yaw);
+			    //printf("\r\n");
+
+			    AP::logger().Write("RTL", "TimeUS,YA", "Qf", 
+	                            AP_HAL::micros64(),
+	                            target_yaw);
+		    }
+		}
+		
         // roll, pitch from waypoint controller, yaw heading from auto_heading()
-        attitude_control.input_euler_angle_roll_pitch_yaw(channel_roll->get_control_in(), channel_pitch->get_control_in(), get_auto_heading(), true);
+        attitude_control.input_euler_angle_roll_pitch_yaw(target_roll, target_pitch, target_yaw, true);
     }
 }
 

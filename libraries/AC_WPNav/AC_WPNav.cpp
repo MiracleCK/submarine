@@ -249,7 +249,7 @@ bool AC_WPNav::set_wp_origin_and_destination(const Vector3f& origin, const Vecto
 
     _track_length = pos_delta.length(); // get track length
     _track_length_xy = safe_sqrt(sq(pos_delta.x)+sq(pos_delta.y));  // get horizontal track length (used to decide if we should update yaw)
-    printf("_track_length =%4.4f _track_length_xy = %4.4f \r\n", _track_length, _track_length_xy);
+
     // calculate each axis' percentage of the total distance to the destination
     if (is_zero(_track_length)) {
         // avoid possible divide by zero
@@ -328,18 +328,15 @@ void AC_WPNav::get_wp_stopping_point(Vector3f& stopping_point) const
     _pos_control.get_stopping_point_xy(stopping_point);
     _pos_control.get_stopping_point_z(stopping_point);
 }
-uint16_t desire_count = 0;
+
 /// advance_wp_target_along_track - move target location along track from origin to destination
 bool AC_WPNav::advance_wp_target_along_track(float dt)
 {
-    desire_count ++;
     float track_covered;        // distance (in cm) along the track that the vehicle has traveled.  Measured by drawing a perpendicular line from the track to the vehicle.
     Vector3f track_error;       // distance error (in cm) from the track_covered position (i.e. closest point on the line to the vehicle) and the vehicle
     float track_desired_max;    // the farthest distance (in cm) along the track that the leash will allow
     float track_leash_slack;    // additional distance (in cm) along the track from our track_covered position that our leash will allow
     bool reached_leash_limit = false;   // true when track has reached leash limit and we need to slow down the target point
-
-    // set_yaw_cd(get_bearing_cd(_origin, _destination));
 
     // get current location
     const Vector3f &curr_pos = _inav.get_position();
@@ -452,11 +449,7 @@ bool AC_WPNav::advance_wp_target_along_track(float dt)
     // convert final_target.z to altitude above the ekf origin
     final_target.z += terr_offset;
     _pos_control.set_pos_target(final_target);
-    if (desire_count >= 400) {
-        // printf("desire_track =%4.4f _track_length =%4.4f \r\n", _track_desired, _track_length);
-        desire_count = 0;
-    }
-    
+
     // check if we've reached the waypoint
     if( !_flags.reached_destination ) {
         if( _track_desired >= _track_length ) {
@@ -522,7 +515,6 @@ bool AC_WPNav::update_wpnav()
     if (!advance_wp_target_along_track(dt)) {
         // To-Do: handle inability to advance along track (probably because of missing terrain data)
         ret = false;
-        printf("ret = %d \r\n", ret);
     }
 
     // freeze feedforwards during known discontinuities
@@ -535,6 +527,27 @@ bool AC_WPNav::update_wpnav()
     check_wp_leash_length();
 
     _wp_last_update = AP_HAL::millis();
+
+    if(1) {
+        static uint32_t _startup_ms = 0;
+
+        if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+        }
+
+        if(AP_HAL::millis() - _startup_ms > 100) {
+			_startup_ms = AP_HAL::millis();
+
+		    AP::logger().Write("WP", "TimeUS,OX,OY,OZ,DX,DY,DZ", "Qffffff", 
+                            AP_HAL::micros64(),
+                            _origin.x,
+                            _origin.y,
+                            _origin.z,
+                            _destination.x,
+                            _destination.y,
+                            _destination.z);
+	    }
+	}
 
     return ret;
 }
