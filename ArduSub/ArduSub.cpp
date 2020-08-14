@@ -80,6 +80,7 @@ const AP_Scheduler::Task Sub::scheduler_tasks[] = {
 #ifdef USERHOOK_SUPERSLOWLOOP
     SCHED_TASK(userhook_SuperSlowLoop, 1,   75),
 #endif
+	SCHED_TASK_CLASS(Factory, &sub.factory, update, 400, 100),
 };
 
 constexpr int8_t Sub::_failsafe_priorities[5];
@@ -88,6 +89,8 @@ void Sub::setup()
 {
     // Load the default values of variables listed in var_info[]s
     AP_Param::setup_sketch_defaults();
+
+    factory.init();
 
     init_ardupilot();
 
@@ -128,8 +131,10 @@ void Sub::fast_loop()
     // check if ekf has reset target heading
     check_ekf_yaw_reset();
 
-    // run the attitude controllers
-    update_flight_mode();
+	if(!factory.isFactoryMode()) {
+	    // run the attitude controllers
+	    update_flight_mode();
+    }
 
     // update home from EKF if necessary
     update_home_from_EKF();

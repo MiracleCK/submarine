@@ -121,7 +121,8 @@ void Scheduler::init()
                      this);                  /* Thread parameter.      */
 #endif
 
-#ifndef HAL_NO_SHELL_THREAD
+//#ifndef HAL_NO_SHELL_THREAD
+#if 0
 // the storage thread runs at just above IO priority
     _shell_thread_ctx = chThdCreateStatic(_shell_thread_wa,
                      sizeof(_shell_thread_wa),
