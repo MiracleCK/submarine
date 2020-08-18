@@ -342,8 +342,7 @@ void AP_BoardConfig::board_autodetect(void)
         hal.console->printf("Detected Pixhawk\n");
 #endif
     } else {
-        //config_error("Unable to detect board type");
-        state.board_type.set(PX4_BOARD_PIXHAWK2);
+        config_error("Unable to detect board type");
     }
 #elif defined(CONFIG_ARCH_BOARD_PX4FMU_V4) || defined(HAL_CHIBIOS_ARCH_FMUV4)
     // only one choice

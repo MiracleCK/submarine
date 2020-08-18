@@ -19,7 +19,18 @@
 #define FACTORY_BATTERY_RESULT_BIT   5
 #define FACTORY_HISI_RESULT_BIT      6
 
-void Factory::init()
+void Factory::check()
+{
+	uint8_t test_pin;
+	
+	printf("factory check\r\n");
+	
+	test_pin = palReadLine(HAL_GPIO_PIN_TEST);
+	if(!test_pin)
+		hal.shell->register_factory_cb(this);
+}
+
+void Factory::setup()
 {
     printf("enter factory test mode\r\n");
 
@@ -32,7 +43,7 @@ void Factory::init()
 	_uart_down->init();
 }
 
-void Factory::update()
+void Factory::loop()
 {	
 	uint8_t result = 0;
     //static uint32_t tested = 0;
@@ -105,12 +116,12 @@ void Factory::update()
 	{
 		if(_hisi_result_new)
 		{
-		    //_uart_down->sendFactoryTestMsg(FACTORY_TEST_STM32_RESULT_MSGID, result, _hisi_result);
+		    _uart_down->sendFactoryTestMsg(FACTORY_TEST_STM32_RESULT_MSGID, result, _hisi_result);
 		    
 		}
 		else if (timesec > 35)
 		{
-		    //_uart_down->sendFactoryTestMsg(FACTORY_TEST_STM32_RESULT_MSGID, result, _hisi_result);
+		    _uart_down->sendFactoryTestMsg(FACTORY_TEST_STM32_RESULT_MSGID, result, _hisi_result);
 		}
 
 		_result_timestamp = AP_HAL::millis();
@@ -125,7 +136,7 @@ void Factory::update()
 		printf("_ramtron_result %d\r\n", _ramtron_result);
 		printf("_mmcsd_result %d\r\n", _mmcsd_result);
 		printf("_batt_result %d\r\n", _batt_result);
-		printf("_hisi_result %x\r\n", _hisi_result);
+		printf("_hisi_result 0x%x\r\n", _hisi_result);
 		printf("\r\n");
 		result = result;
 #endif
@@ -268,4 +279,5 @@ int Factory::_gps_test()
     return 1;
 }
 
+Factory factory;
 

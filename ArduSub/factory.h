@@ -13,11 +13,12 @@
 
 #include "factory_proto.h"
 
-class Factory {
+class Factory : public AP_HAL::HAL::Callbacks {
 public:
     Factory(void);
-	void init(void);
-	void update(void);
+    void check(void);
+	void setup(void) override;
+	void loop(void) override;
 	uint8_t isFactoryMode(void) const { return _test_mode; }
 	void setHisiTestResult(uint8_t *result, uint32_t len);
 	
@@ -55,4 +56,5 @@ private:
     void _uart_update(void);
 };
 
+extern Factory factory;
 

@@ -212,12 +212,8 @@ void Sub::init_ardupilot()
     // disable safety if requested
     BoardConfig.init_safety();  
 
-    factory.init();
+	hal.shell->register_commands(shell_commands);
 
-	if(!factory.isFactoryMode()) {
-		hal.shell->register_commands(shell_commands);
-    }
-    
     hal.console->print("\nInit complete");
     printf("\r\ninit complete \r\n");
     // flag that initialisation has completed

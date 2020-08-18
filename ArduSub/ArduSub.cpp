@@ -80,17 +80,16 @@ const AP_Scheduler::Task Sub::scheduler_tasks[] = {
 #ifdef USERHOOK_SUPERSLOWLOOP
     SCHED_TASK(userhook_SuperSlowLoop, 1,   75),
 #endif
-	SCHED_TASK_CLASS(Factory, &sub.factory, update, 400, 100),
 };
 
 constexpr int8_t Sub::_failsafe_priorities[5];
 
 void Sub::setup()
 {
+	factory.check();
+	
     // Load the default values of variables listed in var_info[]s
     AP_Param::setup_sketch_defaults();
-
-    factory.init();
 
     init_ardupilot();
 

@@ -91,7 +91,7 @@ STM32_ST_USE_TIMER 5
 # Now the size of flash in kilobytes, for creating the ld.script.
 
 # flash size
-FLASH_SIZE_KB 2048
+FLASH_SIZE_KB 1024
 
 # Now define which UART is used for printf(). We rarely use printf()
 # in ChibiOS, so this is really only for debugging very early startup
@@ -104,7 +104,7 @@ FLASH_SIZE_KB 2048
 # The value for STDOUT_SERIAL is a serial device name, and must be for a 
 # serial device for which pins are defined in this file. For example, SD7
 # is for UART7 (SD7 == "serial device 7" in ChibiOS).
-STDOUT_SERIAL SD1
+STDOUT_SERIAL SD3
 STDOUT_BAUDRATE 57600
 
 # Now the USB setup, if you have USB. All of these settings are
@@ -465,7 +465,7 @@ define HAL_STORAGE_SIZE 16384
 # fitted. This needs to be carefully chosen to align with your
 # bootloader. The flash storage system needs two sectors, and the
 # sectors must be at least 20% larger than HAL_STORAGE_SIZE.
-define STORAGE_FLASH_PAGE 22
+#define STORAGE_FLASH_PAGE 10
 
 # allow to have have a dedicated safety switch pin
 #define HAL_HAVE_SAFETY_SWITCH 1

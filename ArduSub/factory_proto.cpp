@@ -138,7 +138,7 @@ void Factory_proto::processMessage()
         case FACTORY_USB_RESPOND_MSGID:
             break;
         case FACTORY_TEST_HISI_RESULT_MSGID:
-            sub.factory.setHisiTestResult(_msg.data, _msg.size-TELEMETRY_MSG_HDR_SIZE-TELEMETRY_MSG_CRC_SIZE);
+            factory.setHisiTestResult(_msg.data, _msg.size-TELEMETRY_MSG_HDR_SIZE-TELEMETRY_MSG_CRC_SIZE);
             break;
         default:
         break;

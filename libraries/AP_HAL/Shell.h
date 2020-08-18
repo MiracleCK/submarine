@@ -14,4 +14,6 @@ public:
 
     virtual void     register_commands(ShellCommand* commands) = 0;
     virtual int      printf(const char *fmt, ...) = 0;
+
+    virtual void register_factory_cb(AP_HAL::HAL::Callbacks* cb) = 0;
 };
