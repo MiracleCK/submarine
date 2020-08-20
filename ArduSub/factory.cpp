@@ -25,25 +25,56 @@
 #define FACTORY_GPS_RESULT_BIT       6
 #define FACTORY_HISI_RESULT_BIT      7
 
-void Factory::check()
+const AP_Param::GroupInfo Factory::var_info[] = {
+    // @Param: AGING_EN
+    // @DisplayName: aging enable or disable
+    // @Description: Used to enter or exit aging mode.
+    // @Values: 1:enable,0:disable
+    // @User: Advanced
+    AP_GROUPINFO("AGING_EN",  0, Factory, _aging_enable, 0),
+
+    // @Param: AGING_RES
+    // @DisplayName: aging result
+    // @Description: Used to return aging result.
+    // @Values: bit[0-7]:imu,baro,compass,ramtron,mmcsd,batt,gps,hisi; 0:OK,1:err
+    // @User: Advanced
+    AP_GROUPINFO("AGING_RES", 1, Factory, _aging_result, 255),
+
+
+    AP_GROUPEND
+};
+
+void Factory::test_check()
 {
 	uint8_t test_pin;
 	
-	printf("factory check\r\n");
-	
 	test_pin = palReadLine(HAL_GPIO_PIN_TEST);
 	if(!test_pin)
+		_test_mode = 1;
+
+	if(_test_mode) {
+		printf("enter factory test mode\r\n");
 		hal.shell->register_factory_cb(this);
+	}
+}
+
+void Factory::aging_check()
+{
+	if(_aging_enable) {
+		_aging_enable.set_and_save(0);
+		_aging_mode = 1;
+	}
+	
+	if(_aging_mode) {
+		printf("enter factory aging mode\r\n");
+		hal.shell->register_factory_cb(this);
+	}
 }
 
 void Factory::setup()
 {
-    printf("enter factory test mode\r\n");
-
-    _test_mode = 1;
     _motor_time = AP_HAL::millis();
     _result_timestamp = AP_HAL::millis();
-    sub.motors.armed(TRUE);
 
     _uart_up->init();
 	_uart_down->init();
@@ -54,14 +85,15 @@ void Factory::loop()
 	uint8_t result = 0;
     //static uint32_t tested = 0;
     static uint32_t timesec = 0;
-    
-	if(!_test_mode)
-		return ;
 
 	_uart_update();
-
-	_motor_test();
-
+	
+	if(_test_mode) {
+		_motor_test();
+	} else {
+		_aging_test();
+	}
+	
 	//if (!tested)
     //{
         /* sensor mpu6000 */
@@ -134,6 +166,10 @@ void Factory::loop()
 		_result_timestamp = AP_HAL::millis();
 		timesec++;
 
+		if(timesec%60==0) {
+			_aging_result.set_and_save(result);
+		}
+
 #if 1
 		printf("\r\n");
 		printf("result 0x%x\r\n", result);
@@ -145,6 +181,7 @@ void Factory::loop()
 		printf("_batt_result %d\r\n", _batt_result);
 		printf("_gps_result %d\r\n", _gps_result);
 		printf("_hisi_result 0x%x\r\n", _hisi_result);
+		printf("depth %f\r\n", depth);
 		printf("\r\n");
 		result = result;
 #endif
@@ -154,6 +191,7 @@ void Factory::loop()
 Factory::Factory(void):
 	_uart_up(&g_uart_up_port),
     _uart_down(&g_uart_down_port),
+    _test_mode(0),
     _motor_state(0),
     _mpu6000_result(1),
     _compass_result(1),
@@ -166,6 +204,7 @@ Factory::Factory(void):
     _hisi_result(0x7f),
     _hisi_result_new(0)
 {
+	AP_Param::setup_object_defaults(this, var_info);
 }
 
 void Factory::setHisiTestResult(uint8_t *result, uint32_t len)
@@ -190,8 +229,27 @@ void Factory::_uart_update()
 	_uart_down->read();
 }
 
+void Factory::_aging_test()
+{
+	AP_AHRS &ahrs = AP::ahrs();
+
+    ahrs.get_position(current_loc);
+	depth = current_loc.alt * 0.01f;	
+	
+    sub.set_mode(ALT_HOLD, ModeReason::RC_COMMAND);
+	sub.motors.armed(TRUE);
+
+	if(depth>-0.5) 
+		sub.channel_throttle->set_radio_in(1350);
+	else if(depth<-0.6)
+		sub.channel_throttle->set_radio_in(1650);
+	else 
+		sub.channel_throttle->set_radio_in(1500);
+}
+
 void Factory::_motor_test()
 {
+	sub.motors.armed(TRUE);
 	sub.motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
     if (AP_HAL::millis() - _motor_time >= 1000)

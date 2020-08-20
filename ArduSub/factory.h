@@ -10,23 +10,35 @@
 #include <cmath>
 #include <stdio.h>
 #include <stdarg.h>
+#include <AP_Common/AP_Common.h>
+#include <AP_Param/AP_Param.h>
 
 #include "factory_proto.h"
 
 class Factory : public AP_HAL::HAL::Callbacks {
 public:
     Factory(void);
-    void check(void);
+    void test_check(void);
+    void aging_check(void);
 	void setup(void) override;
 	void loop(void) override;
-	uint8_t isFactoryMode(void) const { return _test_mode; }
+	uint8_t isFactoryTestMode(void) const { return _test_mode; }
+	uint8_t isFactoryAgingMode(void) const { return _aging_mode; }
 	void setHisiTestResult(uint8_t *result, uint32_t len);
-	
+
+	static const struct AP_Param::GroupInfo var_info[];	
 private:
+	
 	Factory_proto *_uart_up;
     Factory_proto *_uart_down;
     
     uint8_t _test_mode;
+    uint8_t _aging_mode;
+    AP_Int8 _aging_enable;
+    AP_Int16 _aging_result;
+
+    struct Location current_loc;
+  	float depth; 
     
 	uint32_t _motor_time;
 	uint8_t _motor_state;
@@ -46,6 +58,7 @@ private:
     uint32_t _result_timestamp;
 	
     void _motor_test(void);
+    void _aging_test(void);
     int _mpu6000_test(void);
     int _storage_test(void);
     int _ramtron_test(void);
