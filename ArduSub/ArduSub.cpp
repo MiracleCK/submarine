@@ -86,7 +86,7 @@ constexpr int8_t Sub::_failsafe_priorities[5];
 
 void Sub::setup()
 {
-	factory.check();
+	factory.test_check();
 	
     // Load the default values of variables listed in var_info[]s
     AP_Param::setup_sketch_defaults();
@@ -130,7 +130,7 @@ void Sub::fast_loop()
     // check if ekf has reset target heading
     check_ekf_yaw_reset();
 
-	if(!factory.isFactoryMode()) {
+	if(!factory.isFactoryTestMode()) {
 	    // run the attitude controllers
 	    update_flight_mode();
     }
