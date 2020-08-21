@@ -6,12 +6,12 @@
 
 #include "ap_version.h"
 
-#define THISFIRMWARE "F1 v1.0.1dev"
+#define THISFIRMWARE "F1 v1.0.2dev"
 
 // the following line is parsed by the autotest scripts
-#define FIRMWARE_VERSION 1,0,1,FIRMWARE_VERSION_TYPE_DEV
+#define FIRMWARE_VERSION 1,0,2,FIRMWARE_VERSION_TYPE_DEV
 
 #define FW_MAJOR 1
 #define FW_MINOR 0
-#define FW_PATCH 1
+#define FW_PATCH 2
 #define FW_TYPE FIRMWARE_VERSION_TYPE_DEV
