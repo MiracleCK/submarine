@@ -82,8 +82,8 @@ void Factory::setup()
 
 void Factory::loop()
 {	
-	uint8_t result = 0;
-    //static uint32_t tested = 0;
+	uint8_t result = 0xff;
+    static uint32_t tested = 0;
     static uint32_t timesec = 0;
 
 	_uart_update();
@@ -94,79 +94,73 @@ void Factory::loop()
 		_aging_test();
 	}
 	
-	//if (!tested)
-    //{
+	if (tested)
+    {
         /* sensor mpu6000 */
-        //if (0 != _mpu6000_result)
+        if (_test_mode || _mpu6000_result==0)
         {
             _mpu6000_result = _mpu6000_test();
         }
 
         /* EEPROM */
-        //if (0 != _ramtron_result)
+        if (_test_mode || _ramtron_result==0)
         {
             _ramtron_result = _ramtron_test();
         }
 
         /* SD card */
-        //if (0 != _mmcsd_result)
+        if (_test_mode || _mmcsd_result==0)
         {
             _mmcsd_result = _mmcsd_test();
         }
 
         /* sensor presure */
-        //if (0 != _baro_result)
+        if (_test_mode || _baro_result==0)
         {
             _baro_result = _baro_test();
         }
 
         /* battery*/
-        //if (0 != _batt_result)
+        if (_test_mode || _batt_result==0)
         {
             _batt_result = _battery_test();
         }
 
         /* sensor compass */
-        //if (0 != _compass_result)
+        if (_test_mode || _compass_result==0)
         {
             _compass_result = _compass_test();
         }
 
         /* sensor gps */
-        //if (0 != _gps_result)
+        if (_test_mode || _gps_result==0)
         {
             _gps_result = _gps_test();
         }
 
-        //tested = 1;
-    //}
-
-    result = 0;
-    result = _mpu6000_result << FACTORY_MPU6000_RESULT_BIT 
-           | _baro_result  << FACTORY_BARO_RESULT_BIT
-           | _compass_result << FACTORY_COMPASS_RESULT_BIT
-           | _ramtron_result << FACTORY_RAMTRON_RESULT_BIT
-           | _mmcsd_result   << FACTORY_MMCSD_RESULT_BIT
-           | _batt_result    << FACTORY_BATTERY_RESULT_BIT
-           | _gps_result  << FACTORY_GPS_RESULT_BIT
-           | (_hisi_result > 0)    << FACTORY_HISI_RESULT_BIT;
-
+        result = 0;
+	    result = _mpu6000_result << FACTORY_MPU6000_RESULT_BIT 
+	           | _baro_result  << FACTORY_BARO_RESULT_BIT
+	           | _compass_result << FACTORY_COMPASS_RESULT_BIT
+	           | _ramtron_result << FACTORY_RAMTRON_RESULT_BIT
+	           | _mmcsd_result   << FACTORY_MMCSD_RESULT_BIT
+	           | _batt_result    << FACTORY_BATTERY_RESULT_BIT
+	           | _gps_result  << FACTORY_GPS_RESULT_BIT
+	           | (_hisi_result > 0)    << FACTORY_HISI_RESULT_BIT;
+    }
+    
 	if (AP_HAL::millis() - _result_timestamp >= FACTORY_TEST_REUSLT_SEND_INTERVAL)
 	{
-		if(_hisi_result_new)
-		{
-		    _uart_down->sendFactoryTestMsg(FACTORY_TEST_STM32_RESULT_MSGID, result, _hisi_result);
-		    
-		}
-		else if (timesec > 35)
-		{
-		    _uart_down->sendFactoryTestMsg(FACTORY_TEST_STM32_RESULT_MSGID, result, _hisi_result);
-		}
-
 		_result_timestamp = AP_HAL::millis();
 		timesec++;
+		
+		_uart_down->sendFactoryTestMsg(FACTORY_TEST_STM32_RESULT_MSGID, result, _hisi_result);
 
-		if(timesec%60==0) {
+		if(timesec>10)
+			tested = 1;
+			
+		if(timesec%60==0 && 
+		   _aging_result!=result) {
 			_aging_result.set_and_save(result);
 		}
 
@@ -183,7 +177,6 @@ void Factory::loop()
 		printf("_hisi_result 0x%x\r\n", _hisi_result);
 		printf("depth %f\r\n", depth);
 		printf("\r\n");
-		result = result;
 #endif
 	}
 }
@@ -193,14 +186,14 @@ Factory::Factory(void):
     _uart_down(&g_uart_down_port),
     _test_mode(0),
     _motor_state(0),
-    _mpu6000_result(1),
-    _compass_result(1),
-    _baro_result(1),
-    _ramtron_result(1),
-    _mmcsd_result(1),
-    _usb_result(1),
-    _gps_result(1),
-    _batt_result(1),
+    _mpu6000_result(0),
+    _compass_result(0),
+    _baro_result(0),
+    _ramtron_result(0),
+    _mmcsd_result(0),
+    _usb_result(0),
+    _gps_result(0),
+    _batt_result(0),
     _hisi_result(0x7f),
     _hisi_result_new(0)
 {
