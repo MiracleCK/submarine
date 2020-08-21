@@ -725,7 +725,6 @@ void Sub::load_parameters()
     AP_Param::set_default_by_name("EK2_VELNE_M_NSE", 0.01);
 
     //AP_Param::set_default_by_name("INS_POS1_X", 0.04);
-    AP_Param::set_default_by_name("INS_POS1_Y", 0.04);
 
     AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", WP_YAW_BEHAVIOR_LOOK_AT_NEXT_WP); // look at next wp
     //AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", WP_YAW_BEHAVIOR_CORRECT_XTRACK);
