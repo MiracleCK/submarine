@@ -35,7 +35,7 @@ private:
     uint8_t _test_mode;
     uint8_t _aging_mode;
     AP_Int8 _aging_enable;
-    AP_Int16 _aging_result;
+    AP_Int16 _aging_result[2];
 
     struct Location current_loc;
   	float depth; 

@@ -597,7 +597,7 @@ const AP_Param::Info Sub::var_info[] = {
 
 	// @Group:
     // @Path: factory.cpp
-    { AP_PARAM_GROUP, "FAT_", Parameters::k_param_factory, (const void *)&factory, {group_info : Factory::var_info} },
+    { AP_PARAM_GROUP, "", Parameters::k_param_factory, (const void *)&factory, {group_info : Factory::var_info} },
     
     AP_VAREND
 };

@@ -14,7 +14,6 @@
 #define FACTORY_TEST_GPS			(0)
 
 #define FACTORY_TEST_REUSLT_SEND_INTERVAL   (1000)
-#define FACTORY_MOTOR_MAX_NUMBER            (4)
 
 #define FACTORY_MPU6000_RESULT_BIT   0
 #define FACTORY_BARO_RESULT_BIT      1
@@ -26,21 +25,27 @@
 #define FACTORY_HISI_RESULT_BIT      7
 
 const AP_Param::GroupInfo Factory::var_info[] = {
-    // @Param: AGING_EN
+    // @Param: AGING_ENABLE
     // @DisplayName: aging enable or disable
     // @Description: Used to enter or exit aging mode.
     // @Values: 1:enable,0:disable
     // @User: Advanced
-    AP_GROUPINFO("AGING_EN",  0, Factory, _aging_enable, 0),
+    AP_GROUPINFO("AGING_ENABLE",  0, Factory, _aging_enable, 0),
 
-    // @Param: AGING_RES
-    // @DisplayName: aging result
+    // @Param: AGING_RESULT
+    // @DisplayName: submarine aging result
     // @Description: Used to return aging result.
     // @Values: bit[0-7]:imu,baro,compass,ramtron,mmcsd,batt,gps,hisi; 0:OK,1:err
     // @User: Advanced
-    AP_GROUPINFO("AGING_RES", 1, Factory, _aging_result, 255),
+    AP_GROUPINFO("AGING_RESULT", 1, Factory, _aging_result[0], 255),
 
-
+	// @Param: AGING_RESULT2
+    // @DisplayName: hisi aging result
+    // @Description: Used to return aging result.
+    // @Values: hisi define; 0:OK,1:err
+    // @User: Advanced
+    AP_GROUPINFO("AGING_RESULT2", 2, Factory, _aging_result[1], 255),
+    
     AP_GROUPEND
 };
 
@@ -159,9 +164,11 @@ void Factory::loop()
 		if(timesec>10)
 			tested = 1;
 			
-		if(timesec%60==0 && 
-		   _aging_result!=result) {
-			_aging_result.set_and_save(result);
+		if(timesec%60==0) {
+		   if(_aging_result[0]!=result) 
+				_aging_result[0].set_and_save(result);
+			if(_aging_result[1]!=_hisi_result) 
+				_aging_result[1].set_and_save(_hisi_result);
 		}
 
 #if 1
