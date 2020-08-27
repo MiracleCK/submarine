@@ -35,10 +35,11 @@ private:
     uint8_t _test_mode;
     uint8_t _aging_mode;
     AP_Int8 _aging_enable;
-    AP_Int16 _aging_result;
+    AP_Int16 _aging_time;
+    AP_Int16 _aging_result[2];
 
-    struct Location current_loc;
-  	float depth; 
+    struct Location _current_loc;
+  	float _depth; 
     
 	uint32_t _motor_time;
 	uint8_t _motor_state;
@@ -56,6 +57,15 @@ private:
     uint16_t _hisi_result_new;
 
     uint32_t _result_timestamp;
+
+	Vector3f _imu_gyro[2];
+    Vector3f _imu_accel[2];
+    Vector3f _imu_mag[2];
+    float _baro_press[2];
+	float _baro_temp[2];
+	float _batt_voltage;
+	float _batt_current;
+	uint8_t _batt_remaining;
 	
     void _motor_test(void);
     void _aging_test(void);
