@@ -5,6 +5,7 @@
 
 #include "factory.h"
 
+
 #define FACTORY_TEST_IMU			(1)
 #define FACTORY_TEST_COMPASS		(1)
 #define FACTORY_TEST_BARO			(1)
@@ -14,6 +15,13 @@
 #define FACTORY_TEST_GPS			(0)
 
 #define FACTORY_TEST_REUSLT_SEND_INTERVAL   (1000)
+#define IMU_GYRO_ERROR_RANGE		10.0f
+#define IMU_ACCEL_ERROR_RANGE		10.0f
+#define IMU_COMPASS_ERROR_RANGE		10.0f
+#define BARO_PRESS_ERROR_RANGE		2.0f
+#define BARO_TEMP_ERROR_RANGE		2.0f
+#define BATT_VOL_MIN				18000.0f
+#define BATT_VOL_MAX				25200.0f
 
 #define FACTORY_MPU6000_RESULT_BIT   0
 #define FACTORY_BARO_RESULT_BIT      1
@@ -24,6 +32,8 @@
 #define FACTORY_GPS_RESULT_BIT       6
 #define FACTORY_HISI_RESULT_BIT      7
 
+#define diff(a, b) ((a) > (b) ? ((a)-(b)) : ((b)-(a)))
+
 const AP_Param::GroupInfo Factory::var_info[] = {
     // @Param: AGING_ENABLE
     // @DisplayName: aging enable or disable
@@ -32,19 +42,26 @@ const AP_Param::GroupInfo Factory::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("AGING_ENABLE",  0, Factory, _aging_enable, 0),
 
+    // @Param: AGING_TIME
+    // @DisplayName: submarine aging time
+    // @Description: Used to return aging time.
+    // @Values: aging time, in 1min units
+    // @User: Advanced
+    AP_GROUPINFO("AGING_TIME", 1, Factory, _aging_time, 0),
+
     // @Param: AGING_RESULT
     // @DisplayName: submarine aging result
     // @Description: Used to return aging result.
     // @Values: bit[0-7]:imu,baro,compass,ramtron,mmcsd,batt,gps,hisi; 0:OK,1:err
     // @User: Advanced
-    AP_GROUPINFO("AGING_RESULT", 1, Factory, _aging_result[0], 255),
+    AP_GROUPINFO("AGING_RESULT", 2, Factory, _aging_result[0], 255),
 
 	// @Param: AGING_RESULT2
     // @DisplayName: hisi aging result
     // @Description: Used to return aging result.
     // @Values: hisi define; 0:OK,1:err
     // @User: Advanced
-    AP_GROUPINFO("AGING_RESULT2", 2, Factory, _aging_result[1], 255),
+    AP_GROUPINFO("AGING_RESULT2", 3, Factory, _aging_result[1], 255),
     
     AP_GROUPEND
 };
@@ -83,6 +100,20 @@ void Factory::setup()
 
     _uart_up->init();
 	_uart_down->init();
+
+	if(_aging_mode) {
+		_aging_time.set_and_save(0);
+		_aging_result[0].set_and_save(255);
+		_aging_result[1].set_and_save(255);
+
+		sub.channel_roll->set_radio_in(1500);
+		sub.channel_pitch->set_radio_in(1500);
+		sub.channel_throttle->set_radio_in(1500);
+		sub.channel_yaw->set_radio_in(1500);
+		sub.channel_forward->set_radio_in(1500);
+		sub.channel_lateral->set_radio_in(1500);
+		AP_Param::set_by_name("RC_OPTIONS", 3);
+	}
 }
 
 void Factory::loop()
@@ -102,43 +133,43 @@ void Factory::loop()
 	if (tested)
     {
         /* sensor mpu6000 */
-        if (_test_mode || _mpu6000_result==0)
+        //if (_test_mode || _mpu6000_result==0)
         {
             _mpu6000_result = _mpu6000_test();
         }
 
         /* EEPROM */
-        if (_test_mode || _ramtron_result==0)
+        //if (_test_mode || _ramtron_result==0)
         {
             _ramtron_result = _ramtron_test();
         }
 
         /* SD card */
-        if (_test_mode || _mmcsd_result==0)
+        //if (_test_mode || _mmcsd_result==0)
         {
             _mmcsd_result = _mmcsd_test();
         }
 
         /* sensor presure */
-        if (_test_mode || _baro_result==0)
+        //if (_test_mode || _baro_result==0)
         {
             _baro_result = _baro_test();
         }
 
         /* battery*/
-        if (_test_mode || _batt_result==0)
+        //if (_test_mode || _batt_result==0)
         {
             _batt_result = _battery_test();
         }
 
         /* sensor compass */
-        if (_test_mode || _compass_result==0)
+        //if (_test_mode || _compass_result==0)
         {
             _compass_result = _compass_test();
         }
 
         /* sensor gps */
-        if (_test_mode || _gps_result==0)
+        //if (_test_mode || _gps_result==0)
         {
             _gps_result = _gps_test();
         }
@@ -161,14 +192,14 @@ void Factory::loop()
 		
 		_uart_down->sendFactoryTestMsg(FACTORY_TEST_STM32_RESULT_MSGID, result, _hisi_result);
 
-		if(timesec>10)
+		if(timesec>10) {
 			tested = 1;
+		}
 			
-		if(timesec%60==0) {
-		   if(_aging_result[0]!=result) 
-				_aging_result[0].set_and_save(result);
-			if(_aging_result[1]!=_hisi_result) 
-				_aging_result[1].set_and_save(_hisi_result);
+		if(_aging_mode && timesec%60==0) {
+			_aging_result[0].set_and_save_ifchanged(result);
+			_aging_result[1].set_and_save_ifchanged(_hisi_result);
+			_aging_time.set_and_save(++_time_min);
 		}
 
 #if 1
@@ -182,7 +213,26 @@ void Factory::loop()
 		printf("_batt_result %d\r\n", _batt_result);
 		printf("_gps_result %d\r\n", _gps_result);
 		printf("_hisi_result 0x%x\r\n", _hisi_result);
-		printf("depth %f\r\n", depth);
+		printf("\r\n");
+
+		printf("_imu_gyro.x %f %f %f\r\n", _imu_gyro[0].x, _imu_gyro[1].x, diff(_imu_gyro[0].x, _imu_gyro[1].x));
+		printf("_imu_gyro.y %f %f %f\r\n", _imu_gyro[0].y, _imu_gyro[1].y, diff(_imu_gyro[0].y, _imu_gyro[1].y));
+		printf("_imu_gyro.z %f %f %f\r\n", _imu_gyro[0].z, _imu_gyro[1].z, diff(_imu_gyro[0].z, _imu_gyro[1].z));
+		
+		printf("_imu_accel.x %f %f %f\r\n", _imu_accel[0].x, _imu_accel[1].x, diff(_imu_accel[0].x, _imu_accel[1].x));
+		printf("_imu_accel.y %f %f %f\r\n", _imu_accel[0].y, _imu_accel[1].y, diff(_imu_accel[0].y, _imu_accel[1].y));
+		printf("_imu_accel.z %f %f %f\r\n", _imu_accel[0].z, _imu_accel[1].z, diff(_imu_accel[0].z, _imu_accel[1].z));
+		
+		printf("_imu_mag.x %f %f %f\r\n", _imu_mag[0].x, _imu_mag[1].x, diff(_imu_mag[0].x, _imu_mag[1].x));
+		printf("_imu_mag.y %f %f %f\r\n", _imu_mag[0].y, _imu_mag[1].y, diff(_imu_mag[0].y, _imu_mag[1].y));
+		printf("_imu_mag.z %f %f %f\r\n", _imu_mag[0].z, _imu_mag[1].z, diff(_imu_mag[0].z, _imu_mag[1].z));
+
+		printf("_baro_press %f %f %f\r\n", _baro_press[0], _baro_press[1], diff(_baro_press[0], _baro_press[1]));
+		printf("_baro_temp %f %f %f\r\n", _baro_temp[0], _baro_temp[1], diff(_baro_temp[0], _baro_temp[1]));
+
+		printf("_batt_voltage %f\r\n", _batt_voltage);
+		printf("_batt_current %f\r\n", _batt_current);
+		printf("_batt_remaining %d\r\n", _batt_remaining);
 		printf("\r\n");
 #endif
 	}
@@ -202,7 +252,8 @@ Factory::Factory(void):
     _gps_result(0),
     _batt_result(0),
     _hisi_result(0x7f),
-    _hisi_result_new(0)
+    _hisi_result_new(0),
+    _time_min(0)
 {
 	AP_Param::setup_object_defaults(this, var_info);
 }
@@ -231,20 +282,18 @@ void Factory::_uart_update()
 
 void Factory::_aging_test()
 {
-	AP_AHRS &ahrs = AP::ahrs();
-
-    ahrs.get_position(current_loc);
-	depth = current_loc.alt * 0.01f;	
-	
     sub.set_mode(ALT_HOLD, ModeReason::RC_COMMAND);
 	sub.motors.armed(TRUE);
 
-	if(depth>-0.5) 
+	if(_depth>-0.5) {
+		AP_AHRS &ahrs = AP::ahrs();
+		
+	    ahrs.get_position(_current_loc);
+		_depth = _current_loc.alt * 0.01f;	
 		sub.channel_throttle->set_radio_in(1350);
-	else if(depth<-0.6)
-		sub.channel_throttle->set_radio_in(1650);
-	else 
+	} else {
 		sub.channel_throttle->set_radio_in(1500);
+	}
 }
 
 void Factory::_motor_test()
@@ -284,9 +333,30 @@ int Factory::_mpu6000_test()
 {
 #if FACTORY_TEST_IMU
 	const AP_InertialSensor &ins = AP::ins();
+	static uint8_t init = 0;
+	static uint8_t i = 0;
 
 	if (ins.get_accel_health_all() && ins.get_gyro_health_all()) {
-        return 0;
+		if(init==0) {
+			_imu_gyro[0] = _imu_gyro[1] = ins.get_gyro() * 1000.0f;
+			_imu_accel[0] = _imu_accel[1] = ins.get_accel() * 1000.0f / GRAVITY_MSS;
+			init = 1;
+		} else {
+			_imu_gyro[i] = ins.get_gyro() * 1000.0f;
+			_imu_accel[i] = ins.get_accel() * 1000.0f / GRAVITY_MSS;
+			i = (i+1)%2;
+		}
+
+		//if(_aging_mode)
+		//	return 0;
+
+		if(diff(_imu_gyro[0].x, _imu_gyro[1].x) < IMU_GYRO_ERROR_RANGE &&
+		   diff(_imu_gyro[0].y, _imu_gyro[1].y) < IMU_GYRO_ERROR_RANGE &&
+		   diff(_imu_gyro[0].z, _imu_gyro[1].z) < IMU_GYRO_ERROR_RANGE &&
+		   diff(_imu_accel[0].x, _imu_accel[1].x) < IMU_ACCEL_ERROR_RANGE &&
+		   diff(_imu_accel[0].y, _imu_accel[1].y) < IMU_ACCEL_ERROR_RANGE &&
+		   diff(_imu_accel[0].z, _imu_accel[1].z) < IMU_ACCEL_ERROR_RANGE)
+        	return 0;
     }
 
     return 1;
@@ -300,7 +370,9 @@ int Factory::_storage_test()
 	AP_HAL::Storage *st = hal.storage;
 
 	if(st->healthy()) {
-		return 0;
+		if (sub.g.format_version.load() &&
+	        sub.g.format_version == Parameters::k_format_version)
+			return 0;
 	}
 	return 1;
 }
@@ -327,9 +399,26 @@ int Factory::_baro_test()
 {
 #if FACTORY_TEST_BARO
 	const AP_Baro &baro = AP::baro();
-
+	static uint8_t init = 0;
+	static uint8_t i = 0;
+	
 	if (baro.healthy()) {
-        return 0;
+        if(init==0) {
+			_baro_press[0] = _baro_press[1] = baro.get_pressure() * 0.01f;
+			_baro_temp[0] = _baro_temp[1] = baro.get_temperature()*100;
+			init = 1;
+		} else {
+			_baro_press[i] = baro.get_pressure() * 0.01f;
+			_baro_temp[i] = baro.get_temperature()*100;
+			i = (i+1)%2;
+		}
+
+		//if(_aging_mode)
+		//	return 0;
+			
+		if(diff(_baro_press[0], _baro_press[1]) < BARO_PRESS_ERROR_RANGE &&
+		   diff(_baro_temp[0], _baro_temp[1]) < BARO_TEMP_ERROR_RANGE)
+        	return 0;
     }
     return 1;
 #else
@@ -340,11 +429,19 @@ int Factory::_baro_test()
 int Factory::_battery_test()
 {
 #if FACTORY_TEST_BATTERY
-	const AP_BattMonitor &battery = AP::battery();
+    const AP_BattMonitor &battery = AP::battery();
 
-    if (battery.num_instances() > 0 && battery.healthy()) {
-        return 0;
+    if (battery.num_instances() && 
+        battery.healthy() && 
+        battery.current_amps(_batt_current)) {
+        _batt_remaining = battery.capacity_remaining_pct(); // in %
+        _batt_current *= 100; //in 10mA units
+        _batt_voltage = battery.voltage() * 1000; //mv
+        if(_batt_voltage > BATT_VOL_MIN &&
+           _batt_voltage < BATT_VOL_MAX)
+        	return 0;
     }
+
     return 1;
 #else
 	return 0;
@@ -355,9 +452,25 @@ int Factory::_compass_test()
 {
 #if FACTORY_TEST_COMPASS
 	const Compass &compass = AP::compass();
-
+	static uint8_t init = 0;
+	static uint8_t i = 0;
+	
     if (compass.enabled() && compass.healthy()) {
-        return 0;
+    	if(init==0) {
+			_imu_mag[0] = _imu_mag[1] = compass.get_field();
+			init = 1;
+		} else {
+			_imu_mag[i] = compass.get_field();
+			i = (i+1)%2;
+		}
+
+		//if(_aging_mode)
+		//	return 0;
+			
+		if(diff(_imu_mag[0].x, _imu_mag[1].x) < IMU_COMPASS_ERROR_RANGE &&
+		   diff(_imu_mag[0].y, _imu_mag[1].y) < IMU_COMPASS_ERROR_RANGE &&
+		   diff(_imu_mag[0].z, _imu_mag[1].z) < IMU_COMPASS_ERROR_RANGE)
+        	return 0;
     }
     return 1;
 #else
