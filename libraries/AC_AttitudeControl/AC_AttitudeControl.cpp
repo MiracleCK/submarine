@@ -623,6 +623,7 @@ void AC_AttitudeControl::attitude_controller_run_quat()
 
     // Correct the thrust vector and smoothly add feedforward and yaw input
     _feedforward_scalar = 1.0f;
+    _thrust_error_angle = 0.8f;
     if (_thrust_error_angle > AC_ATTITUDE_THRUST_ERROR_ANGLE * 2.0f) {
         _rate_target_ang_vel.z = _ahrs.get_gyro().z;
     } else if (_thrust_error_angle > AC_ATTITUDE_THRUST_ERROR_ANGLE) {
