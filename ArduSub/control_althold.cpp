@@ -275,7 +275,7 @@ void Sub::althold_run_rate()
             pos_control.relax_alt_hold_controllers();
         }
 
-        if (!is_ned_pilot) {
+        if (!is_ned_pilot && !depth_limit) {
             motors.set_throttle_pilot(pilot_trans_thrusts.z); // here means throttle not affect z pos
         } else {
             motors.set_throttle_pilot(0.0f);

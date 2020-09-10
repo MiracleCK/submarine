@@ -709,6 +709,7 @@ public:
     void setup_custom_motors();
     
     bool is_affect_z;
+    bool depth_limit;
     Vector3f pilot_trans_thrusts;
     void thrust_decomposition_select(bool is_ned, control_mode_t mode, bool is_affect_z_pos = false);
     Vector3f thrust_decomposition_ned_roll0(Vector3f& euler_rad, Vector3f thrusts, float throttle_bf);

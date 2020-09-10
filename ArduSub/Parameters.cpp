@@ -37,6 +37,14 @@ const AP_Param::Info Sub::var_info[] = {
     // @User: Standard
     GSCALAR(surface_depth, "SURFACE_DEPTH", SURFACE_DEPTH_DEFAULT),
 
+    // @Param: DEPTH LIMIT
+    // @DisplayName: depth limit
+    // @Description: Set ROV maximum submergence depth
+    // @User: Standard
+    // @units: m
+    // @Values: < 0
+    GSCALAR(depth_limit, "DEPTH_LIMIT", -100.0f),
+
     // @Param: SYSID_SW_MREV
     // @DisplayName: Eeprom format version number
     // @Description: This value is incremented when changes are made to the eeprom format

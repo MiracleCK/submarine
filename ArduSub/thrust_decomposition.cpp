@@ -328,13 +328,28 @@ void Sub::thrust_decomposition_select(bool is_ned, control_mode_t mode, bool is_
 }
 
 bool Sub::is_affect_z_pos(bool is_ned, float forward, float lateral, float throttle) {
+
+	struct Location _current_loc;
+    float depth; 
+		
+	ahrs.get_position(_current_loc);
+	depth = _current_loc.alt * 0.01f;
+	depth_limit = (depth < sub.g.depth_limit) ? 1 : 0;
+    
     if (is_ned) {
+    	if(depth_limit && throttle < 0.0f) {
+			return 0;
+    	}
         return (fabsf(throttle) > 0.05f);
     }
 
     Matrix3f body_to_ned = ahrs.get_rotation_body_to_ned();
     Vector3f thrusts(forward, lateral, -throttle); // body axis down is +
     Vector3f thrusts_ned = body_to_ned * thrusts;
+
+    if(depth_limit && thrusts_ned.z > 0.0f) {
+		return 0;
+	}
 
     return fabsf(thrusts_ned.z) > 0.05f;
 }
