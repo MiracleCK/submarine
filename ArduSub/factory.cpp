@@ -5,6 +5,7 @@
 
 #include "factory.h"
 
+#define FACTORY_SENSOR_TEST_MODE
 
 #define FACTORY_TEST_IMU			(1)
 #define FACTORY_TEST_COMPASS		(1)
@@ -62,6 +63,41 @@ const AP_Param::GroupInfo Factory::var_info[] = {
     // @Values: hisi define; 0:OK,1:err
     // @User: Advanced
     AP_GROUPINFO("AGING_RESULT2", 3, Factory, _aging_result[1], 255),
+
+	// @Param: AGING_GYRO
+    // @DisplayName: gyro max jitter
+    // @Description: Used to measure gyro jitter.
+    // @Values: 
+    // @User: Advanced
+    AP_GROUPINFO("AGING_GYRO_X", 4, Factory, _aging_gyro[0], 0),
+    AP_GROUPINFO("AGING_GYRO_Y", 5, Factory, _aging_gyro[1], 0),
+    AP_GROUPINFO("AGING_GYRO_Z", 6, Factory, _aging_gyro[2], 0),
+
+	// @Param: AGING_ACCEL
+    // @DisplayName: accel max jitter
+    // @Description: Used to measure accel jitter.
+    // @Values: 
+    // @User: Advanced
+    AP_GROUPINFO("AGING_ACCEL_X", 7, Factory, _aging_accel[0], 0),
+    AP_GROUPINFO("AGING_ACCEL_Y", 8, Factory, _aging_accel[1], 0),
+    AP_GROUPINFO("AGING_ACCEL_Z", 9, Factory, _aging_accel[2], 0),
+
+	// @Param: AGING_MAG
+    // @DisplayName: mag max jitter
+    // @Description: Used to measure mag jitter.
+    // @Values: 
+    // @User: Advanced
+    AP_GROUPINFO("AGING_MAG_X", 10, Factory, _aging_mag[0], 0),
+    AP_GROUPINFO("AGING_MAG_Y", 11, Factory, _aging_mag[1], 0),
+    AP_GROUPINFO("AGING_MAG_Z", 12, Factory, _aging_mag[2], 0),
+
+	// @Param: AGING_BARO
+    // @DisplayName: baro max jitter
+    // @Description: Used to measure baro jitter.
+    // @Values: 
+    // @User: Advanced
+    AP_GROUPINFO("AGING_BARO_PRESS", 13, Factory, _aging_baro[0], 0),
+    AP_GROUPINFO("AGING_BARO_TEMP", 14, Factory, _aging_baro[1], 0),
     
     AP_GROUPEND
 };
@@ -106,6 +142,23 @@ void Factory::setup()
 		_aging_result[0].set_and_save(255);
 		_aging_result[1].set_and_save(255);
 
+#ifdef FACTORY_SENSOR_TEST_MODE
+		_aging_gyro[0].set_and_save(0);
+		_aging_gyro[1].set_and_save(0);
+		_aging_gyro[2].set_and_save(0);
+
+		_aging_accel[0].set_and_save(0);
+		_aging_accel[1].set_and_save(0);
+		_aging_accel[2].set_and_save(0);
+
+		_aging_mag[0].set_and_save(0);
+		_aging_mag[1].set_and_save(0);
+		_aging_mag[2].set_and_save(0);
+		
+		_aging_baro[0].set_and_save(0);
+		_aging_baro[1].set_and_save(0);
+#endif
+	
 		sub.channel_roll->set_radio_in(1500);
 		sub.channel_pitch->set_radio_in(1500);
 		sub.channel_throttle->set_radio_in(1500);
@@ -133,43 +186,57 @@ void Factory::loop()
 	if (tested)
     {
         /* sensor mpu6000 */
-        //if (_test_mode || _mpu6000_result==0)
+#ifndef FACTORY_SENSOR_TEST_MODE
+        if (_test_mode || _mpu6000_result==0)
+#endif
         {
             _mpu6000_result = _mpu6000_test();
         }
 
         /* EEPROM */
-        //if (_test_mode || _ramtron_result==0)
+#ifndef FACTORY_SENSOR_TEST_MODE
+        if (_test_mode || _ramtron_result==0)
+#endif
         {
             _ramtron_result = _ramtron_test();
         }
 
         /* SD card */
-        //if (_test_mode || _mmcsd_result==0)
+#ifndef FACTORY_SENSOR_TEST_MODE
+        if (_test_mode || _mmcsd_result==0)
+#endif
         {
             _mmcsd_result = _mmcsd_test();
         }
 
         /* sensor presure */
-        //if (_test_mode || _baro_result==0)
+#ifndef FACTORY_SENSOR_TEST_MODE
+        if (_test_mode || _baro_result==0)
+#endif
         {
             _baro_result = _baro_test();
         }
 
         /* battery*/
-        //if (_test_mode || _batt_result==0)
+#ifndef FACTORY_SENSOR_TEST_MODE
+        if (_test_mode || _batt_result==0)
+#endif
         {
             _batt_result = _battery_test();
         }
 
         /* sensor compass */
-        //if (_test_mode || _compass_result==0)
+#ifndef FACTORY_SENSOR_TEST_MODE
+        if (_test_mode || _compass_result==0)
+#endif
         {
             _compass_result = _compass_test();
         }
 
         /* sensor gps */
-        //if (_test_mode || _gps_result==0)
+#ifndef FACTORY_SENSOR_TEST_MODE
+        if (_test_mode || _gps_result==0)
+#endif
         {
             _gps_result = _gps_test();
         }
@@ -192,14 +259,23 @@ void Factory::loop()
 		
 		_uart_down->sendFactoryTestMsg(FACTORY_TEST_STM32_RESULT_MSGID, result, _hisi_result);
 
-		if(timesec>10) {
-			tested = 1;
-		}
-			
-		if(_aging_mode && timesec%60==0) {
-			_aging_result[0].set_and_save_ifchanged(result);
-			_aging_result[1].set_and_save_ifchanged(_hisi_result);
-			_aging_time.set_and_save(++_time_min);
+		if(_aging_mode) {
+			if(_depth<=-0.5) {
+				if(timesec>60)
+					tested = 1;
+					
+				if(timesec%60==0) {
+					_aging_result[0].set_and_save_ifchanged(result);
+					_aging_result[1].set_and_save_ifchanged(_hisi_result);
+					_aging_time.set_and_save(++_time_min);
+				}
+			} else {
+				timesec = 0;
+			}
+		} else {
+			if(timesec>10) {
+				tested = 1;
+			}
 		}
 
 #if 1
@@ -349,7 +425,32 @@ int Factory::_mpu6000_test()
 
 		//if(_aging_mode)
 		//	return 0;
+#ifdef FACTORY_SENSOR_TEST_MODE		
+		float diffVal;
+		diffVal = diff(_imu_gyro[0].x, _imu_gyro[1].x);
+		if(diffVal > _aging_gyro[0])
+			_aging_gyro[0].set_and_save(diffVal);
+			
+		diffVal = diff(_imu_gyro[0].y, _imu_gyro[1].y);
+		if(diffVal > _aging_gyro[1])
+			_aging_gyro[1].set_and_save(diffVal);
+			
+		diffVal = diff(_imu_gyro[0].z, _imu_gyro[1].z);
+		if(diffVal > _aging_gyro[2])
+			_aging_gyro[2].set_and_save(diffVal);
 
+		diffVal = diff(_imu_accel[0].x, _imu_accel[1].x);
+		if(diffVal > _aging_accel[0])
+			_aging_accel[0].set_and_save(diffVal);
+			
+		diffVal = diff(_imu_accel[0].y, _imu_accel[1].y);
+		if(diffVal > _aging_accel[1])
+			_aging_accel[1].set_and_save(diffVal);
+			
+		diffVal = diff(_imu_accel[0].z, _imu_accel[1].z);
+		if(diffVal > _aging_accel[2])
+			_aging_accel[2].set_and_save(diffVal);
+#endif
 		if(diff(_imu_gyro[0].x, _imu_gyro[1].x) < IMU_GYRO_ERROR_RANGE &&
 		   diff(_imu_gyro[0].y, _imu_gyro[1].y) < IMU_GYRO_ERROR_RANGE &&
 		   diff(_imu_gyro[0].z, _imu_gyro[1].z) < IMU_GYRO_ERROR_RANGE &&
@@ -415,7 +516,16 @@ int Factory::_baro_test()
 
 		//if(_aging_mode)
 		//	return 0;
+#ifdef FACTORY_SENSOR_TEST_MODE
+		float diffVal;
+		diffVal = diff(_baro_press[0], _baro_press[1]);
+		if(diffVal > _aging_baro[0])
+			_aging_baro[0].set_and_save(diffVal);
 			
+		diffVal = diff(_baro_temp[0], _baro_temp[1]);
+		if(diffVal > _aging_baro[1])
+			_aging_baro[1].set_and_save(diffVal);
+#endif			
 		if(diff(_baro_press[0], _baro_press[1]) < BARO_PRESS_ERROR_RANGE &&
 		   diff(_baro_temp[0], _baro_temp[1]) < BARO_TEMP_ERROR_RANGE)
         	return 0;
@@ -466,7 +576,20 @@ int Factory::_compass_test()
 
 		//if(_aging_mode)
 		//	return 0;
+#ifdef FACTORY_SENSOR_TEST_MODE
+		float diffVal;
+		diffVal = diff(_imu_mag[0].x, _imu_mag[1].x);
+		if(diffVal > _aging_mag[0])
+			_aging_mag[0].set_and_save(diffVal);
 			
+		diffVal = diff(_imu_mag[0].y, _imu_mag[1].y);
+		if(diffVal > _aging_mag[1])
+			_aging_mag[1].set_and_save(diffVal);
+			
+		diffVal = diff(_imu_mag[0].z, _imu_mag[1].z);
+		if(diffVal > _aging_mag[2])
+			_aging_mag[2].set_and_save(diffVal);
+#endif			
 		if(diff(_imu_mag[0].x, _imu_mag[1].x) < IMU_COMPASS_ERROR_RANGE &&
 		   diff(_imu_mag[0].y, _imu_mag[1].y) < IMU_COMPASS_ERROR_RANGE &&
 		   diff(_imu_mag[0].z, _imu_mag[1].z) < IMU_COMPASS_ERROR_RANGE)

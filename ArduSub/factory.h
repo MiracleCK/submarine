@@ -31,12 +31,18 @@ private:
 	
 	Factory_proto *_uart_up;
     Factory_proto *_uart_down;
-    
-    uint8_t _test_mode;
-    uint8_t _aging_mode;
+
     AP_Int8 _aging_enable;
     AP_Int16 _aging_time;
     AP_Int16 _aging_result[2];
+
+    AP_Float _aging_gyro[3];
+    AP_Float _aging_accel[3];
+    AP_Float _aging_mag[3];
+    AP_Float _aging_baro[2];
+    
+    uint8_t _test_mode;
+    uint8_t _aging_mode;
     uint16_t _time_min;
 
     struct Location _current_loc;
