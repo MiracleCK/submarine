@@ -18,10 +18,10 @@
 #define IMU_GYRO_ERROR_RANGE		10.0f
 #define IMU_ACCEL_ERROR_RANGE		10.0f
 #define IMU_COMPASS_ERROR_RANGE		10.0f
-#define BARO_PRESS_ERROR_RANGE		10.0f
-#define BARO_TEMP_ERROR_RANGE		1.0f
-#define BATT_VOL_MIN				9800.0f
-#define BATT_VOL_MAX				12700.0f
+#define BARO_PRESS_ERROR_RANGE		2.0f
+#define BARO_TEMP_ERROR_RANGE		2.0f
+#define BATT_VOL_MIN				18000.0f
+#define BATT_VOL_MAX				25200.0f
 
 #define FACTORY_MPU6000_RESULT_BIT   0
 #define FACTORY_BARO_RESULT_BIT      1
@@ -105,8 +105,15 @@ void Factory::setup()
 		_aging_time.set_and_save(0);
 		_aging_result[0].set_and_save(255);
 		_aging_result[1].set_and_save(255);
+
+		sub.channel_roll->set_radio_in(1500);
+		sub.channel_pitch->set_radio_in(1500);
+		sub.channel_throttle->set_radio_in(1500);
+		sub.channel_yaw->set_radio_in(1500);
+		sub.channel_forward->set_radio_in(1500);
+		sub.channel_lateral->set_radio_in(1500);
+		AP_Param::set_by_name("RC_OPTIONS", 3);
 	}
-	AP_Param::set_by_name("RC_OPTIONS", 0);
 }
 
 void Factory::loop()
@@ -126,43 +133,43 @@ void Factory::loop()
 	if (tested)
     {
         /* sensor mpu6000 */
-        if (_test_mode || _mpu6000_result==0)
+        //if (_test_mode || _mpu6000_result==0)
         {
             _mpu6000_result = _mpu6000_test();
         }
 
         /* EEPROM */
-        if (_test_mode || _ramtron_result==0)
+        //if (_test_mode || _ramtron_result==0)
         {
             _ramtron_result = _ramtron_test();
         }
 
         /* SD card */
-        if (_test_mode || _mmcsd_result==0)
+        //if (_test_mode || _mmcsd_result==0)
         {
             _mmcsd_result = _mmcsd_test();
         }
 
         /* sensor presure */
-        if (_test_mode || _baro_result==0)
+        //if (_test_mode || _baro_result==0)
         {
             _baro_result = _baro_test();
         }
 
         /* battery*/
-        if (_test_mode || _batt_result==0)
+        //if (_test_mode || _batt_result==0)
         {
             _batt_result = _battery_test();
         }
 
         /* sensor compass */
-        if (_test_mode || _compass_result==0)
+        //if (_test_mode || _compass_result==0)
         {
             _compass_result = _compass_test();
         }
 
         /* sensor gps */
-        if (_test_mode || _gps_result==0)
+        //if (_test_mode || _gps_result==0)
         {
             _gps_result = _gps_test();
         }
@@ -190,10 +197,9 @@ void Factory::loop()
 		}
 			
 		if(_aging_mode && timesec%60==0) {
-		   if(_aging_result[0]!=result) 
-				_aging_result[0].set_and_save(result);
-			if(_aging_result[1]!=_hisi_result) 
-				_aging_result[1].set_and_save(_hisi_result);
+			_aging_result[0].set_and_save_ifchanged(result);
+			_aging_result[1].set_and_save_ifchanged(_hisi_result);
+			_aging_time.set_and_save(++_time_min);
 		}
 
 #if 1
@@ -207,27 +213,19 @@ void Factory::loop()
 		printf("_batt_result %d\r\n", _batt_result);
 		printf("_gps_result %d\r\n", _gps_result);
 		printf("_hisi_result 0x%x\r\n", _hisi_result);
-		printf("_depth %f\r\n", _depth);
 		printf("\r\n");
 
 		printf("_imu_gyro.x %f %f %f\r\n", _imu_gyro[0].x, _imu_gyro[1].x, diff(_imu_gyro[0].x, _imu_gyro[1].x));
 		printf("_imu_gyro.y %f %f %f\r\n", _imu_gyro[0].y, _imu_gyro[1].y, diff(_imu_gyro[0].y, _imu_gyro[1].y));
 		printf("_imu_gyro.z %f %f %f\r\n", _imu_gyro[0].z, _imu_gyro[1].z, diff(_imu_gyro[0].z, _imu_gyro[1].z));
 		
-		printf("_imu_accel.x %f %f\r\n", _imu_accel[0].x, _imu_accel[1].x);
-		printf("_imu_accel.y %f %f\r\n", _imu_accel[0].y, _imu_accel[1].y);
-		printf("_imu_accel.z %f %f\r\n", _imu_accel[0].z, _imu_accel[1].z);
+		printf("_imu_accel.x %f %f %f\r\n", _imu_accel[0].x, _imu_accel[1].x, diff(_imu_accel[0].x, _imu_accel[1].x));
+		printf("_imu_accel.y %f %f %f\r\n", _imu_accel[0].y, _imu_accel[1].y, diff(_imu_accel[0].y, _imu_accel[1].y));
+		printf("_imu_accel.z %f %f %f\r\n", _imu_accel[0].z, _imu_accel[1].z, diff(_imu_accel[0].z, _imu_accel[1].z));
 		
-		printf("_imu_mag.x %f %f\r\n", _imu_mag[0].x, _imu_mag[1].x);
-		printf("_imu_mag.y %f %f\r\n", _imu_mag[0].y, _imu_mag[1].y);
-		printf("_imu_mag.z %f %f\r\n", _imu_mag[0].z, _imu_mag[1].z);
-
-		printf("_baro_press %f %f\r\n", _baro_press[0], _baro_press[1]);
-		printf("_baro_temp %f %f\r\n", _baro_temp[0], _baro_temp[1]);
-
-		printf("_batt_voltage %f\r\n", _batt_voltage);
-		printf("_batt_current %f\r\n", _batt_current);
-		printf("_batt_remaining %d\r\n", _batt_remaining);
+		printf("_imu_mag.x %f %f %f\r\n", _imu_mag[0].x, _imu_mag[1].x, diff(_imu_mag[0].x, _imu_mag[1].x));
+		printf("_imu_mag.y %f %f %f\r\n", _imu_mag[0].y, _imu_mag[1].y, diff(_imu_mag[0].y, _imu_mag[1].y));
+		printf("_imu_mag.z %f %f %f\r\n", _imu_mag[0].z, _imu_mag[1].z, diff(_imu_mag[0].z, _imu_mag[1].z));
 		printf("\r\n");
 #endif
 	}
@@ -247,7 +245,8 @@ Factory::Factory(void):
     _gps_result(0),
     _batt_result(0),
     _hisi_result(0x7f),
-    _hisi_result_new(0)
+    _hisi_result_new(0),
+    _time_min(0)
 {
 	AP_Param::setup_object_defaults(this, var_info);
 }
@@ -276,22 +275,8 @@ void Factory::_uart_update()
 
 void Factory::_aging_test()
 {
-	AP_AHRS &ahrs = AP::ahrs();
-
-    ahrs.get_position(_current_loc);
-	_depth = _current_loc.alt * 0.01f;	
-	
-    sub.set_mode(ALT_HOLD, ModeReason::RC_COMMAND);
+    sub.set_mode(STABILIZE, ModeReason::RC_COMMAND);
 	sub.motors.armed(TRUE);
-
-	if(_depth>-0.5) {
-		sub.channel_throttle->set_radio_in(1350);
-	} else if(_depth<-0.6) {
-		sub.channel_throttle->set_radio_in(1650);
-	} else {
-		sub.channel_throttle->set_radio_in(1500);
-		
-	}
 }
 
 void Factory::_motor_test()

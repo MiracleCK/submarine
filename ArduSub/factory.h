@@ -37,6 +37,7 @@ private:
     AP_Int8 _aging_enable;
     AP_Int16 _aging_time;
     AP_Int16 _aging_result[2];
+    uint16_t _time_min;
 
     struct Location _current_loc;
   	float _depth; 
