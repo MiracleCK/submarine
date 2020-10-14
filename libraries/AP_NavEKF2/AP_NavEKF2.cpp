@@ -582,6 +582,14 @@ const AP_Param::GroupInfo NavEKF2::var_info[] = {
     // @RebootRequired: False
     AP_GROUPINFO("HRT_FILT", 53, NavEKF2, _hrt_filt_freq, 2.0f),
 
+    // @Param: GPS_HDOP_LIM
+    // @DisplayName: GPS hdop limit
+    // @Description: This is to limit the accuracy of GPS, the smaller the more strict
+    // @User: Advanced
+    // @Range: 50 250
+    // @Units: cm
+    AP_GROUPINFO("GPS_HDOP_LIM", 54, NavEKF2, _gps_hdop_limit, 70),
+
     AP_GROUPEND
 };
 

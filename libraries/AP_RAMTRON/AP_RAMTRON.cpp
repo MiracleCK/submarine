@@ -57,10 +57,12 @@ bool AP_RAMTRON::init(void)
         if (ramtron_ids[i].id1 == rdid.id1 &&
             ramtron_ids[i].id2 == rdid.id2) {
             id = i;
+            hal.shell->printf("Found RAMTRON manufacturer=%02x memory=%02x id1=%02x id2=%02x, idx %d\r\n",
+                        rdid.manufacturer[0], rdid.memory, rdid.id1, rdid.id2, id);
             return true;
         }
     }
-    hal.console->printf("Unknown RAMTRON manufacturer=%02x memory=%02x id1=%02x id2=%02x\n",
+    hal.shell->printf("Unknown RAMTRON manufacturer=%02x memory=%02x id1=%02x id2=%02x\r\n",
                         rdid.manufacturer[0], rdid.memory, rdid.id1, rdid.id2);
     return false;
 }

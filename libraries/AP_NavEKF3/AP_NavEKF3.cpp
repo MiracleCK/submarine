@@ -604,6 +604,14 @@ const AP_Param::GroupInfo NavEKF3::var_info[] = {
     // @Units: mGauss
     AP_GROUPINFO("MAG_EF_LIM", 56, NavEKF3, _mag_ef_limit, 50),
 
+    // @Param: GPS_HDOP_LIM
+    // @DisplayName: GPS hdop limit
+    // @Description: This is to limit the accuracy of GPS, the smaller the more strict
+    // @User: Advanced
+    // @Range: 50 250
+    // @Units: cm
+    AP_GROUPINFO("GPS_HDOP_LIM", 57, NavEKF3, _gps_hdop_limit, 70),
+
     AP_GROUPEND
 };
 

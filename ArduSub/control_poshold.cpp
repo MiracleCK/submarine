@@ -30,11 +30,21 @@ void Sub::poshold_init_target(void)
     }
 }
 
+bool Sub::poshold_position_ok()
+{
+    // with EKF use filter status and ekf check
+    nav_filter_status filt_status = inertial_nav.get_filter_status();
+
+    return (filt_status.flags.using_gps && \
+            !filt_status.flags.gps_glitching && \
+            filt_status.flags.gps_quality_good);
+}
+
 // poshold_init - initialise PosHold controller
 bool Sub::poshold_init()
 {
     // fail to initialise PosHold mode if no GPS lock
-    if (!position_ok()) {
+    if (!position_ok() || !poshold_position_ok()) {
         return false;
     }
 

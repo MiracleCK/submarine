@@ -293,7 +293,7 @@ bool Sub::smart_mode_auto_switch() {
         } break;
 
         case POSHOLD: {
-            if(!position_ok()) {
+            if(!position_ok() || !poshold_position_ok()) {
                 is_success = sub.set_mode(STABILIZE, ModeReason::GCS_FAILSAFE);
             }
         } break;

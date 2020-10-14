@@ -3,6 +3,8 @@
 #include <AP_HAL/HAL.h>
 #include <AP_Logger/AP_Logger.h>
 
+extern const AP_HAL::HAL& hal;
+
 void NavEKF2::Log_Write_NKF1(uint8_t _core, uint64_t time_us) const
 {
     // Write first EKF packet
@@ -148,6 +150,32 @@ void NavEKF2::Log_Write_NKF4(uint8_t _core, uint64_t time_us) const
         primary : (int8_t)primaryIndex
     };
     AP::logger().WriteBlock(&pkt4, sizeof(pkt4));
+
+    if(0) {
+        static uint32_t _startup_ms = 0;
+
+        if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+        }
+
+        if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+
+		    hal.shell->printf("value %02x\r\n", gpsStatus.value);
+		    hal.shell->printf("bad_sAcc %d\r\n", gpsStatus.flags.bad_sAcc);
+		    hal.shell->printf("bad_hAcc %d\r\n", gpsStatus.flags.bad_hAcc);
+		    hal.shell->printf("bad_yaw %d\r\n", gpsStatus.flags.bad_yaw);
+		    hal.shell->printf("bad_sats %d\r\n", gpsStatus.flags.bad_sats);
+		    hal.shell->printf("bad_VZ %d\r\n", gpsStatus.flags.bad_VZ);
+		    hal.shell->printf("bad_horiz_drift %d\r\n", gpsStatus.flags.bad_horiz_drift);
+		    hal.shell->printf("bad_hdop %d\r\n", gpsStatus.flags.bad_hdop);
+		    hal.shell->printf("bad_vert_vel %d\r\n", gpsStatus.flags.bad_vert_vel);
+		    hal.shell->printf("bad_fix %d\r\n", gpsStatus.flags.bad_fix);
+		    hal.shell->printf("bad_horiz_vel %d\r\n", gpsStatus.flags.bad_horiz_vel);
+		    hal.shell->printf("bad_vAcc %d\r\n", gpsStatus.flags.bad_vAcc);
+		    hal.shell->printf("\r\n");
+	    }
+	}
 }
 
 void NavEKF2::Log_Write_NKF5(uint64_t time_us) const

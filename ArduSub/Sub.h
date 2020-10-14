@@ -543,6 +543,7 @@ private:
     bool is_waypoint_running = false;
 
 	void poshold_init_target(void);
+	bool poshold_position_ok(void);
     bool poshold_init(void);
     void poshold_run();
 

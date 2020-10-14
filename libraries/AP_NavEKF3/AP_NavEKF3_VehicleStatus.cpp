@@ -37,6 +37,12 @@ void NavEKF3_core::calcGpsGoodToAlign(void)
           arm
          */
         checkScaler *= 1.3f;
+        
+    	gpsLock = true;
+    }
+
+    if(gpsLock) {
+		gpsHdopLimit = frontend->_gps_hdop_limit;
     }
     
     // If we have good magnetometer consistency and bad innovations for longer than 5 seconds then we reset heading and field states
@@ -183,12 +189,12 @@ void NavEKF3_core::calcGpsGoodToAlign(void)
     }
 
     // fail if satellite geometry is poor
-    bool hdopFail = (gps.get_hdop() > 250)  && (frontend->_gpsCheck & MASK_GPS_HDOP);
+    bool hdopFail = (gps.get_hdop() > gpsHdopLimit)  && (frontend->_gpsCheck & MASK_GPS_HDOP);
 
     // Report check result as a text string and bitmask
     if (hdopFail) {
         hal.util->snprintf(prearm_fail_string, sizeof(prearm_fail_string),
-                           "GPS HDOP %.1f (needs 2.5)", (double)(0.01f * gps.get_hdop()));
+                           "GPS HDOP %.2f (needs <= %.2f)", (double)(0.01f * gps.get_hdop()), (double)(0.01f * gpsHdopLimit));
         gpsCheckStatus.bad_hdop = true;
     } else {
         gpsCheckStatus.bad_hdop = false;

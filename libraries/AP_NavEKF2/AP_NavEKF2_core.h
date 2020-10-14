@@ -949,7 +949,9 @@ private:
     Vector3f outputTrackError;      // attitude (rad), velocity (m/s) and position (m) tracking error magnitudes from the output observer
     Vector3f velOffsetNED;          // This adds to the earth frame velocity estimate at the IMU to give the velocity at the body origin (m/s)
     Vector3f posOffsetNED;          // This adds to the earth frame position estimate at the IMU to give the position at the body origin (m)
-
+	uint16_t gpsHdopLimit;          // limit the accuracy of GPS
+	bool gpsLock;                   // gps lock
+	
     // variables used to calculate a vertical velocity that is kinematically consistent with the verical position
     struct {
         float pos;

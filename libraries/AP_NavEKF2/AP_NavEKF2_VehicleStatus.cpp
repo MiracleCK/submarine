@@ -33,8 +33,8 @@ void NavEKF2_core::calcGpsGoodToAlign(void)
     }
 
     // User defined multiplier to be applied to check thresholds
-    float checkScaler = 0.01f*(float)frontend->_gpsCheckScaler;
-
+    float checkScaler = 0.01f*(float)frontend->_gpsCheckScaler;  
+	
     if (gpsGoodToAlign) {
         /*
           if we have already passed GPS alignment checks then raise
@@ -43,6 +43,12 @@ void NavEKF2_core::calcGpsGoodToAlign(void)
           arm
          */
         checkScaler *= 1.3f;
+        
+        gpsLock = true;
+    }
+
+    if(gpsLock) {
+		gpsHdopLimit = frontend->_gps_hdop_limit;
     }
 
     // If we have good magnetometer consistency and bad innovations for longer than 5 seconds then we reset heading and field states
@@ -186,12 +192,12 @@ void NavEKF2_core::calcGpsGoodToAlign(void)
     }
 
     // fail if satellite geometry is poor
-    bool hdopFail = (gps.get_hdop() > 250)  && (frontend->_gpsCheck & MASK_GPS_HDOP);
+    bool hdopFail = (gps.get_hdop() > gpsHdopLimit)  && (frontend->_gpsCheck & MASK_GPS_HDOP);
 
     // Report check result as a text string and bitmask
     if (hdopFail) {
         hal.util->snprintf(prearm_fail_string, sizeof(prearm_fail_string),
-                           "GPS HDOP %.1f (needs 2.5)", (double)(0.01f * gps.get_hdop()));
+                           "GPS HDOP %.2f (needs <= %.2f)", (double)(0.01f * gps.get_hdop()), (double)(0.01f * gpsHdopLimit));
         gpsCheckStatus.bad_hdop = true;
     } else {
         gpsCheckStatus.bad_hdop = false;
@@ -247,9 +253,24 @@ void NavEKF2_core::calcGpsGoodToAlign(void)
     // continuous period of 5s without pass required to set unhealthy
     if (!gpsGoodToAlign && imuSampleTime_ms - lastGpsVelFail_ms > 10000) {
         gpsGoodToAlign = true;
-    } else if (gpsGoodToAlign && imuSampleTime_ms - lastGpsVelPass_ms > 5000) {
+    } else if (gpsGoodToAlign && imuSampleTime_ms - lastGpsVelPass_ms > 1000) {
         gpsGoodToAlign = false;
     }
+
+    if(0) {
+        static uint32_t _startup_ms = 0;
+
+        if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+        }
+
+        if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+
+		    hal.shell->printf("GPS HDOP %.2f (needs <= %.2f)", (double)(0.01f * gps.get_hdop()), (double)(0.01f * gpsHdopLimit));
+		    hal.shell->printf("\r\n");
+	    }
+	}
 }
 
 // update inflight calculaton that determines if GPS data is good enough for reliable navigation
