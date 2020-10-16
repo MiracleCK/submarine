@@ -37,9 +37,13 @@ private:
     AP_Int16 _aging_result[2];
 
     AP_Float _aging_gyro[3];
+    AP_Float _aging_gyro_vari[3];
     AP_Float _aging_accel[3];
+    AP_Float _aging_accel_vari[3];
     AP_Float _aging_mag[3];
+    AP_Float _aging_mag_vari[3];
     AP_Float _aging_baro[2];
+    AP_Float _aging_baro_vari[2];
     
     uint8_t _test_mode;
     uint8_t _aging_mode;
@@ -66,10 +70,45 @@ private:
     uint32_t _result_timestamp;
 
 	Vector3f _imu_gyro[2];
+	uint64_t _imu_gyro_n;
+	Vector3f _imu_gyro_sum;
+	Vector3f _imu_gyro_sum2;
+	Vector3f _imu_gyro_aver;
+	Vector3f _imu_gyro_aver2;
+	Vector3f _imu_gyro_vari;
+	
     Vector3f _imu_accel[2];
+    uint64_t _imu_accel_n;
+	Vector3f _imu_accel_sum;
+	Vector3f _imu_accel_sum2;
+	Vector3f _imu_accel_aver;
+	Vector3f _imu_accel_aver2;
+	Vector3f _imu_accel_vari;
+	
     Vector3f _imu_mag[2];
+    uint64_t _imu_mag_n;
+	Vector3f _imu_mag_sum;
+	Vector3f _imu_mag_sum2;
+	Vector3f _imu_mag_aver;
+	Vector3f _imu_mag_aver2;
+	Vector3f _imu_mag_vari;
+	
     float _baro_press[2];
+    uint64_t _baro_press_n;
+	float _baro_press_sum;
+	float _baro_press_sum2;
+	float _baro_press_aver;
+	float _baro_press_aver2;
+	float _baro_press_vari;
+	
 	float _baro_temp[2];
+	uint64_t _baro_temp_n;
+	float _baro_temp_sum;
+	float _baro_temp_sum2;
+	float _baro_temp_aver;
+	float _baro_temp_aver2;
+	float _baro_temp_vari;
+	
 	float _batt_voltage;
 	float _batt_current;
 	uint8_t _batt_remaining;

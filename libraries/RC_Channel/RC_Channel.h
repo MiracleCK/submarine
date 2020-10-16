@@ -93,6 +93,9 @@ public:
 
     ChannelType get_type(void) const { return type_in; }
 
+    void       enable_channel(void) { chan_en = true; }
+    void       disable_channel(void) { chan_en = false; }
+
     AP_Int16    option; // e.g. activate EPM gripper / enable fence
 
     // auxillary switch support:
@@ -271,6 +274,7 @@ private:
     
     float last_slew_norm_input;
 
+	bool chan_en;
 public:
     void calc_slew_norm_input_bidirectional(float dt);
     float slew_norm_input_bidirectional();

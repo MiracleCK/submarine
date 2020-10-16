@@ -73,31 +73,46 @@ const AP_Param::GroupInfo Factory::var_info[] = {
     AP_GROUPINFO("AGING_GYRO_Y", 5, Factory, _aging_gyro[1], 0),
     AP_GROUPINFO("AGING_GYRO_Z", 6, Factory, _aging_gyro[2], 0),
 
+    AP_GROUPINFO("AGING_GYRO_V_X", 7, Factory, _aging_gyro_vari[0], 0),
+    AP_GROUPINFO("AGING_GYRO_V_Y", 8, Factory, _aging_gyro_vari[1], 0),
+    AP_GROUPINFO("AGING_GYRO_V_Z", 9, Factory, _aging_gyro_vari[2], 0),
+
 	// @Param: AGING_ACCEL
     // @DisplayName: accel max jitter
     // @Description: Used to measure accel jitter.
     // @Values: 
     // @User: Advanced
-    AP_GROUPINFO("AGING_ACCEL_X", 7, Factory, _aging_accel[0], 0),
-    AP_GROUPINFO("AGING_ACCEL_Y", 8, Factory, _aging_accel[1], 0),
-    AP_GROUPINFO("AGING_ACCEL_Z", 9, Factory, _aging_accel[2], 0),
+    AP_GROUPINFO("AGING_ACCEL_X", 10, Factory, _aging_accel[0], 0),
+    AP_GROUPINFO("AGING_ACCEL_Y", 11, Factory, _aging_accel[1], 0),
+    AP_GROUPINFO("AGING_ACCEL_Z", 12, Factory, _aging_accel[2], 0),
+
+    AP_GROUPINFO("AGING_ACCEL_V_X", 13, Factory, _aging_accel_vari[0], 0),
+    AP_GROUPINFO("AGING_ACCEL_V_Y", 14, Factory, _aging_accel_vari[1], 0),
+    AP_GROUPINFO("AGING_ACCEL_V_Z", 15, Factory, _aging_accel_vari[2], 0),
 
 	// @Param: AGING_MAG
     // @DisplayName: mag max jitter
     // @Description: Used to measure mag jitter.
     // @Values: 
     // @User: Advanced
-    AP_GROUPINFO("AGING_MAG_X", 10, Factory, _aging_mag[0], 0),
-    AP_GROUPINFO("AGING_MAG_Y", 11, Factory, _aging_mag[1], 0),
-    AP_GROUPINFO("AGING_MAG_Z", 12, Factory, _aging_mag[2], 0),
+    AP_GROUPINFO("AGING_MAG_X", 16, Factory, _aging_mag[0], 0),
+    AP_GROUPINFO("AGING_MAG_Y", 17, Factory, _aging_mag[1], 0),
+    AP_GROUPINFO("AGING_MAG_Z", 18, Factory, _aging_mag[2], 0),
+
+    AP_GROUPINFO("AGING_ACCEL_V_X", 19, Factory, _aging_mag_vari[0], 0),
+    AP_GROUPINFO("AGING_ACCEL_V_Y", 20, Factory, _aging_mag_vari[1], 0),
+    AP_GROUPINFO("AGING_ACCEL_V_Z", 21, Factory, _aging_mag_vari[2], 0),
 
 	// @Param: AGING_BARO
     // @DisplayName: baro max jitter
     // @Description: Used to measure baro jitter.
     // @Values: 
     // @User: Advanced
-    AP_GROUPINFO("AGING_BARO_PRESS", 13, Factory, _aging_baro[0], 0),
-    AP_GROUPINFO("AGING_BARO_TEMP", 14, Factory, _aging_baro[1], 0),
+    AP_GROUPINFO("AGING_BARO_PRESS", 22, Factory, _aging_baro[0], 0),
+    AP_GROUPINFO("AGING_BARO_TEMP", 23, Factory, _aging_baro[1], 0),
+
+    AP_GROUPINFO("AGING_V_PRESS", 24, Factory, _aging_baro_vari[0], 0),
+    AP_GROUPINFO("AGING_V_TEMP", 25, Factory, _aging_baro_vari[1], 0),
     
     AP_GROUPEND
 };
@@ -122,7 +137,8 @@ void Factory::aging_check()
 		_aging_enable.set_and_save(0);
 		_aging_mode = 1;
 	}
-	
+
+	//_aging_mode = 1;
 	if(_aging_mode) {
 		printf("enter factory aging mode\r\n");
 		hal.shell->register_factory_cb(this);
@@ -147,25 +163,44 @@ void Factory::setup()
 		_aging_gyro[1].set_and_save(0);
 		_aging_gyro[2].set_and_save(0);
 
+		_aging_gyro_vari[0].set_and_save(0);
+		_aging_gyro_vari[1].set_and_save(0);
+		_aging_gyro_vari[2].set_and_save(0);
+
 		_aging_accel[0].set_and_save(0);
 		_aging_accel[1].set_and_save(0);
 		_aging_accel[2].set_and_save(0);
 
+		_aging_accel_vari[0].set_and_save(0);
+		_aging_accel_vari[1].set_and_save(0);
+		_aging_accel_vari[2].set_and_save(0);
+
 		_aging_mag[0].set_and_save(0);
 		_aging_mag[1].set_and_save(0);
 		_aging_mag[2].set_and_save(0);
+
+		_aging_mag_vari[0].set_and_save(0);
+		_aging_mag_vari[1].set_and_save(0);
+		_aging_mag_vari[2].set_and_save(0);
 		
 		_aging_baro[0].set_and_save(0);
 		_aging_baro[1].set_and_save(0);
+
+		_aging_baro_vari[0].set_and_save(0);
+		_aging_baro_vari[1].set_and_save(0);
 #endif
-	
+
+		sub.channel_roll->disable_channel();
+		sub.channel_pitch->disable_channel();
+		//sub.channel_yaw->disable_channel();
+		sub.channel_throttle->disable_channel();
+		
 		sub.channel_roll->set_radio_in(1500);
-		sub.channel_pitch->set_radio_in(1500);
-		sub.channel_throttle->set_radio_in(1500);
-		sub.channel_yaw->set_radio_in(1500);
-		sub.channel_forward->set_radio_in(1500);
-		sub.channel_lateral->set_radio_in(1500);
-		AP_Param::set_by_name("RC_OPTIONS", 3);
+	    sub.channel_pitch->set_radio_in(1500);
+	    sub.channel_yaw->set_radio_in(1500);
+	    sub.channel_throttle->set_radio_in(1500);
+	    sub.channel_forward->set_radio_in(1500);
+	    sub.channel_lateral->set_radio_in(1500);
 	}
 }
 
@@ -294,17 +329,28 @@ void Factory::loop()
 		printf("_imu_gyro.x %f %f %f\r\n", _imu_gyro[0].x, _imu_gyro[1].x, diff(_imu_gyro[0].x, _imu_gyro[1].x));
 		printf("_imu_gyro.y %f %f %f\r\n", _imu_gyro[0].y, _imu_gyro[1].y, diff(_imu_gyro[0].y, _imu_gyro[1].y));
 		printf("_imu_gyro.z %f %f %f\r\n", _imu_gyro[0].z, _imu_gyro[1].z, diff(_imu_gyro[0].z, _imu_gyro[1].z));
+		printf("_imu_gyro_vari.x %f\r\n", _imu_gyro_vari.x);
+		printf("_imu_gyro_vari.y %f\r\n", _imu_gyro_vari.y);
+		printf("_imu_gyro_vari.z %f\r\n", _imu_gyro_vari.z);
 		
 		printf("_imu_accel.x %f %f %f\r\n", _imu_accel[0].x, _imu_accel[1].x, diff(_imu_accel[0].x, _imu_accel[1].x));
 		printf("_imu_accel.y %f %f %f\r\n", _imu_accel[0].y, _imu_accel[1].y, diff(_imu_accel[0].y, _imu_accel[1].y));
 		printf("_imu_accel.z %f %f %f\r\n", _imu_accel[0].z, _imu_accel[1].z, diff(_imu_accel[0].z, _imu_accel[1].z));
+		printf("_imu_accel_vari.x %f\r\n", _imu_accel_vari.x);
+		printf("_imu_accel_vari.y %f\r\n", _imu_accel_vari.y);
+		printf("_imu_accel_vari.z %f\r\n", _imu_accel_vari.z);
 		
 		printf("_imu_mag.x %f %f %f\r\n", _imu_mag[0].x, _imu_mag[1].x, diff(_imu_mag[0].x, _imu_mag[1].x));
 		printf("_imu_mag.y %f %f %f\r\n", _imu_mag[0].y, _imu_mag[1].y, diff(_imu_mag[0].y, _imu_mag[1].y));
 		printf("_imu_mag.z %f %f %f\r\n", _imu_mag[0].z, _imu_mag[1].z, diff(_imu_mag[0].z, _imu_mag[1].z));
+		printf("_imu_mag_vari.x %f\r\n", _imu_mag_vari.x);
+		printf("_imu_mag_vari.y %f\r\n", _imu_mag_vari.y);
+		printf("_imu_mag_vari.z %f\r\n", _imu_mag_vari.z);
 
 		printf("_baro_press %f %f %f\r\n", _baro_press[0], _baro_press[1], diff(_baro_press[0], _baro_press[1]));
 		printf("_baro_temp %f %f %f\r\n", _baro_temp[0], _baro_temp[1], diff(_baro_temp[0], _baro_temp[1]));
+		printf("_baro_press_vari %f\r\n", _baro_press_vari);
+		printf("_baro_temp_vari %f\r\n", _baro_temp_vari);
 
 		printf("_batt_voltage %f\r\n", _batt_voltage);
 		printf("_batt_current %f\r\n", _batt_current);
@@ -329,7 +375,22 @@ Factory::Factory(void):
     _batt_result(0),
     _hisi_result(0x7f),
     _hisi_result_new(0),
-    _time_min(0)
+    _time_min(0),
+    _imu_gyro_n(0),
+    _imu_accel_n(0),
+    _imu_mag_n(0),
+    _baro_press_n(0),
+    _baro_press_sum(0),
+    _baro_press_sum2(0),
+    _baro_press_aver(0),
+    _baro_press_aver2(0),
+    _baro_press_vari(0),
+    _baro_temp_n(0),
+    _baro_temp_sum(0),
+    _baro_temp_sum2(0),
+    _baro_temp_aver(0),
+    _baro_temp_aver2(0),
+    _baro_temp_vari(0)
 {
 	AP_Param::setup_object_defaults(this, var_info);
 }
@@ -359,6 +420,7 @@ void Factory::_uart_update()
 void Factory::_aging_test()
 {
     sub.set_mode(ALT_HOLD, ModeReason::RC_COMMAND);
+    //sub.set_mode(MANUAL, ModeReason::RC_COMMAND);
 	sub.motors.armed(TRUE);
 
 	if(_depth>-0.5) {
@@ -450,6 +512,78 @@ int Factory::_mpu6000_test()
 		diffVal = diff(_imu_accel[0].z, _imu_accel[1].z);
 		if(diffVal > _aging_accel[2])
 			_aging_accel[2].set_and_save(diffVal);
+
+		uint8_t idx;
+		idx = (i==0) ? 1 : 0;
+		
+		_imu_gyro_n++;
+		_imu_gyro_sum.x += _imu_gyro[idx].x;
+		_imu_gyro_sum2.x += _imu_gyro[idx].x*_imu_gyro[idx].x;
+		_imu_gyro_aver.x = _imu_gyro_sum.x / _imu_gyro_n;
+		_imu_gyro_aver2.x = _imu_gyro_sum2.x / _imu_gyro_n;
+		_imu_gyro_vari.x = _imu_gyro_aver2.x - _imu_gyro_aver.x*_imu_gyro_aver.x;
+		_imu_gyro_vari.x = safe_sqrt(_imu_gyro_vari.x);
+		//_aging_gyro_vari[0].set_and_save(_imu_gyro_vari.x);
+		
+		_imu_gyro_sum.y += _imu_gyro[idx].y;
+		_imu_gyro_sum2.y += _imu_gyro[idx].y*_imu_gyro[idx].y;
+		_imu_gyro_aver.y = _imu_gyro_sum.y / _imu_gyro_n;
+		_imu_gyro_aver2.y = _imu_gyro_sum2.y / _imu_gyro_n;
+		_imu_gyro_vari.y = _imu_gyro_aver2.y - _imu_gyro_aver.y*_imu_gyro_aver.y;
+		_imu_gyro_vari.y = safe_sqrt(_imu_gyro_vari.y);
+		//_aging_gyro_vari[1].set_and_save(_imu_gyro_vari.y);
+		
+		_imu_gyro_sum.z += _imu_gyro[idx].z;
+		_imu_gyro_sum2.z += _imu_gyro[idx].z*_imu_gyro[idx].z;
+		_imu_gyro_aver.z = _imu_gyro_sum.z / _imu_gyro_n;
+		_imu_gyro_aver2.z = _imu_gyro_sum2.z / _imu_gyro_n;
+		_imu_gyro_vari.z = _imu_gyro_aver2.z - _imu_gyro_aver.z*_imu_gyro_aver.z;
+		_imu_gyro_vari.z = safe_sqrt(_imu_gyro_vari.z);
+		//_aging_gyro_vari[2].set_and_save(_imu_gyro_vari.z);
+		
+		_imu_accel_n++;
+		_imu_accel_sum.x += _imu_accel[idx].x;
+		_imu_accel_sum2.x += _imu_accel[idx].x*_imu_accel[idx].x;
+		_imu_accel_aver.x = _imu_accel_sum.x / _imu_accel_n;
+		_imu_accel_aver2.x = _imu_accel_sum2.x / _imu_accel_n;
+		_imu_accel_vari.x = _imu_accel_aver2.x - _imu_accel_aver.x*_imu_accel_aver.x;
+		_imu_accel_vari.x = safe_sqrt(_imu_accel_vari.x);
+		//_aging_accel_vari[0].set_and_save(_imu_accel_vari.x);
+		
+		_imu_accel_sum.y += _imu_accel[idx].y;
+		_imu_accel_sum2.y += _imu_accel[idx].y*_imu_accel[idx].y;
+		_imu_accel_aver.y = _imu_accel_sum.y / _imu_accel_n;
+		_imu_accel_aver2.y = _imu_accel_sum2.y / _imu_accel_n;
+		_imu_accel_vari.y = _imu_accel_aver2.y - _imu_accel_aver.y*_imu_accel_aver.y;
+		_imu_accel_vari.y = safe_sqrt(_imu_accel_vari.y);
+		//_aging_accel_vari[1].set_and_save(_imu_accel_vari.y);
+		
+		_imu_accel_sum.z += _imu_accel[idx].z;
+		_imu_accel_sum2.z += _imu_accel[idx].z*_imu_accel[idx].z;
+		_imu_accel_aver.z = _imu_accel_sum.z / _imu_accel_n;
+		_imu_accel_aver2.z = _imu_accel_sum2.z / _imu_accel_n;
+		_imu_accel_vari.z = _imu_accel_aver2.z - _imu_accel_aver.z*_imu_accel_aver.z;
+		_imu_accel_vari.z = safe_sqrt(_imu_accel_vari.z);
+		//_aging_accel_vari[2].set_and_save(_imu_accel_vari.z);
+
+		if(1) {
+			static uint32_t _startup_ms = 0;
+
+			if(_startup_ms == 0) {
+				_startup_ms = AP_HAL::millis();
+			}
+
+			if(AP_HAL::millis() - _startup_ms > 10000) {
+				_startup_ms = AP_HAL::millis();
+				
+				_aging_gyro_vari[0].set_and_save(_imu_gyro_vari.x);
+				_aging_gyro_vari[1].set_and_save(_imu_gyro_vari.y);
+				_aging_gyro_vari[2].set_and_save(_imu_gyro_vari.z);
+				_aging_accel_vari[0].set_and_save(_imu_accel_vari.x);
+				_aging_accel_vari[1].set_and_save(_imu_accel_vari.y);
+				_aging_accel_vari[2].set_and_save(_imu_accel_vari.z);
+			}
+		}
 #endif
 		if(diff(_imu_gyro[0].x, _imu_gyro[1].x) < IMU_GYRO_ERROR_RANGE &&
 		   diff(_imu_gyro[0].y, _imu_gyro[1].y) < IMU_GYRO_ERROR_RANGE &&
@@ -472,7 +606,7 @@ int Factory::_storage_test()
 
 	if(st->healthy()) {
 		if (sub.g.format_version.load() &&
-	        sub.g.format_version == Parameters::k_format_version)
+	        sub.g.format_version.get() == Parameters::k_format_version)
 			return 0;
 	}
 	return 1;
@@ -506,11 +640,13 @@ int Factory::_baro_test()
 	if (baro.healthy()) {
         if(init==0) {
 			_baro_press[0] = _baro_press[1] = baro.get_pressure() * 0.01f;
-			_baro_temp[0] = _baro_temp[1] = baro.get_temperature()*100;
+			//_baro_temp[0] = _baro_temp[1] = baro.get_temperature()*100;
+			_baro_temp[0] = _baro_temp[1] = baro.get_temperature();
 			init = 1;
 		} else {
 			_baro_press[i] = baro.get_pressure() * 0.01f;
-			_baro_temp[i] = baro.get_temperature()*100;
+			//_baro_temp[i] = baro.get_temperature()*100;
+			_baro_temp[i] = baro.get_temperature();
 			i = (i+1)%2;
 		}
 
@@ -525,6 +661,42 @@ int Factory::_baro_test()
 		diffVal = diff(_baro_temp[0], _baro_temp[1]);
 		if(diffVal > _aging_baro[1])
 			_aging_baro[1].set_and_save(diffVal);
+
+		uint8_t idx;
+		idx = (i==0) ? 1 : 0;
+
+		_baro_press_n++;
+		_baro_press_sum += _baro_press[idx];
+		_baro_press_sum2 += _baro_press[idx]*_baro_press[idx];
+		_baro_press_aver = _baro_press_sum / _baro_press_n;
+		_baro_press_aver2 = _baro_press_sum2 / _baro_press_n;
+		_baro_press_vari = _baro_press_aver2 - _baro_press_aver*_baro_press_aver;
+		_baro_press_vari = safe_sqrt(_baro_press_vari);
+		//_aging_baro_vari[0].set_and_save(_baro_press_vari);
+		
+		_baro_temp_n++;
+		_baro_temp_sum += _baro_temp[idx];
+		_baro_temp_sum2 += _baro_temp[idx]*_baro_temp[idx];
+		_baro_temp_aver = _baro_temp_sum / _baro_temp_n;
+		_baro_temp_aver2 = _baro_temp_sum2 / _baro_temp_n;
+		_baro_temp_vari = _baro_temp_aver2 - _baro_temp_aver*_baro_temp_aver;
+		_baro_temp_vari = safe_sqrt(_baro_temp_vari);
+		//_aging_baro_vari[1].set_and_save(_baro_temp_vari);
+
+		if(1) {
+			static uint32_t _startup_ms = 0;
+
+			if(_startup_ms == 0) {
+				_startup_ms = AP_HAL::millis();
+			}
+
+			if(AP_HAL::millis() - _startup_ms > 10000) {
+				_startup_ms = AP_HAL::millis();
+				
+				_aging_baro_vari[0].set_and_save(_baro_press_vari);
+				_aging_baro_vari[1].set_and_save(_baro_temp_vari);
+			}
+		}
 #endif			
 		if(diff(_baro_press[0], _baro_press[1]) < BARO_PRESS_ERROR_RANGE &&
 		   diff(_baro_temp[0], _baro_temp[1]) < BARO_TEMP_ERROR_RANGE)
@@ -589,6 +761,50 @@ int Factory::_compass_test()
 		diffVal = diff(_imu_mag[0].z, _imu_mag[1].z);
 		if(diffVal > _aging_mag[2])
 			_aging_mag[2].set_and_save(diffVal);
+
+		uint8_t idx;
+		idx = (i==0) ? 1 : 0;
+		
+		_imu_mag_n++;
+		_imu_mag_sum.x += _imu_mag[idx].x;
+		_imu_mag_sum2.x += _imu_mag[idx].x*_imu_mag[idx].x;
+		_imu_mag_aver.x = _imu_mag_sum.x / _imu_mag_n;
+		_imu_mag_aver2.x = _imu_mag_sum2.x / _imu_mag_n;
+		_imu_mag_vari.x = _imu_mag_aver2.x - _imu_mag_aver.x*_imu_mag_aver.x;
+		_imu_mag_vari.x = safe_sqrt(_imu_mag_vari.x);
+		//_aging_mag_vari[0].set_and_save(_imu_mag_vari.x);
+		
+		_imu_mag_sum.y += _imu_mag[idx].y;
+		_imu_mag_sum2.y += _imu_mag[idx].y*_imu_mag[idx].y;
+		_imu_mag_aver.y = _imu_mag_sum.y / _imu_mag_n;
+		_imu_mag_aver2.y = _imu_mag_sum2.y / _imu_mag_n;
+		_imu_mag_vari.y = _imu_mag_aver2.y - _imu_mag_aver.y*_imu_mag_aver.y;
+		_imu_mag_vari.y = safe_sqrt(_imu_mag_vari.y);
+		//_aging_mag_vari[1].set_and_save(_imu_mag_vari.y);
+		
+		_imu_mag_sum.z += _imu_mag[idx].z;
+		_imu_mag_sum2.z += _imu_mag[idx].z*_imu_mag[idx].z;
+		_imu_mag_aver.z = _imu_mag_sum.z / _imu_mag_n;
+		_imu_mag_aver2.z = _imu_mag_sum2.z / _imu_mag_n;
+		_imu_mag_vari.z = _imu_mag_aver2.z - _imu_mag_aver.z*_imu_mag_aver.z;
+		_imu_mag_vari.z = safe_sqrt(_imu_mag_vari.z);
+		//_aging_mag_vari[2].set_and_save(_imu_mag_vari.z);
+
+		if(1) {
+			static uint32_t _startup_ms = 0;
+
+			if(_startup_ms == 0) {
+				_startup_ms = AP_HAL::millis();
+			}
+
+			if(AP_HAL::millis() - _startup_ms > 10000) {
+				_startup_ms = AP_HAL::millis();
+				
+				_aging_mag_vari[0].set_and_save(_imu_mag_vari.x);
+				_aging_mag_vari[1].set_and_save(_imu_mag_vari.y);
+				_aging_mag_vari[2].set_and_save(_imu_mag_vari.z);
+			}
+		}
 #endif			
 		if(diff(_imu_mag[0].x, _imu_mag[1].x) < IMU_COMPASS_ERROR_RANGE &&
 		   diff(_imu_mag[0].y, _imu_mag[1].y) < IMU_COMPASS_ERROR_RANGE &&

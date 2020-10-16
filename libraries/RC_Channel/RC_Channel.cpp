@@ -121,7 +121,8 @@ const AP_Param::GroupInfo RC_Channel::var_info[] = {
 
 
 // constructor
-RC_Channel::RC_Channel(void)
+RC_Channel::RC_Channel(void):
+			chan_en(true)
 {
     AP_Param::setup_object_defaults(this, var_info);
 }
@@ -156,9 +157,9 @@ RC_Channel::get_reverse(void) const
 bool
 RC_Channel::update(void)
 {
-    if (has_override() && !rc().ignore_overrides()) {
+    if (has_override() && !rc().ignore_overrides() && chan_en) {
         radio_in = override_value;
-    } else if (!rc().ignore_receiver()) {
+    } else if (!rc().ignore_receiver() && chan_en) {
         radio_in = hal.rcin->read(ch_in);
     } else {
         return false;
