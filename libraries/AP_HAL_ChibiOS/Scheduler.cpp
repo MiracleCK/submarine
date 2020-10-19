@@ -67,6 +67,7 @@ THD_WORKING_AREA(_shell_thread_wa, SHELL_THD_WA_SIZE);
 #endif
 
 extern ShellConfig shell_cfg;
+extern AP_HAL::HAL::Callbacks* g_factory_cb;
 
 Scheduler::Scheduler()
 {
@@ -397,9 +398,23 @@ void Scheduler::_shell_thread(void *arg)
 
     while (!sched->_hal_initialized) {
         sched->delay_microseconds(20000);
-    }    
-    
-    shellThread(&shell_cfg);
+    } 
+
+	//delay 1s
+	int count = 0;
+    while (count++ < 50) {
+        sched->delay_microseconds(20000);
+    }
+
+    if(g_factory_cb) {
+    	g_factory_cb->setup();
+    	while(true) {
+			g_factory_cb->loop();
+			sched->delay_microseconds(25000);
+    	}
+    } else {
+    	shellThread(&shell_cfg);
+    }
 }
 
 #endif

@@ -595,6 +595,10 @@ const AP_Param::Info Sub::var_info[] = {
     // @Path: ../libraries/AP_Vehicle/AP_Vehicle.cpp
     { AP_PARAM_GROUP, "", Parameters::k_param_vehicle, (const void *)&sub, {group_info : AP_Vehicle::var_info} },
 
+	// @Group:
+	// @Path: factory.cpp
+	{ AP_PARAM_GROUP, "", Parameters::k_param_factory, (const void *)&factory, {group_info : Factory::var_info} },
+	
     AP_VAREND
 };
 

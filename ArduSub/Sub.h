@@ -78,6 +78,8 @@
 #include "Parameters.h"
 #include "AP_Arming_Sub.h"
 #include "GCS_Sub.h"
+#include "factory.h"
+#include "factory_proto.h"
 
 // libraries which are dependent on #defines in defines.h and/or config.h
 #if OPTFLOW == ENABLED
@@ -147,6 +149,8 @@ public:
     friend class ParametersG2;
     friend class AP_Arming_Sub;
     friend class RC_Channels_Sub;
+    friend class Factory;
+    friend class Factory_proto;
 
     Sub(void);
 

@@ -32,6 +32,8 @@ void Sub::init_ardupilot()
     // load parameters from EEPROM
     load_parameters();
 
+    factory.aging_check();
+
     BoardConfig.init();
 #if HAL_WITH_UAVCAN
     BoardConfig_CAN.init();
@@ -210,10 +212,10 @@ void Sub::init_ardupilot()
     ins.set_log_raw_bit(MASK_LOG_IMU_RAW);
 
     // disable safety if requested
-    BoardConfig.init_safety();    
+    BoardConfig.init_safety();  
 
-    hal.shell->register_commands(shell_commands);
-    
+	hal.shell->register_commands(shell_commands);
+
     hal.console->print("\nInit complete");
     printf("\r\ninit complete \r\n");
     // flag that initialisation has completed

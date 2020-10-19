@@ -91,7 +91,7 @@ STM32_ST_USE_TIMER 5
 # Now the size of flash in kilobytes, for creating the ld.script.
 
 # flash size
-FLASH_SIZE_KB 2048
+FLASH_SIZE_KB 1024
 
 # Now define which UART is used for printf(). We rarely use printf()
 # in ChibiOS, so this is really only for debugging very early startup
@@ -145,7 +145,7 @@ I2C_ORDER I2C1 I2C2
 # 6) SERIAL5: extra UART (usually RTOS debug console)
 
 # order of UARTs (and USB)
-UART_ORDER OTG1 USART2 USART1 EMPTY EMPTY USART3
+UART_ORDER OTG1 USART2 EMPTY EMPTY EMPTY USART3 USART1
 
 # If the board has an IOMCU connected via a UART then this defines the
 # UART to talk to that MCU. Leave it out for boards with no IOMCU.
@@ -255,6 +255,7 @@ PB0 EXTERN_GPIO1 OUTPUT GPIO(1)
 # This defines some input pins, currently unused.
 PB2 BOOT1 INPUT
 #PB3 FMU_SW0 INPUT
+PE1 TEST INPUT
 
 # This defines the pins for the 2nd CAN interface, if available.
 #PB6 CAN2_TX CAN2
@@ -331,6 +332,10 @@ PD8 USART3_TX USART3
 PD9 USART3_RX USART3
 #PD11 USART3_CTS USART3
 #PD12 USART3_RTS USART3
+
+# UART4 maps to uartD
+#PC10 UART4_TX UART4
+#PC11 UART4_RX UART4
 
 # The CS pin for FRAM (ramtron). This one is marked as using
 # SPEED_VERYLOW, which matches the HAL_PX4 setup.
@@ -460,7 +465,7 @@ define HAL_STORAGE_SIZE 16384
 # fitted. This needs to be carefully chosen to align with your
 # bootloader. The flash storage system needs two sectors, and the
 # sectors must be at least 20% larger than HAL_STORAGE_SIZE.
-define STORAGE_FLASH_PAGE 22
+#define STORAGE_FLASH_PAGE 10
 
 # allow to have have a dedicated safety switch pin
 #define HAL_HAVE_SAFETY_SWITCH 1

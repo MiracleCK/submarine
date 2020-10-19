@@ -30,9 +30,16 @@ ShellConfig shell_cfg = {
   chibi_shell_commands
 };
 
+AP_HAL::HAL::Callbacks* g_factory_cb = NULL;
+
 void Shell::register_commands(AP_HAL::Shell::ShellCommand* commands)
 {
     _shell_commands = commands;
+}
+
+void Shell::register_factory_cb(AP_HAL::HAL::Callbacks* cb)
+{
+    g_factory_cb = cb;
 }
 
 int Shell::printf(const char *fmt, ...)
