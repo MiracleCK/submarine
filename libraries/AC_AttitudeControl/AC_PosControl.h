@@ -279,6 +279,7 @@ public:
 
     // get_leash_xy - returns horizontal leash length in cm
     float get_leash_xy() const { return _leash; }
+    bool gps_drift_out() const { return _flags._gps_drift==true; }
 
     /// get pid controllers
     AC_P& get_pos_z_p() { return _p_pos_z; }
@@ -324,6 +325,7 @@ protected:
             uint16_t freeze_ff_z        : 1;    // 1 used to freeze velocity to accel feed forward for one iteration
             uint16_t use_desvel_ff_z    : 1;    // 1 to use z-axis desired velocity as feed forward into velocity step
             uint16_t vehicle_horiz_vel_override : 1; // 1 if we should use _vehicle_horiz_vel as our velocity process variable for one timestep
+			uint16_t _gps_drift         : 1;    // 1 if GPS drift
     } _flags;
 
     // limit flags structure
@@ -407,7 +409,8 @@ protected:
     float       _leash_down_z;          // vertical leash down in cm.  target will never be further than this distance below the vehicle
     float       _leash_up_z;            // vertical leash up in cm.  target will never be further than this distance above the vehicle
     float       _vel_z_control_ratio = 2.0f;   // confidence that we have control in the vertical axis
-
+	AP_Float    _lean_limit;            // GPS drift limit
+	
     // output from controller
     float       _roll_target;           // desired roll angle in centi-degrees calculated by position controller
     float       _pitch_target;          // desired roll pitch in centi-degrees calculated by position controller

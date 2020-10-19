@@ -106,13 +106,13 @@ void Factory::setup()
 		_aging_result[0].set_and_save(255);
 		_aging_result[1].set_and_save(255);
 
-		sub.channel_roll->set_radio_in(1500);
-		sub.channel_pitch->set_radio_in(1500);
-		sub.channel_throttle->set_radio_in(1500);
-		sub.channel_yaw->set_radio_in(1500);
-		sub.channel_forward->set_radio_in(1500);
-		sub.channel_lateral->set_radio_in(1500);
-		AP_Param::set_by_name("RC_OPTIONS", 3);
+		//sub.channel_roll->set_radio_in(1500);
+		//sub.channel_pitch->set_radio_in(1500);
+		//sub.channel_throttle->set_radio_in(1500);
+		//sub.channel_yaw->set_radio_in(1500);
+		//sub.channel_forward->set_radio_in(1500);
+		//sub.channel_lateral->set_radio_in(1500);
+		//AP_Param::set_by_name("RC_OPTIONS", 3);
 	}
 }
 

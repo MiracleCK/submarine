@@ -182,6 +182,13 @@ const AP_Param::GroupInfo AC_PosControl::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("_ANGLE_MAX", 7, AC_PosControl, _lean_angle_max, 0.0f),
 
+    // @Param: _LEAN_LIMIT
+    // @DisplayName: GPS drift limit
+    // @Description: Range of GPS drift
+    // @Units: cm
+    // @User: Advanced
+    AP_GROUPINFO("_LEAN_LIMIT", 8, AC_PosControl, _lean_limit, 500.0f),
+
     AP_GROUPEND
 };
 
@@ -221,6 +228,7 @@ AC_PosControl::AC_PosControl(const AP_AHRS_View& ahrs, const AP_InertialNav& ina
     _flags.reset_rate_to_accel_z = true;
     _flags.freeze_ff_z = true;
     _flags.use_desvel_ff_z = true;
+    _flags._gps_drift = false;
     _limit.pos_up = true;
     _limit.pos_down = true;
     _limit.vel_up = true;
@@ -783,6 +791,7 @@ void AC_PosControl::init_xy_controller()
     // flag reset required in rate to accel step
     _flags.reset_desired_vel_to_pos = true;
     _flags.reset_accel_to_lean_xy = true;
+    _flags._gps_drift = false;
 
     // initialise ekf xy reset handler
     init_ekf_xy_reset();
@@ -1030,9 +1039,12 @@ void AC_PosControl::run_xy_controller(float dt)
         // Constrain _pos_error and target position
         // Constrain the maximum length of _vel_target to the maximum position correction velocity
         // TODO: replace the leash length with a user definable maximum position correction
+        _leash = _lean_limit;
         if (limit_vector_length(_pos_error.x, _pos_error.y, _leash)) {
             //_pos_target.x = curr_pos.x + _pos_error.x;
             //_pos_target.y = curr_pos.y + _pos_error.y;
+            _flags._gps_drift = true;
+            hal.shell->printf("GPS drift, _leash %f\r\n", _leash);
         }
 
         _vel_target = sqrt_controller(_pos_error, kP, _accel_cms);
