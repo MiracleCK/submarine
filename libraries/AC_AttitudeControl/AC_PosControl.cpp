@@ -187,7 +187,7 @@ const AP_Param::GroupInfo AC_PosControl::var_info[] = {
     // @Description: Range of GPS drift
     // @Units: cm
     // @User: Advanced
-    AP_GROUPINFO("_LEAN_LIMIT", 8, AC_PosControl, _lean_limit, 500.0f),
+    AP_GROUPINFO("_LEAN_LIMIT", 8, AC_PosControl, _lean_limit, 20.0f),
 
     AP_GROUPEND
 };

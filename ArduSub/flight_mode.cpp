@@ -268,6 +268,8 @@ void Sub::notify_flight_mode(control_mode_t mode)
 // true: auto switched
 // false: not do auto switch
 bool Sub::smart_mode_auto_switch() {
+	static uint32_t _startup_ms = 0;
+	
     if (!is_mode_auto_switch_enabled) {
         return false;
     }
@@ -289,11 +291,18 @@ bool Sub::smart_mode_auto_switch() {
         } break;
 
         case STABILIZE: {
-            is_success = sub.set_mode(POSHOLD, reason);
+        	if(_startup_ms == 0) {
+				_startup_ms = AP_HAL::millis();
+			}
+			
+			//if(AP_HAL::millis() - _startup_ms > 10000) {
+				is_success = sub.set_mode(POSHOLD, reason);
+			//}
         } break;
 
         case POSHOLD: {
-            if(!position_ok() || !poshold_position_ok()) {
+        	_startup_ms = 0;
+            if(!position_ok() || !poshold_position_ok() || pos_control.gps_drift_out()) {
                 is_success = sub.set_mode(STABILIZE, ModeReason::GCS_FAILSAFE);
             }
         } break;

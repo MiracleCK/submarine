@@ -37,8 +37,7 @@ bool Sub::poshold_position_ok()
 
     return (filt_status.flags.using_gps && \
             !filt_status.flags.gps_glitching && \
-            filt_status.flags.gps_quality_good && \
-            !pos_control.gps_drift_out());
+            filt_status.flags.gps_quality_good);
 }
 
 // poshold_init - initialise PosHold controller
