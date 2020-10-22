@@ -152,6 +152,8 @@ void Sub::fast_loop()
     }
 
     param_debug_tick();
+
+    //factory.aging_check_reboot();
 }
 
 // 50 Hz tasks

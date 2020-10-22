@@ -95,6 +95,7 @@ static int cmd_param_reset(void);
 static void cmd_param_dbg(int argc, char *argv[]);
 
 static void cmd_version(int argc, char *argv[]);
+static void cmd_reset(int argc, char *argv[]);
 
 static int radian_to_degree(float value);
 static float degree_to_radian(int value);
@@ -102,6 +103,7 @@ static float degree_to_radian(int value);
 AP_HAL::Shell::ShellCommand shell_commands[] = {
     {"param", cmd_param},
     {"version", cmd_version},
+    {"reset", cmd_reset},
     {"cali", cmd_cali},
     {NULL, NULL} // this is the end of commands
 };
@@ -180,6 +182,17 @@ void cmd_version(int argc, char *argv[]) {
     AP_FWVersion ver = AP_FWVersion::get_fwverz();
 
     hal.shell->printf("%s\r\n", ver.fw_string);
+}
+
+void cmd_reset(int argc, char *argv[]) {
+	bool hold_in_bootloader = false;
+
+	if(argc && argv[0])
+		hold_in_bootloader = strtol(argv[0], NULL, 10) ? true : false;
+
+	hal.shell->printf("system reboot%s\r\n", hold_in_bootloader ? ", hold boot" : "");
+	hal.scheduler->delay(500);
+    hal.scheduler->reboot(hold_in_bootloader);
 }
 
 // param dbg motor|atti|ctrl on|[off] [print_cnt]

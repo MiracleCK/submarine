@@ -93,6 +93,15 @@ void Factory::aging_check()
 	}
 }
 
+void Factory::aging_check_reboot()
+{
+	if(_aging_enable.get()) {
+		printf("aging reboot\r\n");
+		hal.scheduler->delay(500);
+		hal.scheduler->reboot(false);
+	}
+}
+
 void Factory::setup()
 {
     _motor_time = AP_HAL::millis();

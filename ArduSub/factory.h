@@ -20,6 +20,7 @@ public:
     Factory(void);
     void test_check(void);
     void aging_check(void);
+    void aging_check_reboot(void);
 	void setup(void) override;
 	void loop(void) override;
 	uint8_t isFactoryTestMode(void) const { return _test_mode; }
