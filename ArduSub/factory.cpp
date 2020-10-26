@@ -33,6 +33,8 @@
 #define FACTORY_GPS_RESULT_BIT       6
 #define FACTORY_HISI_RESULT_BIT      7
 
+#define WASHING_LEVEL		100
+
 #define diff(a, b) ((a) > (b) ? ((a)-(b)) : ((b)-(a)))
 
 const AP_Param::GroupInfo Factory::var_info[] = {
@@ -113,6 +115,13 @@ const AP_Param::GroupInfo Factory::var_info[] = {
 
     AP_GROUPINFO("AGING_V_PRESS", 24, Factory, _aging_baro_vari[0], 0),
     AP_GROUPINFO("AGING_V_TEMP", 25, Factory, _aging_baro_vari[1], 0),
+
+    // @Param: WASHING_ENABLE
+    // @DisplayName: wash enable or disable
+    // @Description: Used to enter or exit wash mode.
+    // @Values: 1:enable,0:disable
+    // @User: Advanced
+    AP_GROUPINFO("WASHING_ENABLE",  26, Factory, _washing_enable, 0),
     
     AP_GROUPEND
 };
@@ -125,22 +134,32 @@ void Factory::test_check()
 	if(!test_pin)
 		_test_mode = 1;
 
+	//_test_mode = 1;
 	if(_test_mode) {
 		printf("enter factory test mode\r\n");
 		hal.shell->register_factory_cb(this);
 	}
 }
 
-void Factory::aging_check()
+void Factory::mode_check()
 {
 	if(_aging_enable) {
 		_aging_enable.set_and_save(0);
 		_aging_mode = 1;
+	} else if(_washing_enable) {
+		_washing_enable.set_and_save(0);
+		_washing_mode = 1;
 	}
 
 	//_aging_mode = 1;
 	if(_aging_mode) {
 		printf("enter factory aging mode\r\n");
+		hal.shell->register_factory_cb(this);
+	}
+
+	//_washing_mode = 1;
+	if(_washing_mode) {
+		printf("enter factory washing mode\r\n");
 		hal.shell->register_factory_cb(this);
 	}
 }
@@ -201,6 +220,29 @@ void Factory::setup()
 	    sub.channel_throttle->set_radio_in(1500);
 	    sub.channel_forward->set_radio_in(1500);
 	    sub.channel_lateral->set_radio_in(1500);
+	}else if(_washing_mode || _test_mode) {
+		sub.channel_roll->disable_channel();
+		sub.channel_pitch->disable_channel();
+		sub.channel_yaw->disable_channel();
+		sub.channel_throttle->disable_channel();
+		sub.channel_forward->disable_channel();
+	    sub.channel_lateral->disable_channel();
+	    
+		sub.channel_roll->set_radio_in(1500);
+	    sub.channel_pitch->set_radio_in(1500);
+	    sub.channel_yaw->set_radio_in(1500);
+	    sub.channel_throttle->set_radio_in(1500);
+	    sub.channel_forward->set_radio_in(1500);
+	    sub.channel_lateral->set_radio_in(1500);
+
+	    AP_Param::set_by_name("MOT_1_MAPPING", 0);
+	    AP_Param::set_by_name("MOT_2_MAPPING", 0);
+	    AP_Param::set_by_name("MOT_3_MAPPING", 0);
+	    AP_Param::set_by_name("MOT_4_MAPPING", 0);
+	    AP_Param::set_by_name("MOT_5_MAPPING", 0);
+	    AP_Param::set_by_name("MOT_6_MAPPING", 0);
+	    AP_Param::set_by_name("MOT_7_MAPPING", 0);
+	    AP_Param::set_by_name("MOT_8_MAPPING", 0);
 	}
 }
 
@@ -214,8 +256,11 @@ void Factory::loop()
 	
 	if(_test_mode) {
 		_motor_test();
-	} else {
+	} else if(_aging_mode) {
 		_aging_test();
+	} else if(_washing_mode) {
+		_washing_test();
+		return ;
 	}
 	
 	if (tested)
@@ -364,6 +409,8 @@ Factory::Factory(void):
 	_uart_up(&g_uart_up_port),
     _uart_down(&g_uart_down_port),
     _test_mode(0),
+    _aging_mode(0),
+    _washing_mode(0),
     _motor_state(0),
     _mpu6000_result(0),
     _compass_result(0),
@@ -434,10 +481,90 @@ void Factory::_aging_test()
 	}
 }
 
+void Factory::_washing_test()
+{
+	static uint16_t ms_count = 0;
+	static uint16_t count = 0;
+	
+	sub.motors.armed(TRUE);
+
+    if (AP_HAL::millis() - _motor_time >= ms_count)
+    {
+        //printf("washing test...\r\n");
+        switch(_motor_state)
+        {
+            case 0:
+            	if(count==10) {
+            		printf("washing finish...\r\n");
+            		hal.scheduler->delay(500);
+            		hal.scheduler->reboot(false);
+            	} else {
+					count++;
+					printf("washing count %d\r\n", count);
+            	}
+            	
+                sub.motors.output_test_seq(3, 1500);
+                sub.motors.output_test_seq(4, 1500);
+                sub.motors.output_test_seq(7, 1500);
+                sub.motors.output_test_seq(5, 1500);
+
+                sub.motors.output_test_seq(2, 1500);
+                sub.motors.output_test_seq(8, 1500);
+                sub.motors.output_test_seq(1, 1500);
+                sub.motors.output_test_seq(6, 1500);
+                ms_count = 5*1000;
+                _motor_state = 1;
+                break;
+            case 1:
+                sub.motors.output_test_seq(3, 1500+WASHING_LEVEL);
+                sub.motors.output_test_seq(4, 1500-WASHING_LEVEL);
+                sub.motors.output_test_seq(7, 1500-WASHING_LEVEL);
+                sub.motors.output_test_seq(5, 1500+WASHING_LEVEL);
+
+                sub.motors.output_test_seq(2, 1500-WASHING_LEVEL);
+                sub.motors.output_test_seq(8, 1500+WASHING_LEVEL);
+                sub.motors.output_test_seq(1, 1500+WASHING_LEVEL);
+                sub.motors.output_test_seq(6, 1500-WASHING_LEVEL);
+                ms_count = 25*1000;
+                _motor_state = 2;
+                break;
+            case 2:
+                sub.motors.output_test_seq(3, 1500);
+                sub.motors.output_test_seq(4, 1500);
+                sub.motors.output_test_seq(7, 1500);
+                sub.motors.output_test_seq(5, 1500);
+
+                sub.motors.output_test_seq(2, 1500);
+                sub.motors.output_test_seq(8, 1500);
+                sub.motors.output_test_seq(1, 1500);
+                sub.motors.output_test_seq(6, 1500);
+                ms_count = 5*1000;
+                _motor_state = 3;
+                break; 
+            case 3:
+				sub.motors.output_test_seq(3, 1500-WASHING_LEVEL);
+				sub.motors.output_test_seq(4, 1500+WASHING_LEVEL);
+				sub.motors.output_test_seq(7, 1500+WASHING_LEVEL);
+				sub.motors.output_test_seq(5, 1500-WASHING_LEVEL);
+
+				sub.motors.output_test_seq(2, 1500+WASHING_LEVEL);
+				sub.motors.output_test_seq(8, 1500-WASHING_LEVEL);
+				sub.motors.output_test_seq(1, 1500-WASHING_LEVEL);
+				sub.motors.output_test_seq(6, 1500+WASHING_LEVEL);
+				ms_count = 25*1000;
+				_motor_state = 0;
+                break;
+            default:break;
+        }
+
+        _motor_time = AP_HAL::millis();
+    }
+}
+
+
 void Factory::_motor_test()
 {
 	sub.motors.armed(TRUE);
-	sub.motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
     if (AP_HAL::millis() - _motor_time >= 1000)
     {
@@ -445,19 +572,51 @@ void Factory::_motor_test()
         switch(_motor_state)
         {
             case 0:
-                sub.motors.set_lateral(0.5);
+                sub.motors.output_test_seq(3, 1500);
+                sub.motors.output_test_seq(4, 1500);
+                sub.motors.output_test_seq(7, 1500);
+                sub.motors.output_test_seq(5, 1500);
+
+                sub.motors.output_test_seq(2, 1500);
+                sub.motors.output_test_seq(8, 1500);
+                sub.motors.output_test_seq(1, 1500);
+                sub.motors.output_test_seq(6, 1500);
                 _motor_state = 1;
                 break;
             case 1:
-                sub.motors.set_lateral(0);
+                sub.motors.output_test_seq(3, 1600);
+                sub.motors.output_test_seq(4, 1600);
+                sub.motors.output_test_seq(7, 1600);
+                sub.motors.output_test_seq(5, 1600);
+
+                sub.motors.output_test_seq(2, 1600);
+                sub.motors.output_test_seq(8, 1600);
+                sub.motors.output_test_seq(1, 1600);
+                sub.motors.output_test_seq(6, 1600);
                 _motor_state = 2;
                 break;
             case 2:
-                sub.motors.set_lateral(-0.5);
+                sub.motors.output_test_seq(3, 1500);
+                sub.motors.output_test_seq(4, 1500);
+                sub.motors.output_test_seq(7, 1500);
+                sub.motors.output_test_seq(5, 1500);
+
+                sub.motors.output_test_seq(2, 1500);
+                sub.motors.output_test_seq(8, 1500);
+                sub.motors.output_test_seq(1, 1500);
+                sub.motors.output_test_seq(6, 1500);
                 _motor_state = 3;
                 break; 
             case 3:
-                sub.motors.set_lateral(0);
+                sub.motors.output_test_seq(3, 1400);
+                sub.motors.output_test_seq(4, 1400);
+                sub.motors.output_test_seq(7, 1400);
+                sub.motors.output_test_seq(5, 1400);
+
+                sub.motors.output_test_seq(2, 1400);
+                sub.motors.output_test_seq(8, 1400);
+                sub.motors.output_test_seq(1, 1400);
+                sub.motors.output_test_seq(6, 1400);
                 _motor_state = 0;
                 break;
             default:break;

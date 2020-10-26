@@ -19,7 +19,7 @@ class Factory : public AP_HAL::HAL::Callbacks {
 public:
     Factory(void);
     void test_check(void);
-    void aging_check(void);
+    void mode_check(void);
 	void setup(void) override;
 	void loop(void) override;
 	uint8_t isFactoryTestMode(void) const { return _test_mode; }
@@ -44,9 +44,12 @@ private:
     AP_Float _aging_mag_vari[3];
     AP_Float _aging_baro[2];
     AP_Float _aging_baro_vari[2];
+
+    AP_Int8 _washing_enable;
     
     uint8_t _test_mode;
     uint8_t _aging_mode;
+    uint8_t _washing_mode;
     uint16_t _time_min;
 
     struct Location _current_loc;
@@ -115,6 +118,7 @@ private:
 	
     void _motor_test(void);
     void _aging_test(void);
+    void _washing_test(void);
     int _mpu6000_test(void);
     int _storage_test(void);
     int _ramtron_test(void);
