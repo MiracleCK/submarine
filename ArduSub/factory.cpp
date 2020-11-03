@@ -24,12 +24,12 @@
 #define BATT_VOL_MAX				25200.0f
 
 #define FACTORY_MPU6000_RESULT_BIT   0
-#define FACTORY_BARO_RESULT_BIT      1
+#define FACTORY_RAMTRON_RESULT_BIT   1
 #define FACTORY_COMPASS_RESULT_BIT   2
-#define FACTORY_RAMTRON_RESULT_BIT   3
+#define FACTORY_BARO_RESULT_BIT      3
 #define FACTORY_MMCSD_RESULT_BIT     4
-#define FACTORY_BATTERY_RESULT_BIT   5
-#define FACTORY_GPS_RESULT_BIT       6
+#define FACTORY_GPS_RESULT_BIT       5
+#define FACTORY_BATTERY_RESULT_BIT   6
 #define FACTORY_HISI_RESULT_BIT      7
 
 #define diff(a, b) ((a) > (b) ? ((a)-(b)) : ((b)-(a)))
@@ -185,12 +185,12 @@ void Factory::loop()
 
         result = 0;
 	    result = _mpu6000_result << FACTORY_MPU6000_RESULT_BIT 
-	           | _baro_result  << FACTORY_BARO_RESULT_BIT
+	    	   | _ramtron_result << FACTORY_RAMTRON_RESULT_BIT
 	           | _compass_result << FACTORY_COMPASS_RESULT_BIT
-	           | _ramtron_result << FACTORY_RAMTRON_RESULT_BIT
+	           | _baro_result  << FACTORY_BARO_RESULT_BIT
 	           | _mmcsd_result   << FACTORY_MMCSD_RESULT_BIT
-	           | _batt_result    << FACTORY_BATTERY_RESULT_BIT
 	           | _gps_result  << FACTORY_GPS_RESULT_BIT
+	           | _batt_result    << FACTORY_BATTERY_RESULT_BIT
 	           | (_hisi_result > 0)    << FACTORY_HISI_RESULT_BIT;
     }
     
@@ -210,7 +210,7 @@ void Factory::loop()
 			_aging_result[1].set_and_save_ifchanged(_hisi_result);
 			_aging_time.set_and_save(++_time_min);
 		}
-
+		
 #if 1
 		printf("\r\n");
 		printf("result 0x%x\r\n", result);
@@ -224,18 +224,20 @@ void Factory::loop()
 		printf("_hisi_result 0x%x\r\n", _hisi_result);
 		printf("\r\n");
 
-		printf("_imu_gyro.x %f %f %f\r\n", _imu_gyro[0].x, _imu_gyro[1].x, diff(_imu_gyro[0].x, _imu_gyro[1].x));
-		printf("_imu_gyro.y %f %f %f\r\n", _imu_gyro[0].y, _imu_gyro[1].y, diff(_imu_gyro[0].y, _imu_gyro[1].y));
-		printf("_imu_gyro.z %f %f %f\r\n", _imu_gyro[0].z, _imu_gyro[1].z, diff(_imu_gyro[0].z, _imu_gyro[1].z));
-		
-		printf("_imu_accel.x %f %f %f\r\n", _imu_accel[0].x, _imu_accel[1].x, diff(_imu_accel[0].x, _imu_accel[1].x));
-		printf("_imu_accel.y %f %f %f\r\n", _imu_accel[0].y, _imu_accel[1].y, diff(_imu_accel[0].y, _imu_accel[1].y));
-		printf("_imu_accel.z %f %f %f\r\n", _imu_accel[0].z, _imu_accel[1].z, diff(_imu_accel[0].z, _imu_accel[1].z));
-		
-		printf("_imu_mag.x %f %f %f\r\n", _imu_mag[0].x, _imu_mag[1].x, diff(_imu_mag[0].x, _imu_mag[1].x));
-		printf("_imu_mag.y %f %f %f\r\n", _imu_mag[0].y, _imu_mag[1].y, diff(_imu_mag[0].y, _imu_mag[1].y));
-		printf("_imu_mag.z %f %f %f\r\n", _imu_mag[0].z, _imu_mag[1].z, diff(_imu_mag[0].z, _imu_mag[1].z));
-		printf("\r\n");
+		if(_aging_mode) {
+			printf("_imu_gyro.x %f %f %f\r\n", _imu_gyro[0].x, _imu_gyro[1].x, diff(_imu_gyro[0].x, _imu_gyro[1].x));
+			printf("_imu_gyro.y %f %f %f\r\n", _imu_gyro[0].y, _imu_gyro[1].y, diff(_imu_gyro[0].y, _imu_gyro[1].y));
+			printf("_imu_gyro.z %f %f %f\r\n", _imu_gyro[0].z, _imu_gyro[1].z, diff(_imu_gyro[0].z, _imu_gyro[1].z));
+			
+			printf("_imu_accel.x %f %f %f\r\n", _imu_accel[0].x, _imu_accel[1].x, diff(_imu_accel[0].x, _imu_accel[1].x));
+			printf("_imu_accel.y %f %f %f\r\n", _imu_accel[0].y, _imu_accel[1].y, diff(_imu_accel[0].y, _imu_accel[1].y));
+			printf("_imu_accel.z %f %f %f\r\n", _imu_accel[0].z, _imu_accel[1].z, diff(_imu_accel[0].z, _imu_accel[1].z));
+			
+			printf("_imu_mag.x %f %f %f\r\n", _imu_mag[0].x, _imu_mag[1].x, diff(_imu_mag[0].x, _imu_mag[1].x));
+			printf("_imu_mag.y %f %f %f\r\n", _imu_mag[0].y, _imu_mag[1].y, diff(_imu_mag[0].y, _imu_mag[1].y));
+			printf("_imu_mag.z %f %f %f\r\n", _imu_mag[0].z, _imu_mag[1].z, diff(_imu_mag[0].z, _imu_mag[1].z));
+			printf("\r\n");
+		}
 #endif
 	}
 }
@@ -339,8 +341,8 @@ int Factory::_mpu6000_test()
 			i = (i+1)%2;
 		}
 
-		//if(_aging_mode)
-		//	return 0;
+		if(_test_mode)
+			return 0;
 
 		if(diff(_imu_gyro[0].x, _imu_gyro[1].x) < IMU_GYRO_ERROR_RANGE &&
 		   diff(_imu_gyro[0].y, _imu_gyro[1].y) < IMU_GYRO_ERROR_RANGE &&
@@ -405,8 +407,8 @@ int Factory::_baro_test()
 			i = (i+1)%2;
 		}
 
-		//if(_aging_mode)
-		//	return 0;
+		if(_test_mode)
+			return 0;
 			
 		if(diff(_baro_press[0], _baro_press[1]) < BARO_PRESS_ERROR_RANGE &&
 		   diff(_baro_temp[0], _baro_temp[1]) < BARO_TEMP_ERROR_RANGE)
@@ -456,8 +458,8 @@ int Factory::_compass_test()
 			i = (i+1)%2;
 		}
 
-		//if(_aging_mode)
-		//	return 0;
+		if(_test_mode)
+			return 0;
 			
 		if(diff(_imu_mag[0].x, _imu_mag[1].x) < IMU_COMPASS_ERROR_RANGE &&
 		   diff(_imu_mag[0].y, _imu_mag[1].y) < IMU_COMPASS_ERROR_RANGE &&
