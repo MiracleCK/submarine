@@ -238,6 +238,7 @@ static void main_loop()
                                    pd.fault_addr,
                                    pd.fault_thd_prio,
                                    pd.fault_icsr);
+        hal.shell->printf("watchdog reset\r\n");
     }
 #endif // HAL_NO_LOGGING
 #endif // IOMCU_FW

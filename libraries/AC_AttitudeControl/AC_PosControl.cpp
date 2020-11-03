@@ -1039,12 +1039,12 @@ void AC_PosControl::run_xy_controller(float dt)
         // Constrain _pos_error and target position
         // Constrain the maximum length of _vel_target to the maximum position correction velocity
         // TODO: replace the leash length with a user definable maximum position correction
-        _leash = _lean_limit;
+        //_leash = _lean_limit;
         if (limit_vector_length(_pos_error.x, _pos_error.y, _leash)) {
             //_pos_target.x = curr_pos.x + _pos_error.x;
             //_pos_target.y = curr_pos.y + _pos_error.y;
-            _flags._gps_drift = true;
-            hal.shell->printf("GPS drift, _leash %f\r\n", _leash);
+            //_flags._gps_drift = true;
+            //hal.shell->printf("GPS drift, _leash %f\r\n", _leash);
         }
 
         _vel_target = sqrt_controller(_pos_error, kP, _accel_cms);
