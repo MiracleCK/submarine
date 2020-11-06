@@ -26,10 +26,10 @@
 #define FACTORY_MPU6000_RESULT_BIT   0
 #define FACTORY_RAMTRON_RESULT_BIT   1
 #define FACTORY_COMPASS_RESULT_BIT   2
-#define FACTORY_BARO_RESULT_BIT      3
+#define FACTORY_BATTERY_RESULT_BIT   3
 #define FACTORY_MMCSD_RESULT_BIT     4
 #define FACTORY_GPS_RESULT_BIT       5
-#define FACTORY_BATTERY_RESULT_BIT   6
+#define FACTORY_BARO_RESULT_BIT      6
 #define FACTORY_HISI_RESULT_BIT      7
 
 #define diff(a, b) ((a) > (b) ? ((a)-(b)) : ((b)-(a)))
@@ -187,10 +187,10 @@ void Factory::loop()
 	    result = _mpu6000_result << FACTORY_MPU6000_RESULT_BIT 
 	    	   | _ramtron_result << FACTORY_RAMTRON_RESULT_BIT
 	           | _compass_result << FACTORY_COMPASS_RESULT_BIT
-	           | _baro_result  << FACTORY_BARO_RESULT_BIT
+	           | _batt_result    << FACTORY_BATTERY_RESULT_BIT
 	           | _mmcsd_result   << FACTORY_MMCSD_RESULT_BIT
 	           | _gps_result  << FACTORY_GPS_RESULT_BIT
-	           | _batt_result    << FACTORY_BATTERY_RESULT_BIT
+	           | _baro_result  << FACTORY_BARO_RESULT_BIT
 	           | (_hisi_result > 0)    << FACTORY_HISI_RESULT_BIT;
     }
     
@@ -198,10 +198,12 @@ void Factory::loop()
 	{
 		_result_timestamp = AP_HAL::millis();
 		timesec++;
-		
-		_uart_down->sendFactoryTestMsg(FACTORY_TEST_STM32_RESULT_MSGID, result, _hisi_result);
 
-		if(timesec>10) {
+		if(tested) {
+			_uart_down->sendFactoryTestMsg(FACTORY_TEST_STM32_RESULT_MSGID, result, _hisi_result);
+		}
+		
+		if(timesec>3) {
 			tested = 1;
 		}
 			
@@ -438,7 +440,7 @@ int Factory::_battery_test()
 
     return 1;
 #else
-	return 0;
+	return ((_hisi_result & 0x0040) > 0);
 #endif
 }
 
