@@ -39,6 +39,11 @@ void Sub::userhook_SlowLoop()
 #ifdef USERHOOK_SUPERSLOWLOOP
 void Sub::userhook_SuperSlowLoop()
 {
-    // put your 1Hz code here
+    // put your 1Hz code here        
+    if((fabsf(motors.get_forward()) > 0.25f || 
+        fabsf(motors.get_lateral()) > 0.25f) &&
+       ahrs.groundspeed() < 0.08f) {
+		gcs().send_text(MAV_SEVERITY_WARNING, "May hit an obstacle");
+    }
 }
 #endif
