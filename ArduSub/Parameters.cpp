@@ -652,6 +652,35 @@ const AP_Param::ConversionInfo conversion_table[] = {
     { Parameters::k_param_arming,            2,     AP_PARAM_INT16,  "ARMING_CHECK" },
 };
 
+const char *backup_table[] = {
+	"INS_GYROFFS",
+	"INS_GYR_ID",
+	"INS_GYR2OFFS",
+	"INS_GYR2_ID",
+	"INS_GYR3OFFS",
+	"INS_GYR3_ID",
+	"AHRS_TRIM",
+	
+	"INS_ACCOFFS",
+	"INS_ACCSCAL",
+	"INS_ACC_ID",
+	"INS_ACC2OFFS",
+	"INS_ACC2SCAL",
+	"INS_ACC2_ID",
+	"INS_ACC3OFFS",
+	"INS_ACC3SCAL",
+	"INS_ACC3_ID",
+
+	"COMPASS_OFS",
+	"COMPASS_DEV_ID",
+	"COMPASS_DIA",
+	"COMPASS_ODI",
+	"COMPASS_SCALE",
+
+	"GND_ALT_OFFSET",
+	"GND_ABS_PRESS",
+};
+
 void Sub::load_parameters()
 {
     if (!AP_Param::check_var_info()) {
@@ -669,9 +698,18 @@ void Sub::load_parameters()
         // erase all parameters
         hal.console->printf("Firmware change: erasing EEPROM...\n");
         printf("Param version change(%d->%d): erasing EEPROM...\r\n", g.format_version.get(), Parameters::k_format_version);
+
+		if(g.format_version != 0) {
+        	backup_parameters();
+        }	
+        
         StorageManager::erase();
         AP_Param::erase_all();
 
+        if(g.format_version != 0) {
+        	recover_parameters();
+		}
+		
         // save the current format version
         g.format_version.set_and_save(Parameters::k_format_version);
         hal.console->println("done.");
@@ -858,3 +896,32 @@ void Sub::convert_old_parameters()
     // note that we don't pass in rcmap as we don't want output channel functions changed based on rcmap
     SRV_Channels::upgrade_parameters(old_rc_keys, old_aux_chan_mask, nullptr);
 }
+
+void Sub::backup_parameters()
+{
+	uint16_t i;
+	
+	for(i=0; i<ARRAY_SIZE(backup_table); i++) {
+		enum ap_var_type var_type;
+		AP_Param *param = AP_Param::find(backup_table[i], &var_type);
+		if (param != nullptr) {
+			hal.shell->printf("backup %s\r\n", backup_table[i]);
+			param->load();
+		}
+	}
+}
+
+void Sub::recover_parameters()
+{
+	uint16_t i;
+	
+	for(i=0; i<ARRAY_SIZE(backup_table); i++) {
+		enum ap_var_type var_type;
+		AP_Param *param = AP_Param::find(backup_table[i], &var_type);
+		if (param != nullptr) {
+			hal.shell->printf("recover %s\r\n", backup_table[i]);
+			param->save_sync(true);
+		}
+	}
+}
+
