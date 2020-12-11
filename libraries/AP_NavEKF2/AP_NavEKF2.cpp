@@ -588,7 +588,7 @@ const AP_Param::GroupInfo NavEKF2::var_info[] = {
     // @User: Advanced
     // @Range: 50 250
     // @Units: cm
-    AP_GROUPINFO("GPS_HDOP_LIM", 54, NavEKF2, _gps_hdop_limit, 65),
+    AP_GROUPINFO("GPS_HDOP_LIM", 54, NavEKF2, _gps_hdop_limit, 70),
 
     AP_GROUPEND
 };

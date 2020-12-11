@@ -18,6 +18,7 @@
 #include <RC_Channel/RC_Channel.h>
 #include <AP_Filesystem/AP_Filesystem_Available.h>
 #include <AP_GPS/AP_GPS.h>
+#include <AP_Vehicle/ModeReason.h>
 
 #include "MissionItemProtocol_Waypoints.h"
 #include "MissionItemProtocol_Rally.h"
@@ -474,7 +475,7 @@ private:
 
     void log_mavlink_stats();
 
-    MAV_RESULT _set_mode_common(const MAV_MODE base_mode, const uint32_t custom_mode);
+    MAV_RESULT _set_mode_common(const MAV_MODE base_mode, const uint32_t custom_mode, const ModeReason _reason);
 
     virtual void        handleMessage(const mavlink_message_t &msg) = 0;
 

@@ -2016,7 +2016,7 @@ void GCS_MAVLINK::handle_set_mode(const mavlink_message_t &msg)
     const MAV_MODE _base_mode = (MAV_MODE)packet.base_mode;
     const uint32_t _custom_mode = packet.custom_mode;
 
-    const MAV_RESULT result = _set_mode_common(_base_mode, _custom_mode);
+    const MAV_RESULT result = _set_mode_common(_base_mode, _custom_mode, ModeReason::GCS_COMMAND);
 
     // send ACK or NAK.  Note that this is extraodinarily improper -
     // we are sending a command-ack for a message which is not a
@@ -2031,12 +2031,12 @@ void GCS_MAVLINK::handle_set_mode(const mavlink_message_t &msg)
 /*
   code common to both SET_MODE mavlink message and command long set_mode msg
 */
-MAV_RESULT GCS_MAVLINK::_set_mode_common(const MAV_MODE _base_mode, const uint32_t _custom_mode)
+MAV_RESULT GCS_MAVLINK::_set_mode_common(const MAV_MODE _base_mode, const uint32_t _custom_mode, const ModeReason _reason)
 {
     MAV_RESULT result = MAV_RESULT_UNSUPPORTED;
     // only accept custom modes because there is no easy mapping from Mavlink flight modes to AC flight modes
     if (_base_mode & MAV_MODE_FLAG_CUSTOM_MODE_ENABLED) {
-        if (AP::vehicle()->set_mode(_custom_mode, ModeReason::GCS_COMMAND)) {
+        if (AP::vehicle()->set_mode(_custom_mode, _reason)) {
             result = MAV_RESULT_ACCEPTED;
         }
     } else if (_base_mode == (MAV_MODE)MAV_MODE_FLAG_DECODE_POSITION_SAFETY) {
@@ -3556,8 +3556,13 @@ MAV_RESULT GCS_MAVLINK::handle_command_do_set_mode(const mavlink_command_long_t 
 {
     const MAV_MODE _base_mode = (MAV_MODE)packet.param1;
     const uint32_t _custom_mode = (uint32_t)packet.param2;
+	ModeReason _reason = (ModeReason)packet.param4;
 
-    return _set_mode_common(_base_mode, _custom_mode);
+	if(_reason == ModeReason::UNKNOWN) {
+		_reason = ModeReason::GCS_COMMAND;
+	}
+
+    return _set_mode_common(_base_mode, _custom_mode, _reason);
 }
 
 MAV_RESULT GCS_MAVLINK::handle_command_get_home_position(const mavlink_command_long_t &packet)
