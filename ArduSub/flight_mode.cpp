@@ -84,6 +84,10 @@ bool Sub::set_mode(control_mode_t mode, ModeReason reason)
         success = motordetect_init();
         break;
 
+    case WIRING:
+        success = wiring_init();
+        break;
+
     default:
         success = false;
         break;
@@ -181,6 +185,10 @@ void Sub::update_flight_mode()
 
     case MOTOR_DETECT:
         motordetect_run();
+        break;
+
+    case WIRING:
+        wiring_run();
         break;
 
     default:

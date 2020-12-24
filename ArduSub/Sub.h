@@ -554,6 +554,9 @@ private:
     bool motordetect_init();
     void motordetect_run();
 
+    bool wiring_init(void);
+    void wiring_run();
+
     bool stabilize_init(void);
     void stabilize_run();
     bool manual_init(void);

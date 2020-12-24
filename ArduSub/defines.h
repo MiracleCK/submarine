@@ -41,7 +41,8 @@ enum control_mode_t : uint8_t {
     SURFACE =       9,  // automatically return to surface, pilot maintains horizontal control
     POSHOLD =      16,  // automatic position hold with manual override, with automatic throttle
     MANUAL =       19,  // Pass-through input with no stabilization
-    MOTOR_DETECT = 20   // Automatically detect motors orientation
+    MOTOR_DETECT = 20,   // Automatically detect motors orientation
+    WIRING =       50
 };
 
 // Acro Trainer types
