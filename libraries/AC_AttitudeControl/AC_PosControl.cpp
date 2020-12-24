@@ -669,6 +669,8 @@ void AC_PosControl::set_pos_target(const Vector3f& position)
     // To-Do: this initialisation of roll and pitch targets needs to go somewhere between when pos-control is initialised and when it completes it's first cycle
     //_roll_target = constrain_int32(_ahrs.roll_sensor,-_attitude_control.lean_angle_max(),_attitude_control.lean_angle_max());
     //_pitch_target = constrain_int32(_ahrs.pitch_sensor,-_attitude_control.lean_angle_max(),_attitude_control.lean_angle_max());
+	hal.shell->printf("T0[%f %f]\r\n", _pos_target.x,
+                             _pos_target.y);
 }
 
 /// set_xy_target in cm from home
@@ -676,6 +678,8 @@ void AC_PosControl::set_xy_target(float x, float y)
 {
     _pos_target.x = x;
     _pos_target.y = y;
+    hal.shell->printf("T1[%f %f]\r\n", _pos_target.x,
+                             _pos_target.y);
 }
 
 /// shift position target target in x, y axis
@@ -1036,16 +1040,51 @@ void AC_PosControl::run_xy_controller(float dt)
         _pos_error.x = _pos_target.x - curr_pos.x;
         _pos_error.y = _pos_target.y - curr_pos.y;
 
+        if (1) {
+	    	static uint32_t _startup_ms = 0;
+
+	        if(_startup_ms == 0) {
+				_startup_ms = AP_HAL::millis();
+	        }
+
+	        if(AP_HAL::millis() - _startup_ms > 1000) {
+				_startup_ms = AP_HAL::millis();
+				
+	            hal.shell->printf("T[%f %f], C[%f %f], E[%f %f]\r\n", _pos_target.x,
+	                             _pos_target.y,
+	                             curr_pos.x,
+	                             curr_pos.y,
+	                             _pos_error.x,
+	                             _pos_error.y);
+		    }
+		}
+
         // Constrain _pos_error and target position
         // Constrain the maximum length of _vel_target to the maximum position correction velocity
         // TODO: replace the leash length with a user definable maximum position correction
         //_leash = _lean_limit;
-        if (limit_vector_length(_pos_error.x, _pos_error.y, _leash)) {
+        //if (limit_vector_length(_pos_error.x, _pos_error.y, _leash)) {
             //_pos_target.x = curr_pos.x + _pos_error.x;
             //_pos_target.y = curr_pos.y + _pos_error.y;
             //_flags._gps_drift = true;
             //hal.shell->printf("GPS drift, _leash %f\r\n", _leash);
-        }
+        //}
+
+        if (0) {
+	    	static uint32_t _startup_ms = 0;
+
+	        if(_startup_ms == 0) {
+				_startup_ms = AP_HAL::millis();
+	        }
+
+	        if(AP_HAL::millis() - _startup_ms > 1000) {
+				_startup_ms = AP_HAL::millis();
+				
+	            hal.shell->printf("E[%f %f]\r\n",
+	                             _pos_error.x,
+	                             _pos_error.y);
+		    }
+		}
 
         _vel_target = sqrt_controller(_pos_error, kP, _accel_cms);
     }

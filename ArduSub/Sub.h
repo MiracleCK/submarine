@@ -433,6 +433,7 @@ private:
     uint32_t last_pilot_heading;
     uint32_t last_pilot_yaw_input_ms;
     uint32_t fs_terrain_recover_start_ms;
+    uint32_t last_pilot_move_input_ms;
 
     static const AP_Scheduler::Task scheduler_tasks[];
     static const AP_Param::Info var_info[];
@@ -519,37 +520,29 @@ private:
     bool circle_init(void);
     void circle_run();
     bool guided_init(bool ignore_checks = false);
-    void guided_pos_control_start();
-    void guided_vel_control_start();
-    void guided_posvel_control_start();
-    void guided_angle_control_start();
-    bool guided_set_destination(const Vector3f& destination);
     bool guided_set_destination(const Location& dest_loc);
-    void guided_set_velocity(const Vector3f& velocity);
-    bool guided_set_destination_posvel(const Vector3f& destination, const Vector3f& velocity);
-    void guided_set_angle(const Quaternion &q, float climb_rate_cms);
+    void guided_set_velocity(const Vector3f& velocity){}
+    bool guided_set_destination_posvel(const Vector3f& destination, const Vector3f& velocity){return true;}
+    void guided_set_angle(const Quaternion &q, float climb_rate_cms){}
     void guided_run();
-    void guided_pos_control_run();
-    void guided_vel_control_run();
-    void guided_posvel_control_run();
-    void guided_angle_control_run();
     void guided_limit_clear();
     void guided_limit_set(uint32_t timeout_ms, float alt_min_cm, float alt_max_cm, float horiz_max_cm);
     void guided_limit_init_time_and_pos();
     bool guided_limit_check();
     void rtl_run();
     bool rtl_init(bool ignore_checks = false);
-    void rtl_pos_control_start();
-    bool rtl_set_destination(const Location& dest_loc);
+    bool smart_mode_auto_switch();
     bool is_startup_mode_auto_switch = true;
     bool is_mode_auto_switch_enabled = true;
-    bool smart_mode_auto_switch();
     bool is_waypoint_running = false;
+    bool is_reached_destination = false;
+    Vector3f wp_destination;
 
 	void poshold_init_target(void);
 	bool poshold_position_ok(void);
     bool poshold_init(void);
     void poshold_run();
+    bool is_wp_destination_valid = false;
 
     bool motordetect_init();
     void motordetect_run();

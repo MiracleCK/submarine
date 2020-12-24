@@ -764,7 +764,7 @@ void Sub::load_parameters()
     AP_Param::set_default_by_name("PSC_VELXY_D", 0);
 
     //AP_Param::set_default_by_name("EK2_POS_I_GATE", 100);
-    //AP_Param::set_default_by_name("EK2_VELNE_M_NSE", 0.01);
+    AP_Param::set_default_by_name("EK2_VELNE_M_NSE", 0.1);
 
     //AP_Param::set_default_by_name("INS_POS1_X", 0.04);
 
