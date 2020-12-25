@@ -37,4 +37,31 @@ void Sub::manual_run()
     motors.set_throttle(channel_throttle->norm_input());
     motors.set_forward(channel_forward->norm_input());
     motors.set_lateral(channel_lateral->norm_input());
+
+    if(1) {
+        static uint32_t _startup_ms = 0;
+
+        if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+        }
+
+        if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+			
+		    printf("roll %d\r\n", channel_roll->get_radio_in());
+		    printf("pitch %d\r\n", channel_pitch->get_radio_in());
+		    printf("yaw %d\r\n", channel_yaw->get_radio_in());
+		    printf("throttle %d\r\n", channel_throttle->get_radio_in());
+		    printf("forward %d\r\n", channel_forward->get_radio_in());
+		    printf("lateral %d\r\n", channel_lateral->get_radio_in());
+		    printf("\r\n");
+		    printf("roll %d\r\n", RC_IN_CHANNEL_ROLL);
+		    printf("pitch %d\r\n", RC_IN_CHANNEL_PITCH);
+		    printf("yaw %d\r\n", RC_IN_CHANNEL_YAW);
+		    printf("throttle %d\r\n", RC_IN_CHANNEL_THROTTLE);
+		    printf("forward %d\r\n", RC_IN_CHANNEL_FORWARD);
+		    printf("lateral %d\r\n", RC_IN_CHANNEL_LATERAL);
+		    printf("\r\n");
+	    }
+	}
 }

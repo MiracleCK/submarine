@@ -78,8 +78,11 @@
 #include "Parameters.h"
 #include "AP_Arming_Sub.h"
 #include "GCS_Sub.h"
+
+#if CONFIG_HAL_BOARD != HAL_BOARD_SITL
 #include "factory.h"
 #include "factory_proto.h"
+#endif
 
 // libraries which are dependent on #defines in defines.h and/or config.h
 #if OPTFLOW == ENABLED

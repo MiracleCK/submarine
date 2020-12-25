@@ -694,8 +694,8 @@ void AC_AttitudeControl::thrust_heading_rotation_angles(Quaternion& att_to_quat,
     // calculate the angle error in x and y.
     Vector3f rotation;
     thrust_vec_correction_quat.to_axis_angle(rotation);
-    att_diff_angle.x = rotation.x;
-    att_diff_angle.y = rotation.y;
+    att_diff_angle.x = 0;//rotation.x;
+    att_diff_angle.y = 0;//rotation.y;
 
     // calculate the angle error in z (x and y should be zero here).
     yaw_vec_correction_quat.to_axis_angle(rotation);

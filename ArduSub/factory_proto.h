@@ -1,4 +1,7 @@
 #pragma once
+
+#if CONFIG_HAL_BOARD != HAL_BOARD_SITL
+
 /* Predefined telemetry responses. */
 #define TELEMETRY_RESP_OK         "_OK_"
 #define TELEMETRY_RESP_FAIL       "FAIL"
@@ -66,3 +69,4 @@ private:
 extern Factory_proto g_uart_up_port;
 extern Factory_proto g_uart_down_port;
 
+#endif

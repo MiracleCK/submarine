@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#if CONFIG_HAL_BOARD != HAL_BOARD_SITL
+
 #include "Sub.h"
 
 #include "factory_proto.h"
@@ -258,3 +260,4 @@ void Factory_proto::write_port(uint8_t *buf, uint32_t len) {
 Factory_proto g_uart_up_port(hal.uartF);
 Factory_proto g_uart_down_port(hal.uartG);
 
+#endif

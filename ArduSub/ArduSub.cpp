@@ -86,8 +86,10 @@ constexpr int8_t Sub::_failsafe_priorities[5];
 
 void Sub::setup()
 {
+#if CONFIG_HAL_BOARD != HAL_BOARD_SITL
 	factory.test_check();
-	
+#endif
+
     // Load the default values of variables listed in var_info[]s
     AP_Param::setup_sketch_defaults();
 
@@ -130,7 +132,10 @@ void Sub::fast_loop()
     // check if ekf has reset target heading
     check_ekf_yaw_reset();
 
-	if(!factory.isFactoryTestMode()) {
+#if CONFIG_HAL_BOARD != HAL_BOARD_SITL
+	if(!factory.isFactoryTestMode()) 
+#endif
+	{
 	    // run the attitude controllers
 	    update_flight_mode();
     }
