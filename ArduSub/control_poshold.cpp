@@ -9,9 +9,13 @@
 /// init_target to a position in cm from ekf origin
 void Sub::poshold_init_target(void)
 {
-	const Vector3f& curr_pos = inertial_nav.get_position();
+	//const Vector3f& curr_pos = inertial_nav.get_position();
+	Vector3f curr_pos = inertial_nav.get_position();
 	//const Vector3f& curr_vel = inertial_nav.get_velocity();
 
+	if(is_wp_destination_valid) {
+		curr_pos = wp_destination;
+    }
     // initialise pos controller speed, acceleration
     pos_control.set_max_speed_xy(POSCONTROL_SPEED);
     pos_control.set_max_accel_xy(POSCONTROL_ACCEL_XY);
@@ -49,12 +53,12 @@ bool Sub::poshold_init()
     }
 
 	// initialize vertical speeds and acceleration
-    pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
-    pos_control.set_max_accel_z(g.pilot_accel_z);
+    ///pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
+    ///pos_control.set_max_accel_z(g.pilot_accel_z);
 
     // initialise position and desired velocity
-    pos_control.set_alt_target(inertial_nav.get_altitude());
-    pos_control.set_desired_velocity_z(inertial_nav.get_velocity_z());
+    ///pos_control.set_alt_target(inertial_nav.get_altitude());
+    ///pos_control.set_desired_velocity_z(inertial_nav.get_velocity_z());
 	
     // initialize controller
     poshold_init_target();
@@ -93,7 +97,7 @@ void Sub::poshold_run()
         poshold_init_target();
         attitude_control.set_throttle_out(0,true,g.throttle_filt);
         attitude_control.relax_attitude_controllers();
-        pos_control.relax_alt_hold_controllers(motors.get_throttle_hover());
+        ///pos_control.relax_alt_hold_controllers(motors.get_throttle_hover());
         last_pilot_heading = ahrs.yaw_sensor;
         return;
     }
@@ -113,13 +117,19 @@ void Sub::poshold_run()
     if (fabsf(pilot_lateral) > 0.1 || fabsf(pilot_forward) > 0.1) {
         lateral_out = pilot_lateral;
         forward_out = pilot_forward;
+        is_wp_destination_valid = false;
         poshold_init_target();
+        last_pilot_move_input_ms = tnow;
     } else {
-    	// run posxy controller
-    	pos_control.set_leash_length_xy(500.0f);
-    	pos_control.update_xy_controller();
-    	
-        translate_wpnav_rp(lateral_out, forward_out);
+    	if (tnow < last_pilot_move_input_ms + 3000) {
+			poshold_init_target();
+    	} else {
+	    	// run posxy controller
+	    	//pos_control.set_leash_length_xy(500.0f);
+	    	pos_control.update_xy_controller();
+	    	
+	        translate_wpnav_rp(lateral_out, forward_out);
+        }
     }
 
     motors.set_lateral(lateral_out);
@@ -141,7 +151,6 @@ void Sub::poshold_run()
         attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate);
         last_pilot_heading = ahrs.yaw_sensor;
         last_pilot_yaw_input_ms = tnow; // time when pilot last changed heading
-
     } else { // hold current heading
 
         // this check is required to prevent bounce back after very fast yaw maneuvers
@@ -160,7 +169,7 @@ void Sub::poshold_run()
 
     ///////////////////
     // Update z axis //
-
+#if 0
     // get pilot desired climb rate
     float target_climb_rate = get_pilot_desired_climb_rate(channel_throttle->get_control_in());
     target_climb_rate = constrain_float(target_climb_rate, -get_pilot_speed_dn(), g.pilot_speed_up);
@@ -174,5 +183,6 @@ void Sub::poshold_run()
     }
 
     pos_control.update_z_controller();
+#endif
 }
 #endif  // POSHOLD_ENABLED == ENABLED
