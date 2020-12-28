@@ -2,6 +2,7 @@
 #include "AC_PosControl.h"
 #include <AP_Math/AP_Math.h>
 #include <AP_Logger/AP_Logger.h>
+#include <stdio.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -1098,14 +1099,19 @@ void AC_PosControl::run_xy_controller(float dt)
 	        if(AP_HAL::millis() - _startup_ms > 1000) {
 				_startup_ms = AP_HAL::millis();
 				
-	            hal.console->printf("T[%f %f], C[%f %f], E[%f %f], V[%f %f]\r\n", _pos_target.x,
+	            //hal.console->
+	            printf("T[%f %f], C[%f %f], E[%f %f], V[%f %f], %f, %f, %f, %f\r\n", _pos_target.x,
 	                             _pos_target.y,
 	                             curr_pos.x,
 	                             curr_pos.y,
 	                             _pos_error.x,
 	                             _pos_error.y,
 	                             _vel_target.x,
-	                             _vel_target.y);
+	                             _vel_target.y,
+	                             ekfNavVelGainScaler,
+	                             kP,
+	                             _accel_cms,
+	                             _leash);
 		    }
 		}
     }
@@ -1160,7 +1166,7 @@ void AC_PosControl::run_xy_controller(float dt)
 			_startup_ms = AP_HAL::millis();
         }
 
-        if(AP_HAL::millis() - _startup_ms > 100) {
+        if(AP_HAL::millis() - _startup_ms > 1000) {
 			_startup_ms = AP_HAL::millis();
 			
 		    AP::logger().Write("XYVE", "TimeUS,VDX,VDY,VTX,VTY,VHVX,VHVY,VEX,VEY", "Qffffffff", 
@@ -1170,6 +1176,11 @@ void AC_PosControl::run_xy_controller(float dt)
                              _vel_target.x,
                              _vel_target.y,
                              _vehicle_horiz_vel.x,
+                             _vehicle_horiz_vel.y,
+                             _vel_error.x,
+                             _vel_error.y);
+            printf("vhx %f, vhy %f, vx %f, vy %f\r\n", 
+            				_vehicle_horiz_vel.x,
                              _vehicle_horiz_vel.y,
                              _vel_error.x,
                              _vel_error.y);
@@ -1239,7 +1250,8 @@ void AC_PosControl::run_xy_controller(float dt)
     // the following section converts desired accelerations provided in lat/lon frame to roll/pitch angles
 
     // limit acceleration using maximum lean angles
-    float angle_max = MIN(_attitude_control.get_althold_lean_angle_max(), get_lean_angle_max_cd());
+    //float angle_max = MIN(_attitude_control.get_althold_lean_angle_max(), get_lean_angle_max_cd());
+    float angle_max = get_lean_angle_max_cd();
     float accel_max = MIN(GRAVITY_MSS * 100.0f * tanf(ToRad(angle_max * 0.01f)), POSCONTROL_ACCEL_XY_MAX);
     _limit.accel_xy = limit_vector_length(_accel_target.x, _accel_target.y, accel_max);
 
@@ -1250,7 +1262,7 @@ void AC_PosControl::run_xy_controller(float dt)
 			_startup_ms = AP_HAL::millis();
         }
 
-        if(AP_HAL::millis() - _startup_ms > 100) {
+        if(AP_HAL::millis() - _startup_ms > 1000) {
 			_startup_ms = AP_HAL::millis();
 			
 		    AP::logger().Write("XYAC", "TimeUS,VGS,AGM,ACM,ADX,ADY,ATX,ATY", "Qfffffff", 
@@ -1261,6 +1273,9 @@ void AC_PosControl::run_xy_controller(float dt)
                              //_limit.accel_xy,
                              _accel_desired.x,
                              _accel_desired.y,
+                             _accel_target.x,
+                             _accel_target.y);
+        	printf("_accel_target[%f %f]\r\n", 
                              _accel_target.x,
                              _accel_target.y);
 	    }
@@ -1276,11 +1291,14 @@ void AC_PosControl::run_xy_controller(float dt)
 			_startup_ms = AP_HAL::millis();
         }
 
-        if(AP_HAL::millis() - _startup_ms > 100) {
+        if(AP_HAL::millis() - _startup_ms > 1000) {
 			_startup_ms = AP_HAL::millis();
 			
 		    AP::logger().Write("XYAN", "TimeUS,RT,PT", "Qff", 
                             AP_HAL::micros64(), 
+                             _roll_target,
+                             _pitch_target);
+           printf("roll %f, pitch %f\r\n", 
                              _roll_target,
                              _pitch_target);
 	    }
@@ -1405,10 +1423,28 @@ Vector3f AC_PosControl::sqrt_controller(const Vector3f& error, float p, float se
     float error_length = norm(error.x, error.y);
     if (error_length > linear_dist) {
         float first_order_scale = safe_sqrt(2.0f * second_ord_lim * (error_length - (linear_dist * 0.5f))) / error_length;
-        return Vector3f(error.x * first_order_scale, error.y * first_order_scale, error.z);
+		p = first_order_scale;
+        //return Vector3f(error.x * first_order_scale, error.y * first_order_scale, error.z);
     } else {
-        return Vector3f(error.x * p, error.y * p, error.z);
+        //return Vector3f(error.x * p, error.y * p, error.z);
     }
+
+    if (1) {
+    	
+    	static uint32_t _startup_ms = 0;
+
+        if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+        }
+
+        if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+			
+            printf(">>p %f, linear_dist %f, error_length %f\r\n", p, linear_dist, error_length);
+	    }
+	}
+
+	return Vector3f(error.x * p, error.y * p, error.z);
 }
 
 bool AC_PosControl::pre_arm_checks(const char *param_prefix,

@@ -20,6 +20,8 @@ bool Sub::guided_init(bool ignore_checks)
     pos_control.set_desired_velocity_xy(0.0f, 0.0f);
     pos_control.set_desired_accel_xy(0.0f, 0.0f);
 
+    //pos_control.set_leash_length_xy(500.0f);
+
     // initialise position controller if not already active
     if (!pos_control.is_active_xy()) {
         pos_control.init_xy_controller();
@@ -117,6 +119,7 @@ void Sub::guided_run()
     // run waypoint controller
     //pos_control.set_leash_length_xy(500.0f);
     pos_control.update_xy_controller();
+    //pos_control.update_z_controller();
 
     float lateral_out, forward_out;
     translate_wpnav_rp(lateral_out, forward_out);
