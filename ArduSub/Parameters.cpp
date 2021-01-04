@@ -760,13 +760,16 @@ void Sub::load_parameters()
     AP_Param::set_default_by_name("ATC_RAT_YAW_I", 0);
     AP_Param::set_default_by_name("ATC_RAT_YAW_D", 0);
 
-	AP_Param::set_default_by_name("PSC_POSXY_P", 5);
-	AP_Param::set_default_by_name("PSC_VELXY_P", 3);
+	AP_Param::set_default_by_name("PSC_POSXY_P", 1);
+	AP_Param::set_default_by_name("PSC_VELXY_P", 5);
     AP_Param::set_default_by_name("PSC_VELXY_I", 0);
     AP_Param::set_default_by_name("PSC_VELXY_D", 0);
 
-    //AP_Param::set_default_by_name("EK2_POS_I_GATE", 100);
-    AP_Param::set_default_by_name("EK2_VELNE_M_NSE", 0.1);
+    AP_Param::set_default_by_name("EK2_VEL_I_GATE", 500); //100 - 1000
+    AP_Param::set_default_by_name("EK2_VELNE_M_NSE", 0.5); //0.05 - 5
+
+    AP_Param::set_default_by_name("EK2_POS_I_GATE", 500); //100 - 1000
+    AP_Param::set_default_by_name("EK2_POSNE_M_NSE", 1.0); //0.1 - 10
 
     //AP_Param::set_default_by_name("INS_POS1_X", 0.04);
 
