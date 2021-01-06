@@ -46,6 +46,8 @@ void Sub::rtl_pos_control_start()
 
     // initialise yaw
     set_auto_yaw_mode(get_default_auto_yaw_mode(true));
+
+    pos_control.set_leash_length_xy(500.0f);
 }
 
 void Sub::rtl_run()

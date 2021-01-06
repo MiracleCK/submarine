@@ -32,3 +32,20 @@
 #define HAL_BOARD_STORAGE_DIRECTORY "."
 #endif
 
+
+#define RC_IN_CHANNEL_PITCH 		7-1
+#define RC_IN_CHANNEL_ROLL 			2-1
+#define RC_IN_CHANNEL_THROTTLE 		1-1
+#define RC_IN_CHANNEL_YAW 			4-1
+#define RC_IN_CHANNEL_FORWARD 		3-1
+#define RC_IN_CHANNEL_LATERAL 		5-1
+
+#define CUSTOM_MOTORS_MOT_1      0,      0,   1.0f,      0,     -1.0f,      1.0f
+#define CUSTOM_MOTORS_MOT_2      0,      0,  -1.0f,      0,     -1.0f,     -1.0f
+#define CUSTOM_MOTORS_MOT_3      0,      0,  -1.0f,      0,      1.0f,      1.0f
+#define CUSTOM_MOTORS_MOT_4      0,      0,   1.0f,      0,      1.0f,     -1.0f
+#define MOT_1_DEADZONE 35
+#define MOT_2_DEADZONE 35
+#define MOT_3_DEADZONE 35
+#define MOT_4_DEADZONE 35
+

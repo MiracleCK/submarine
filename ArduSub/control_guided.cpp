@@ -71,6 +71,9 @@ void Sub::guided_pos_control_start()
 
     // initialise yaw
     set_auto_yaw_mode(get_default_auto_yaw_mode(false));
+
+    pos_control.set_leash_length_xy(500.0f);
+    
     printf("guided mode! \r\n");
 }
 

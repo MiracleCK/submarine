@@ -13,6 +13,8 @@
 #include <AP_Common/AP_Common.h>
 #include <AP_Param/AP_Param.h>
 
+#if CONFIG_HAL_BOARD != HAL_BOARD_SITL
+
 #include "factory_proto.h"
 
 class Factory : public AP_HAL::HAL::Callbacks {
@@ -84,3 +86,4 @@ private:
 
 extern Factory factory;
 
+#endif

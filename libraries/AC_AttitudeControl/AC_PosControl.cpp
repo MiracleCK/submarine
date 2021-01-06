@@ -2,6 +2,7 @@
 #include "AC_PosControl.h"
 #include <AP_Math/AP_Math.h>
 #include <AP_Logger/AP_Logger.h>
+#include <stdio.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -682,8 +683,8 @@ void AC_PosControl::set_xy_target(float x, float y)
 void AC_PosControl::shift_pos_xy_target(float x_cm, float y_cm)
 {
     // move pos controller target
-    _pos_target.x += x_cm;
-    _pos_target.y += y_cm;
+    //_pos_target.x += x_cm;
+    //_pos_target.y += y_cm;
 }
 
 /// set_target_to_stopping_point_xy - sets horizontal target to reasonable stopping position in cm from home
@@ -1179,7 +1180,8 @@ void AC_PosControl::run_xy_controller(float dt)
     // the following section converts desired accelerations provided in lat/lon frame to roll/pitch angles
 
     // limit acceleration using maximum lean angles
-    float angle_max = MIN(_attitude_control.get_althold_lean_angle_max(), get_lean_angle_max_cd());
+    //float angle_max = MIN(_attitude_control.get_althold_lean_angle_max(), get_lean_angle_max_cd());
+    float angle_max = get_lean_angle_max_cd();
     float accel_max = MIN(GRAVITY_MSS * 100.0f * tanf(ToRad(angle_max * 0.01f)), POSCONTROL_ACCEL_XY_MAX);
     _limit.accel_xy = limit_vector_length(_accel_target.x, _accel_target.y, accel_max);
 
@@ -1223,7 +1225,7 @@ void AC_PosControl::run_xy_controller(float dt)
                             AP_HAL::micros64(), 
                              _roll_target,
                              _pitch_target);
-	    }
+        }
 	}
 }
 

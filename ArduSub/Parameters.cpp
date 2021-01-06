@@ -594,11 +594,13 @@ const AP_Param::Info Sub::var_info[] = {
     // @Group:
     // @Path: ../libraries/AP_Vehicle/AP_Vehicle.cpp
     { AP_PARAM_GROUP, "", Parameters::k_param_vehicle, (const void *)&sub, {group_info : AP_Vehicle::var_info} },
-
+    
+#if CONFIG_HAL_BOARD != HAL_BOARD_SITL
 	// @Group:
 	// @Path: factory.cpp
 	{ AP_PARAM_GROUP, "", Parameters::k_param_factory, (const void *)&factory, {group_info : Factory::var_info} },
-	
+#endif
+
     AP_VAREND
 };
 
@@ -758,13 +760,18 @@ void Sub::load_parameters()
     AP_Param::set_default_by_name("ATC_RAT_YAW_I", 0);
     AP_Param::set_default_by_name("ATC_RAT_YAW_D", 0);
 
-	AP_Param::set_default_by_name("PSC_POSXY_P", 5);
-	AP_Param::set_default_by_name("PSC_VELXY_P", 3);
+	AP_Param::set_default_by_name("PSC_POSXY_P", 1);
+	AP_Param::set_default_by_name("PSC_VELXY_P", 5);
     AP_Param::set_default_by_name("PSC_VELXY_I", 0);
     AP_Param::set_default_by_name("PSC_VELXY_D", 0);
 
-    //AP_Param::set_default_by_name("EK2_POS_I_GATE", 100);
-    //AP_Param::set_default_by_name("EK2_VELNE_M_NSE", 0.01);
+    AP_Param::set_default_by_name("EK2_VEL_I_GATE", 500); //100 - 1000
+    AP_Param::set_default_by_name("EK2_VELNE_M_NSE", 0.5); //0.05 - 5
+
+    AP_Param::set_default_by_name("EK2_POS_I_GATE", 500); //100 - 1000
+    AP_Param::set_default_by_name("EK2_POSNE_M_NSE", 1.0); //0.1 - 10
+
+    AP_Param::set_default_by_name("WPNAV_RADIUS", 50.0);
 
     //AP_Param::set_default_by_name("INS_POS1_X", 0.04);
 
