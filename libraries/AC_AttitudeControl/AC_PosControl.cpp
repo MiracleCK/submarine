@@ -687,8 +687,8 @@ void AC_PosControl::set_xy_target(float x, float y)
 void AC_PosControl::shift_pos_xy_target(float x_cm, float y_cm)
 {
     // move pos controller target
-    _pos_target.x += x_cm;
-    _pos_target.y += y_cm;
+    //_pos_target.x += x_cm;
+    //_pos_target.y += y_cm;
 }
 
 /// set_target_to_stopping_point_xy - sets horizontal target to reasonable stopping position in cm from home

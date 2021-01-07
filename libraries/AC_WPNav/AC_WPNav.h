@@ -154,6 +154,9 @@ public:
         return get_wp_distance_to_destination() < _wp_radius_cm;
     }
 
+	/// get wp radius
+    float get_wp_radius() const { return _wp_radius_cm.get(); }
+
     /// set_fast_waypoint - set to true to ignore the waypoint radius and consider the waypoint 'reached' the moment the intermediate point reaches it
     void set_fast_waypoint(bool fast) { _flags.fast_waypoint = fast; }
 

@@ -1,7 +1,5 @@
 #include "Sub.h"
 
-#define GUIDED_WP_RADIUS     100		// default guided waypoint radius in cm
-
 // guided_init - initialise guided controller
 bool Sub::guided_init(bool ignore_checks)
 {
@@ -91,7 +89,7 @@ void Sub::guided_run()
     Vector3f curr_pos = inertial_nav.get_position();
 	curr_pos.z = 0;
 	Vector3f dist_to_dest = curr_pos - wp_destination;
-    if( dist_to_dest.length() <= GUIDED_WP_RADIUS ) {
+    if( dist_to_dest.length() <= wp_nav.get_wp_radius() ) {
         is_reached_destination = true;
     }
     
@@ -138,10 +136,8 @@ void Sub::guided_run()
         // roll & pitch from waypoint controller, yaw rate from pilot
         attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate);
     } else {
-    	if( dist_to_dest.length() > 200 ) {
-    	//if(1) {
+    	if(!is_reached_destination) {
     		target_yaw_rate = get_bearing_cd(curr_pos, wp_destination);
-    		printf("target_yaw_rate %f\r\n", target_yaw_rate);
     	} else {
 			target_yaw_rate = ahrs.yaw_sensor;
     	}
