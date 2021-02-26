@@ -46,7 +46,7 @@ const AP_Param::GroupInfo AP_RangeFinder_Params::var_info[] = {
     // @Units: cm
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("MIN_CM",  6, AP_RangeFinder_Params, min_distance_cm, 20),
+    AP_GROUPINFO("MIN_CM",  6, AP_RangeFinder_Params, min_distance_cm, 0),
 
     // @Param: MAX_CM
     // @DisplayName: Rangefinder maximum distance
@@ -54,7 +54,7 @@ const AP_Param::GroupInfo AP_RangeFinder_Params::var_info[] = {
     // @Units: cm
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("MAX_CM",  7, AP_RangeFinder_Params, max_distance_cm, 700),
+    AP_GROUPINFO("MAX_CM",  7, AP_RangeFinder_Params, max_distance_cm, 1000),
 
     // @Param: STOP_PIN
     // @DisplayName: Rangefinder stop pin

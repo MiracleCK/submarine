@@ -29,7 +29,8 @@ bool Sub::althold_init()
 
     is_z_ctrl_relaxed = false;
     engageStopZ = false;
-    lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());;
+    lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
+    target_distance_z = distance_ned[DISTANCE_BOTTOM];
 
     return true;
 }
@@ -268,6 +269,7 @@ void Sub::althold_run_rate()
         is_z_ctrl_relaxed = true;
         engageStopZ = true;
         lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
+        target_distance_z = distance_ned[DISTANCE_BOTTOM];
     } else { // hold z
         
         if (is_z_ctrl_relaxed) {
@@ -284,6 +286,25 @@ void Sub::althold_run_rate()
         if (ap.at_bottom) {
             pos_control.relax_alt_hold_controllers(); // clear velocity and position targets
             pos_control.set_alt_target(inertial_nav.get_altitude() + 10.0f); // set target to 10 cm above bottom
+        }
+
+		if(0) {
+	        if(distance_ned[DISTANCE_BOTTOM] < target_distance_z - 10) {
+	        	int16_t dis_err = target_distance_z - distance_ned[DISTANCE_BOTTOM];
+				pos_control.relax_alt_hold_controllers();
+				pos_control.set_max_speed_z(-g.pilot_speed_up*2, g.pilot_speed_up*2);
+	    		pos_control.set_max_accel_z(g.pilot_accel_z*2);
+				pos_control.set_alt_target(inertial_nav.get_altitude() + dis_err);
+	        } else if(distance_ned[DISTANCE_BOTTOM] > target_distance_z + 10) {
+				int16_t dis_err = distance_ned[DISTANCE_BOTTOM] - target_distance_z;
+				pos_control.relax_alt_hold_controllers();
+				pos_control.set_max_speed_z(-g.pilot_speed_up*2, g.pilot_speed_up*2);
+	    		pos_control.set_max_accel_z(g.pilot_accel_z*2);
+				pos_control.set_alt_target(inertial_nav.get_altitude() - dis_err);
+	        } else {
+				pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
+	    		pos_control.set_max_accel_z(g.pilot_accel_z);
+	        }
         }
 
         // Detects a zero derivative

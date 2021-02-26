@@ -192,6 +192,9 @@ public:
         k_param_cam_tilt_center, // deprecated
         k_param_frame_configuration,
         k_param_depth_limit,
+        k_param_distance_enable,
+        k_param_distance_limit,
+        k_param_distance_p,
 
         // Acro Mode parameters
         k_param_acro_yaw_p = 220, // Used in all modes for get_pilot_desired_yaw_rate
@@ -301,6 +304,9 @@ public:
     AP_Float                surface_depth;
     AP_Int8                 frame_configuration;
     AP_Float                depth_limit;
+    AP_Int8					distance_enable;
+    AP_Int16        		distance_limit;
+    AP_Float        		distance_p;
 
     // Note: keep initializers here in the same order as they are declared
     // above.

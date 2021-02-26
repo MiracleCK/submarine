@@ -2,6 +2,7 @@
 
 #include "AP_RangeFinder.h"
 #include "AP_RangeFinder_Backend.h"
+#include <Filter/LowPassFilter2p.h>
 
 // Data timeout
 #define AP_RANGEFINDER_MAVLINK_TIMEOUT_MS 500
@@ -30,7 +31,8 @@ protected:
 
 private:
     uint16_t distance_cm;
-
+	uint16_t distance_cm_filtered;
+    LowPassFilter2pInt _distance_filter;
     // start a reading
     static bool start_reading(void);
     static bool get_reading(uint16_t &reading_cm);

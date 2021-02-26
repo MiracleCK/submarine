@@ -309,9 +309,10 @@ void GCS_MAVLINK::send_distance_sensor() const
         if (sensor == nullptr) {
             continue;
         }
-        enum Rotation orient = sensor->orientation();
-        if (!filter_possible_proximity_sensors ||
-            (orient > ROTATION_YAW_315 && orient != ROTATION_PITCH_90)) {
+        //enum Rotation orient = sensor->orientation();
+        //if (!filter_possible_proximity_sensors ||
+        //    (orient > ROTATION_YAW_315 && orient != ROTATION_PITCH_90)) {
+        if (!filter_possible_proximity_sensors) {
             send_distance_sensor(sensor, i);
         }
     }

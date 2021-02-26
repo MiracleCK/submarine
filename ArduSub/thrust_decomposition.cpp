@@ -263,6 +263,24 @@ Vector3f Sub::thrust_decomposition_ned(Vector3f& euler_rad, Vector3f thrusts, fl
     rot = rot.transposed() * rot_yaw;
 
     thrusts.z += throttle_bf;
+
+    if(1) {
+		static uint32_t _startup_ms = 0;
+
+		if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+		}
+
+		if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+
+			hal.shell->printf("thrusts [%.4f %.4f %.4f]\r\n",
+					thrusts.x, 
+					thrusts.y,
+					thrusts.z); 
+		}
+	}
+    
     return thrust_decomp_ned(rot, thrusts);
 }
 
@@ -273,10 +291,19 @@ Vector3f Sub::thrust_decomposition_body_rot_matrix(Vector3f& euler_rad, Vector3f
 
     // decomp thrust under body frame
     // only need rot matrix b -> n
+    //Matrix3f rot = ahrs.get_rotation_body_to_ned();
+
     Matrix3f rot = ahrs.get_rotation_body_to_ned();
 
+    float cy = cosf(euler_rad.z);
+    float sy = sinf(euler_rad.z);
+    Matrix3f rot_yaw = Matrix3f(cy, -sy, 0, sy, cy, 0, 0, 0, 1);
+
+    rot = rot.transposed() * rot_yaw;
+
     Vector3f thrusts_decomp(0, 0, -thrusts.z);
-    Vector3f decomped = rot.transposed() * thrusts_decomp;
+    //Vector3f decomped = rot.transposed() * thrusts_decomp;
+    Vector3f decomped = rot * thrusts_decomp;
 
     thrusts.x += decomped.x;
     thrusts.y += decomped.y;

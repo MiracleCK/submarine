@@ -111,14 +111,246 @@ bool Sub::set_mode(const uint8_t new_mode, const ModeReason reason)
     return sub.set_mode((control_mode_t)new_mode, reason);
 }
 
+static void print_vector(Vector3f &v)
+{
+    hal.shell->printf("[%.4f %.4f %.4f]\r\n",
+                        (double)v.x,
+                        (double)v.y,
+                        (double)v.z);
+}
+
+static void print_matrix(Matrix3f &m)
+{
+    print_vector(m.a);
+    print_vector(m.b);
+    print_vector(m.c);
+}
+
+void Sub::distance_raw_filter()
+{
+#define FILTER_A 30
+#define FILTER_B 0.5f
+
+	for(int i=0; i<DISTANCE_NUM; i++) {
+		//限幅
+		//if(((distance_bf[i] - distance_bf_filter[i]) > FILTER_A) || 
+		//	((distance_bf_filter[i] - distance_bf[i]) > FILTER_A))
+		//	continue;
+		
+		//一阶滤波
+		//distance_bf_filter[i] = (int16_t)((float)distance_bf[i] * FILTER_B + (1.0 - FILTER_B) * (float)distance_bf_filter[i]);
+		distance_bf_filter[i] = distance_bf[i];
+	}
+}
+
 // update_flight_mode - calls the appropriate attitude controllers based on flight mode
 // called at 100hz or more
 void Sub::update_flight_mode()
 {
+	if(0) {
+		static uint32_t _startup_ms = 0;
+
+		if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+		}
+
+		if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+			
+			//Matrix3f m = ahrs.get_rotation_body_to_ned();
+			Matrix3f r_b2e = ahrs.get_rotation_body_to_ned();
+			Matrix3f r_y2e, r_b2y;
+			r_y2e.from_euler(0, 0, ahrs.yaw);
+			r_b2y = r_b2e * r_y2e.transposed();
+			print_matrix(r_b2y);
+			hal.shell->printf("\r\n");
+			Vector3f v(0, 0, 1);
+		    v = r_b2y*v;
+		    print_vector(v);
+		    hal.shell->printf("\r\n");
+		}
+	}
+	
     if (motors.armed()) {
-        pilot_trans_thrusts.x = channel_forward->slew_norm_input_bidirectional();
+		distance_bf[DISTANCE_FRONT] = rangefinder.distance_cm_filtered_orient(ROTATION_NONE);
+        distance_bf[DISTANCE_BACK] = rangefinder.distance_cm_filtered_orient(ROTATION_PITCH_180);
+        distance_bf[DISTANCE_LEFT] = rangefinder.distance_cm_filtered_orient(ROTATION_YAW_270);
+        distance_bf[DISTANCE_RIGHT] = rangefinder.distance_cm_filtered_orient(ROTATION_YAW_90);
+        distance_bf[DISTANCE_TOP] = 0;
+        distance_bf[DISTANCE_BOTTOM] = rangefinder.distance_cm_filtered_orient(ROTATION_PITCH_270);
+
+		static uint8_t initialize = 0;
+		if(!initialize) {
+			for(int i=0; i<DISTANCE_NUM; i++) {
+				distance_bf_filter[i] = distance_bf[i];
+			}
+			initialize = 1;
+		} else {
+			distance_raw_filter();
+		}
+        //Matrix3f r_b2e = ahrs.get_rotation_body_to_ned();
+		//Matrix3f r_y2e, r_b2y;
+		//r_y2e.from_euler(0, 0, ahrs.yaw);
+		//r_b2y = r_b2e * r_y2e.transposed();
+		Matrix3f m;
+		m.from_euler(ahrs.roll, ahrs.pitch, 0);
+
+		Vector3f dist[DISTANCE_NUM] = {{(float)distance_bf_filter[DISTANCE_FRONT], 0, 0},
+							{(float)-distance_bf_filter[DISTANCE_BACK], 0, 0},
+							{0, (float)-distance_bf_filter[DISTANCE_LEFT], 0},
+							{0, (float)distance_bf_filter[DISTANCE_RIGHT], 0},
+							{0, 0, (float)-distance_bf_filter[DISTANCE_TOP]},
+							{0, 0, (float)distance_bf_filter[DISTANCE_BOTTOM]}};
+		for(int i=0; i<DISTANCE_NUM; i++) {
+			dist[i] = m * dist[i];
+			distance_ned[i] = 0;
+		}
+
+		for(int i=0; i<DISTANCE_NUM; i++) {
+			if(dist[i].x >= 0) {
+				if(dist[i].x > distance_ned[DISTANCE_FRONT])
+					distance_ned[DISTANCE_FRONT] = dist[i].x;
+			} else {
+				if(dist[i].x < distance_ned[DISTANCE_BACK])
+					distance_ned[DISTANCE_BACK] = dist[i].x;
+			}
+
+			if(dist[i].y >= 0) {
+				if(dist[i].y > distance_ned[DISTANCE_RIGHT])
+					distance_ned[DISTANCE_RIGHT] = dist[i].y;
+			} else {
+				if(dist[i].y < distance_ned[DISTANCE_LEFT])
+					distance_ned[DISTANCE_LEFT] = dist[i].y;
+			}
+
+			if(dist[i].z >= 0) {
+				if(dist[i].z > distance_ned[DISTANCE_BOTTOM])
+					distance_ned[DISTANCE_BOTTOM] = dist[i].z;
+			} else {
+				if(dist[i].z < distance_ned[DISTANCE_TOP])
+					distance_ned[DISTANCE_TOP] = dist[i].z;
+			}
+		}
+
+		if(1) {
+			static uint32_t _startup_ms = 0;
+
+			if(_startup_ms == 0) {
+				_startup_ms = AP_HAL::millis();
+			}
+
+			if(AP_HAL::millis() - _startup_ms > 1000) {
+				_startup_ms = AP_HAL::millis();
+
+				for(int i=0; i<DISTANCE_NUM; i++) {
+					hal.shell->printf("[%.2f %.2f %.2f]\r\n", 
+								dist[i].x,
+								dist[i].y, 
+								dist[i].z);
+				}
+				
+				hal.shell->printf("\r\ndistance_bf: %d %d %d %d %d %d\r\n", 
+							distance_bf[DISTANCE_FRONT],
+							distance_bf[DISTANCE_BACK], 
+							distance_bf[DISTANCE_LEFT], 
+							distance_bf[DISTANCE_RIGHT],
+							distance_bf[DISTANCE_TOP],
+							distance_bf[DISTANCE_BOTTOM]);
+
+				hal.shell->printf("distance_ned: %d %d %d %d %d %d\r\n\r\n", 
+							distance_ned[DISTANCE_FRONT],
+							distance_ned[DISTANCE_BACK], 
+							distance_ned[DISTANCE_LEFT], 
+							distance_ned[DISTANCE_RIGHT],
+							distance_ned[DISTANCE_TOP],
+							distance_ned[DISTANCE_BOTTOM]);
+			}
+		}
+
+		pilot_trans_thrusts.x = channel_forward->slew_norm_input_bidirectional();
         pilot_trans_thrusts.y = channel_lateral->slew_norm_input_bidirectional();
         pilot_trans_thrusts.z = channel_throttle->slew_norm_input_bidirectional();
+        
+        if(g.distance_enable && is_ned_pilot) {
+			Vector3f dis_error;
+			
+	        if(pilot_trans_thrusts.x > 0.05f) {
+	    		if(ahrs.pitch_sensor > -4500)
+					dis_error.x = distance_ned[DISTANCE_FRONT] - 50;//g.distance_limit;
+				else
+					dis_error.x = g.distance_p/2;
+	    	} else if(pilot_trans_thrusts.x < -0.05f) {
+	    		if(ahrs.pitch_sensor < 4500)
+					dis_error.x = abs(distance_ned[DISTANCE_BACK]) - 50;//g.distance_limit;
+				else
+					dis_error.x = g.distance_p;
+	    	} else {
+				dis_error.x = 0;
+				pilot_trans_thrusts.x = 0;
+	    	}
+	    	//if(is_zero(pilot_trans_thrusts.x) || dis_error.x < 5)
+	    	//	dis_error.x = 0;
+	    	//if(dis_error.x < 0)
+	    	//	dis_error.x *= fabsf(dis_error.x);
+	    	pilot_trans_thrusts.x *= constrain_float((float)dis_error.x/g.distance_p, -1.0f, 1.0f);
+
+	    	if(pilot_trans_thrusts.y > 0.05f) {
+	    		if(ahrs.roll_sensor < 4500)
+					dis_error.y = distance_ned[DISTANCE_RIGHT] - 50;//g.distance_limit;
+				else
+					dis_error.y = g.distance_p;
+	    	} else if(ahrs.roll_sensor > -4500) {
+				if(abs(distance_ned[DISTANCE_LEFT]) > 10)
+					dis_error.y = abs(distance_ned[DISTANCE_LEFT]) - 50;//g.distance_limit;
+				else
+					dis_error.y = g.distance_p;
+	    	} else {
+				dis_error.y = 0;
+				pilot_trans_thrusts.y = 0;
+	    	}
+	    	//if(is_zero(pilot_trans_thrusts.y) || dis_error.y < 5)
+	    	//	dis_error.y = 0;
+	    	//if(dis_error.y < 0)
+	    	//	dis_error.y *= fabsf(dis_error.y);
+	    	pilot_trans_thrusts.y *= constrain_float((float)dis_error.y/g.distance_p, -1.0f, 1.0f);
+
+			if(pilot_trans_thrusts.z < -0.05f) {
+				dis_error.z = distance_ned[DISTANCE_BOTTOM] - 20;//g.distance_limit;
+			} else if(pilot_trans_thrusts.z > 0.05f) {
+				if(abs(distance_ned[DISTANCE_TOP]) > 10)
+					dis_error.z = abs(distance_ned[DISTANCE_TOP]) - 20;//g.distance_limit;
+				else
+					dis_error.z = g.distance_p;
+			} else {
+				dis_error.z = 0;
+				pilot_trans_thrusts.z = 0;
+			}
+			//if(is_zero(pilot_trans_thrusts.z) || dis_error.z < 5)
+			//	dis_error.z = 0;
+			pilot_trans_thrusts.z *= constrain_float((float)dis_error.z/g.distance_p, 0.0f, 1.0f);
+
+	    	if(1) {
+				static uint32_t _startup_ms = 0;
+
+				if(_startup_ms == 0) {
+					_startup_ms = AP_HAL::millis();
+				}
+
+				if(AP_HAL::millis() - _startup_ms > 1000) {
+					_startup_ms = AP_HAL::millis();
+
+					hal.shell->printf("dis_error [%.4f %.4f %.4f]\r\n",
+							dis_error.x, 
+							dis_error.y, 
+							dis_error.z);
+
+					hal.shell->printf("pilot_trans_thrusts [%.4f %.4f %.4f]\r\n",
+							pilot_trans_thrusts.x, 
+							pilot_trans_thrusts.y,
+							pilot_trans_thrusts.z); 
+				}
+			}
+		}
 
         is_affect_z = is_affect_z_pos(is_ned_pilot, pilot_trans_thrusts.x, pilot_trans_thrusts.y, pilot_trans_thrusts.z);
         thrust_decomposition_select(is_ned_pilot, control_mode, is_affect_z);

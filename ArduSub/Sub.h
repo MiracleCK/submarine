@@ -548,6 +548,7 @@ private:
     bool set_mode(control_mode_t mode, ModeReason reason);
     bool set_mode(const uint8_t mode, const ModeReason reason) override;
     void update_flight_mode();
+    void distance_raw_filter();
     void exit_mode(control_mode_t old_control_mode, control_mode_t new_control_mode);
     bool mode_requires_GPS(control_mode_t mode);
     bool mode_has_manual_throttle(control_mode_t mode);
@@ -711,6 +712,18 @@ public:
     bool is_affect_z;
     bool depth_limit;
     Vector3f pilot_trans_thrusts;
+    enum distance_dir_t : uint8_t {
+        DISTANCE_FRONT    = 0,
+        DISTANCE_BACK     = 1,
+        DISTANCE_LEFT     = 2,
+        DISTANCE_RIGHT    = 3,
+        DISTANCE_TOP   	  = 4,
+        DISTANCE_BOTTOM   = 5,
+        DISTANCE_NUM
+    };
+    int16_t distance_bf[DISTANCE_NUM];
+    int16_t distance_bf_filter[DISTANCE_NUM];
+    int16_t distance_ned[DISTANCE_NUM];
     void thrust_decomposition_select(bool is_ned, control_mode_t mode, bool is_affect_z_pos = false);
     Vector3f thrust_decomposition_ned_roll0(Vector3f& euler_rad, Vector3f thrusts, float throttle_bf);
     Vector3f thrust_decomposition_ned(Vector3f& euler_rad, Vector3f thrusts, float throttle_bf);
@@ -723,6 +736,7 @@ public:
     void stabilize_run_rate();
     bool attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int16_t yaw);
 
+	int16_t target_distance_z;
     void althold_run_rate();
     void althold_run_rate_2();
     void get_alt_hold_pilot_desired_rate_lean_angles(float roll_rate_in, float pitch_rate_in, float &roll_out, float &pitch_out);

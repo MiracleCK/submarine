@@ -533,7 +533,8 @@ void RangeFinder::handle_msg(const mavlink_message_t &msg)
 {
     uint8_t i;
     for (i=0; i<num_instances; i++) {
-        if ((drivers[i] != nullptr) && ((Type)params[i].type.get() != Type::NONE)) {
+        if ((drivers[i] != nullptr) && 
+        	((Type)params[i].type.get() == Type::MAVLink)) {
           drivers[i]->handle_msg(msg);
         }
     }
@@ -575,6 +576,15 @@ uint16_t RangeFinder::distance_cm_orient(enum Rotation orientation) const
         return 0;
     }
     return backend->distance_cm();
+}
+
+uint16_t RangeFinder::distance_cm_filtered_orient(enum Rotation orientation) const
+{
+    AP_RangeFinder_Backend *backend = find_instance(orientation);
+    if (backend == nullptr) {
+        return 0;
+    }
+    return backend->distance_cm_filtered();
 }
 
 uint16_t RangeFinder::voltage_mv_orient(enum Rotation orientation) const
