@@ -96,6 +96,8 @@ uint32_t dbg_print_cnt = 20;
 uint32_t dbg_print_timeinterval = 1000;
 bool is_dbg_bprintf;
 
+int32_t dbg_alt = 0;
+
 void param_debug_tick(void);
 bool is_param_print(void);
 bool is_param_print_cnt_remain(void);
@@ -223,6 +225,12 @@ void cmd_param_dbg(int argc, char *argv[]) {
             is_dbg_batt = true;
         } else {
             is_dbg_batt = false;
+        }
+    } else if (!strcmp(argv[0], "alt")) {
+        if (argc >= 2) {
+            dbg_alt = strtol(argv[1], NULL, 10);
+        } else {
+			dbg_alt = 0;
         }
     } else {
         hal.shell->printf("usage: param dbg motor|batt on|[off] [print_cnt]\r\n");

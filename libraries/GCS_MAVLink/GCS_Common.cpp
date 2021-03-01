@@ -1525,6 +1525,9 @@ void GCS_MAVLINK::send_rc_channels() const
     uint16_t values[18] = {};
     rc().get_radio_in(values, ARRAY_SIZE(values));
 
+    RangeFinder *rangefinder = RangeFinder::get_singleton();
+	AP_RangeFinder_Backend *sensor = rangefinder->get_backend(0);
+
     mavlink_msg_rc_channels_send(
         chan,
         AP_HAL::millis(),
@@ -1543,8 +1546,8 @@ void GCS_MAVLINK::send_rc_channels() const
         values[11],
         values[12],
         values[13],
-        values[14],
-        values[15],
+        sensor->distance_cm(), //values[14],
+        sensor->distance_cm_filtered(), //values[15],
         values[16],
         values[17],
         receiver_rssi);        
@@ -4176,7 +4179,7 @@ int32_t GCS_MAVLINK::global_position_int_alt() const {
 int32_t GCS_MAVLINK::global_position_int_relative_alt() const {
     float posD;
     AP::ahrs().get_relative_position_D_home(posD);
-    posD *= -1000.0f; // change from down to up and metres to millimeters
+    posD *= 100000.0f; // change from down to up and metres to millimeters
     return posD;
 }
 void GCS_MAVLINK::send_global_position_int()

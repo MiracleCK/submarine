@@ -30,7 +30,9 @@ AP_RangeFinder_MAVLink::AP_RangeFinder_MAVLink(RangeFinder::RangeFinder_State &_
 {
     state.last_reading_ms = AP_HAL::millis();
     distance_cm = 0;
-    _distance_filter.set_cutoff_frequency(200, 20);
+    sample_freq = params.sample_freq.get();
+    cutoff_freq = params.cutoff_freq.get();
+    _distance_filter.set_cutoff_frequency((float)sample_freq, (float)cutoff_freq);
 }
 
 /*
@@ -55,6 +57,7 @@ void AP_RangeFinder_MAVLink::handle_msg(const mavlink_message_t &msg)
     // only accept distances for downward facing sensors
     //if (packet.orientation == MAV_SENSOR_ROTATION_PITCH_270) {
     if (packet.orientation == (Rotation)params.orientation.get()) {
+    	hal.shell->printf("ms: %d\r\n", AP_HAL::millis() - state.last_reading_ms);
         state.last_reading_ms = AP_HAL::millis();
         distance_cm = packet.current_distance;
         sensor_type = (MAV_DISTANCE_SENSOR)packet.type;  
@@ -76,5 +79,13 @@ void AP_RangeFinder_MAVLink::update(void)
         state.distance_cm = distance_cm;
         state.distance_cm_filtered = distance_cm_filtered;
         update_status();
+    }
+
+    if((sample_freq != params.sample_freq.get()) ||
+       (cutoff_freq != params.cutoff_freq.get())) {
+		sample_freq = params.sample_freq.get();
+	    cutoff_freq = params.cutoff_freq.get();
+	    hal.shell->printf("sample_freq: %d, cutoff_freq: %d\r\n", sample_freq, cutoff_freq);
+	    _distance_filter.set_cutoff_frequency((float)sample_freq, (float)cutoff_freq);
     }
 }

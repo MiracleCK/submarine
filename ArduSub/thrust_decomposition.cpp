@@ -264,7 +264,7 @@ Vector3f Sub::thrust_decomposition_ned(Vector3f& euler_rad, Vector3f thrusts, fl
 
     thrusts.z += throttle_bf;
 
-    if(1) {
+    if(0) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {

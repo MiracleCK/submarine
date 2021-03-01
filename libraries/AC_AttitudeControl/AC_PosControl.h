@@ -149,6 +149,7 @@ public:
 
     /// update_z_controller - fly to altitude in cm above home
     void update_z_controller();
+    void update_z_controller(float alt_feed);
 
     // get_leash_down_z, get_leash_up_z - returns vertical leash lengths in cm
     float get_leash_down_z() const { return _leash_down_z; }
@@ -347,6 +348,7 @@ protected:
     //          set_target_to_stopping_point_z
     //          init_takeoff
     void run_z_controller();
+    void run_z_controller(float alt_feed);
 
     ///
     /// xy controller private methods

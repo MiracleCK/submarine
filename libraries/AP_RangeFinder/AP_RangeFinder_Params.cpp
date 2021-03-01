@@ -123,6 +123,10 @@ const AP_Param::GroupInfo AP_RangeFinder_Params::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("ORIENT", 53, AP_RangeFinder_Params, orientation, ROTATION_PITCH_270),
 
+    AP_GROUPINFO("RATE", 54, AP_RangeFinder_Params, sample_freq, 200),
+
+    AP_GROUPINFO("CUTOFF", 55, AP_RangeFinder_Params, cutoff_freq, 20),
+
     AP_GROUPEND
 };
 

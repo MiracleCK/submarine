@@ -30,7 +30,13 @@ bool Sub::althold_init()
     is_z_ctrl_relaxed = false;
     engageStopZ = false;
     lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
-    target_distance_z = distance_ned[DISTANCE_BOTTOM];
+    if(1) {
+    	if(ahrs.pitch_sensor > 6000)
+    		dis_id = DISTANCE_TOP;
+    	else
+    		dis_id = DISTANCE_BOTTOM;
+    	target_distance_z = distance_ned[dis_id];
+    }
 
     return true;
 }
@@ -196,6 +202,8 @@ void Sub::get_alt_hold_pilot_desired_angle_rates(int16_t roll_in, int16_t pitch_
     yaw_out = rate_bf_request.z;
 }
 
+extern int32_t dbg_alt;
+
 bool Sub::attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int16_t yaw) {
     static bool is_reseting = false;
 
@@ -233,6 +241,9 @@ bool Sub::attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int1
 
 void Sub::althold_run_rate()
 {
+	static uint8_t _state = 0;
+	static uint32_t _manual_ms = 0;
+	
     // initialize vertical speeds and acceleration
     pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
     pos_control.set_max_accel_z(g.pilot_accel_z);
@@ -248,8 +259,16 @@ void Sub::althold_run_rate()
         engageStopZ = false;
         lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
         is_request_reset_rp = true; // to reset rp when arm
+        target_distance_z = distance_ned[dis_id];
+        _state = 0;
+        _manual_ms = AP_HAL::millis();
         return;
     }
+
+    if(ahrs.pitch_sensor > 6000)
+		dis_id = DISTANCE_TOP;
+	else
+		dis_id = DISTANCE_BOTTOM;
 
     motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
@@ -269,7 +288,23 @@ void Sub::althold_run_rate()
         is_z_ctrl_relaxed = true;
         engageStopZ = true;
         lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
-        target_distance_z = distance_ned[DISTANCE_BOTTOM];
+        _state = 0;
+        _manual_ms = AP_HAL::millis();
+        target_distance_z = distance_ned[dis_id];
+        //hal.shell->printf(">>set target %d\r\n", target_distance_z);
+        if(0) {
+			static uint32_t _startup_ms = 0;
+
+			if(_startup_ms == 0) {
+				_startup_ms = AP_HAL::millis();
+			}
+
+			if(AP_HAL::millis() - _startup_ms > 100) {
+				_startup_ms = AP_HAL::millis();
+
+				hal.shell->printf(">>set target %d\r\n", target_distance_z);
+			}
+		}
     } else { // hold z
         
         if (is_z_ctrl_relaxed) {
@@ -289,22 +324,136 @@ void Sub::althold_run_rate()
         }
 
 		if(0) {
-	        if(distance_ned[DISTANCE_BOTTOM] < target_distance_z - 10) {
-	        	int16_t dis_err = target_distance_z - distance_ned[DISTANCE_BOTTOM];
+	        if(distance_ned[dis_id] < target_distance_z - 2) {
+	        	int16_t dis_err = target_distance_z - distance_ned[dis_id];
+
+	        	//hal.shell->printf(">>up %d\r\n", dis_err);
 				pos_control.relax_alt_hold_controllers();
-				pos_control.set_max_speed_z(-g.pilot_speed_up*2, g.pilot_speed_up*2);
-	    		pos_control.set_max_accel_z(g.pilot_accel_z*2);
+				//pos_control.set_max_speed_z(-g.pilot_speed_up*2, g.pilot_speed_up*2);
+	    		//pos_control.set_max_accel_z(g.pilot_accel_z*2);
 				pos_control.set_alt_target(inertial_nav.get_altitude() + dis_err);
-	        } else if(distance_ned[DISTANCE_BOTTOM] > target_distance_z + 10) {
-				int16_t dis_err = distance_ned[DISTANCE_BOTTOM] - target_distance_z;
+	        } else if(distance_ned[dis_id] > target_distance_z + 2) {
+				int16_t dis_err = distance_ned[dis_id] - target_distance_z;
+
+				//hal.shell->printf(">>down %d\r\n", dis_err);
 				pos_control.relax_alt_hold_controllers();
-				pos_control.set_max_speed_z(-g.pilot_speed_up*2, g.pilot_speed_up*2);
-	    		pos_control.set_max_accel_z(g.pilot_accel_z*2);
-				pos_control.set_alt_target(inertial_nav.get_altitude() - dis_err);
+				//pos_control.set_max_speed_z(-g.pilot_speed_up*2, g.pilot_speed_up*2);
+	    		//pos_control.set_max_accel_z(g.pilot_accel_z*2);
+				pos_control.set_alt_target(pos_control.get_alt_target() - dis_err);
 	        } else {
-				pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
-	    		pos_control.set_max_accel_z(g.pilot_accel_z);
+	        	//hal.shell->printf(">>keep\r\n");
+	        	pos_control.relax_alt_hold_controllers();
+				//pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
+	    		//pos_control.set_max_accel_z(g.pilot_accel_z);
+	    		pos_control.set_alt_target(inertial_nav.get_altitude());
 	        }
+        }
+
+        if(0) {
+	        if(abs(distance_ned[dis_id] - target_distance_z)) {
+	        	int16_t dis_err = distance_ned[dis_id] - target_distance_z;
+
+	        	//hal.shell->printf(">>up %d\r\n", dis_err);
+				pos_control.relax_alt_hold_controllers();
+				//pos_control.set_max_speed_z(-g.pilot_speed_up*2, g.pilot_speed_up*2);
+	    		//pos_control.set_max_accel_z(g.pilot_accel_z*2);
+
+	    		if(1) {
+					static uint32_t _startup_ms = 0;
+
+					if(_startup_ms == 0) {
+						_startup_ms = AP_HAL::millis();
+					}
+
+					if(AP_HAL::millis() - _startup_ms > 100) {
+						_startup_ms = AP_HAL::millis();
+
+						hal.shell->printf("td %d cd[%d] %d ta %f, ca %f\r\n",
+								target_distance_z, 
+								dis_id,
+								distance_ned[dis_id], 
+								pos_control.get_alt_target() - dis_err,
+								inertial_nav.get_altitude());
+					}
+				}
+				
+				pos_control.set_alt_target(pos_control.get_alt_target() - dis_err);
+	        } else {
+	        	//hal.shell->printf(">>keep\r\n");
+	        	//pos_control.relax_alt_hold_controllers();
+				//pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
+	    		//pos_control.set_max_accel_z(g.pilot_accel_z);
+	    		//pos_control.set_alt_target(inertial_nav.get_altitude());
+	        }
+        }
+
+        if(0) {
+			switch(_state) {
+				case 0:
+				{
+					if(AP_HAL::millis() - _manual_ms > 2000) {
+						_manual_ms = AP_HAL::millis();
+						target_distance_z = distance_ned[dis_id];
+						_state = 1;
+					}
+				}
+				break;
+				case 1:
+				{
+					int16_t dis_err = distance_ned[dis_id] - target_distance_z;
+					if(abs(dis_err) > 2) {
+						pos_control.relax_alt_hold_controllers();
+						pos_control.set_alt_target(inertial_nav.get_altitude() - dis_err);
+
+						hal.shell->printf(">>td %d cd[%d] %d ta %f, ca %f\r\n",
+								target_distance_z, 
+								dis_id,
+								distance_ned[dis_id], 
+								inertial_nav.get_altitude() - dis_err,
+								inertial_nav.get_altitude());
+						_state = 2;
+					}
+				}
+				break;
+				case 2:
+				{
+					float alt_err = inertial_nav.get_altitude() - pos_control.get_alt_target();
+					if(fabsl(alt_err) < 1.0f) {
+						hal.shell->printf(">>arrived target %d\r\n", target_distance_z);
+						_state = 1;
+					}
+				}
+				break;
+			}
+
+			if(0) {
+				static uint32_t _startup_ms = 0;
+
+				if(_startup_ms == 0) {
+					_startup_ms = AP_HAL::millis();
+				}
+
+				if(AP_HAL::millis() - _startup_ms > 1000) {
+					_startup_ms = AP_HAL::millis();
+
+					hal.shell->printf("state %d td %d cd[%d] %d ta %f, ca %f\r\n",
+							_state,
+							target_distance_z, 
+							dis_id,
+							distance_ned[dis_id], 
+							pos_control.get_alt_target(),
+							inertial_nav.get_altitude());
+				}
+			}
+        }
+
+        if(dbg_alt) {
+			pos_control.relax_alt_hold_controllers();
+			//pos_control.set_max_speed_z(-g.pilot_speed_up*2, g.pilot_speed_up*2);
+    		//pos_control.set_max_accel_z(g.pilot_accel_z*2);
+			//pos_control.set_alt_target(pos_control.get_alt_target() + dbg_alt);
+			pos_control.set_alt_target(inertial_nav.get_altitude() + dbg_alt);
+			dbg_alt = 0;
         }
 
         // Detects a zero derivative
@@ -316,8 +465,36 @@ void Sub::althold_run_rate()
             pos_control.relax_alt_hold_controllers();
         }
 
-        pos_control.update_z_controller();
+		if(1) {
+			int16_t dis_err = distance_ned[dis_id] - target_distance_z;
+	        //if(abs(dis_err) < 5) {
+			//	dis_err = 0;
+	        //}
+
+	        pos_control.update_z_controller((float)dis_err);
+        }
+        //pos_control.update_z_controller();
     }
+
+    if(0) {
+		static uint32_t _startup_ms = 0;
+
+		if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+		}
+
+		if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+
+			hal.shell->printf("dt %d dc[%d] %d\r\n",
+					target_distance_z, 
+					dis_id,
+					distance_ned[dis_id]);
+			hal.shell->printf("ct %f cc %f\r\n",
+					pos_control.get_alt_target(), 
+					inertial_nav.get_altitude());
+		}
+	}
 
     motors.set_forward(pilot_trans_thrusts.x);
     motors.set_lateral(pilot_trans_thrusts.y);
