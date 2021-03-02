@@ -94,7 +94,7 @@ public:
         k_param_avoid, // Relies on proximity and fence
         k_param_NavEKF3,
         k_param_loiter_nav,
-
+		k_param_distance_control, // distance Control
 
         // Other external hardware interfaces
         k_param_motors = 65, // Motors

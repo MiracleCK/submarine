@@ -241,12 +241,14 @@ bool Sub::attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int1
 
 void Sub::althold_run_rate()
 {
-	static uint8_t _state = 0;
-	static uint32_t _manual_ms = 0;
-	
     // initialize vertical speeds and acceleration
     pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
     pos_control.set_max_accel_z(g.pilot_accel_z);
+
+    if(ahrs.pitch_sensor > 6000)
+		dis_id = DISTANCE_TOP;
+	else
+		dis_id = DISTANCE_BOTTOM;
 
     if (!motors.armed()) {
         motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::GROUND_IDLE);
@@ -254,21 +256,14 @@ void Sub::althold_run_rate()
         attitude_control.set_throttle_out(0,true,g.throttle_filt);
         attitude_control.relax_attitude_controllers();
         pos_control.relax_alt_hold_controllers(motors.get_throttle_hover());
+        distance_control.relax_alt_hold_controllers(distance_ned[dis_id]);
 
         is_z_ctrl_relaxed = false;
         engageStopZ = false;
         lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
         is_request_reset_rp = true; // to reset rp when arm
-        target_distance_z = distance_ned[dis_id];
-        _state = 0;
-        _manual_ms = AP_HAL::millis();
         return;
     }
-
-    if(ahrs.pitch_sensor > 6000)
-		dis_id = DISTANCE_TOP;
-	else
-		dis_id = DISTANCE_BOTTOM;
 
     motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
@@ -278,6 +273,7 @@ void Sub::althold_run_rate()
         is_request_reset_rp = false;
     }
 
+#if 0
     if (is_affect_z) {
         // output pilot's throttle
         motors.set_throttle_pilot(pilot_trans_thrusts.z);
@@ -495,7 +491,21 @@ void Sub::althold_run_rate()
 					inertial_nav.get_altitude());
 		}
 	}
+#endif
 
+	if (is_affect_z) {
+        // output pilot's throttle
+        motors.set_throttle_pilot(pilot_trans_thrusts.z);
+        attitude_control.set_throttle_out(motors.get_throttle_hover(), false, g.throttle_filt); // throttle should be zero
+        
+        // reset z targets to current values
+        distance_control.relax_alt_hold_controllers((float)distance_ned[dis_id]);
+    } else { // hold z
+        motors.set_throttle_pilot(0.0f);
+
+	    distance_control.update_z_controller((float)distance_ned[dis_id]);
+    }
+	
     motors.set_forward(pilot_trans_thrusts.x);
     motors.set_lateral(pilot_trans_thrusts.y);
 }

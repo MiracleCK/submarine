@@ -80,6 +80,7 @@
 #include "GCS_Sub.h"
 #include "factory.h"
 #include "factory_proto.h"
+#include "distance_control.h"
 
 // libraries which are dependent on #defines in defines.h and/or config.h
 #if OPTFLOW == ENABLED
@@ -365,6 +366,7 @@ private:
     AC_AttitudeControl_Sub attitude_control;
 
     AC_PosControl_Sub pos_control;
+    DistanceControl distance_control;
 
     AC_WPNav wp_nav;
     AC_Loiter loiter_nav;
