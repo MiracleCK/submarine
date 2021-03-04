@@ -271,10 +271,10 @@ Vector3f Sub::thrust_decomposition_ned(Vector3f& euler_rad, Vector3f thrusts, fl
 			_startup_ms = AP_HAL::millis();
 		}
 
-		if(AP_HAL::millis() - _startup_ms > 1000) {
+		if(AP_HAL::millis() - _startup_ms > 500) {
 			_startup_ms = AP_HAL::millis();
 
-			hal.shell->printf("thrusts [%.4f %.4f %.4f]\r\n",
+			hal.shell->printf("\r\nthrusts [%.4f %.4f %.4f]\r\n",
 					thrusts.x, 
 					thrusts.y,
 					thrusts.z); 

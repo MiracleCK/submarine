@@ -239,8 +239,12 @@ bool Sub::attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int1
     return !is_zero(target_yaw_rate) || !is_zero(target_roll_rate) || !is_zero(target_pitch_rate);
 }
 
+int16_t set_distance = 0; 
+int16_t set_bora = 0;
 void Sub::althold_run_rate()
 {
+	int16_t distance;
+	
     // initialize vertical speeds and acceleration
     pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
     pos_control.set_max_accel_z(g.pilot_accel_z);
@@ -250,13 +254,17 @@ void Sub::althold_run_rate()
 	else
 		dis_id = DISTANCE_BOTTOM;
 
+	distance = rangefinder.distance_cm_orient(ROTATION_PITCH_270);
+	//hal.shell->printf(">>cur distance %d %f\r\n", distance, inertial_nav.get_altitude());
+	
     if (!motors.armed()) {
         motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::GROUND_IDLE);
         // Sub vehicles do not stabilize roll/pitch/yaw when not auto-armed (i.e. on the ground, pilot has never raised throttle)
         attitude_control.set_throttle_out(0,true,g.throttle_filt);
         attitude_control.relax_attitude_controllers();
         pos_control.relax_alt_hold_controllers(motors.get_throttle_hover());
-        distance_control.relax_alt_hold_controllers(distance_ned[dis_id]);
+        //distance_control.relax_alt_hold_controllers(distance_ned[dis_id]);
+        distance_control.relax_alt_hold_controllers((float)distance);
 
         is_z_ctrl_relaxed = false;
         engageStopZ = false;
@@ -273,6 +281,10 @@ void Sub::althold_run_rate()
         is_request_reset_rp = false;
     }
 
+    static uint32_t last_pilot_z_input_ms;
+
+	uint32_t tnow = AP_HAL::millis();
+
 #if 0
     if (is_affect_z) {
         // output pilot's throttle
@@ -284,10 +296,11 @@ void Sub::althold_run_rate()
         is_z_ctrl_relaxed = true;
         engageStopZ = true;
         lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
-        _state = 0;
-        _manual_ms = AP_HAL::millis();
         target_distance_z = distance_ned[dis_id];
-        //hal.shell->printf(">>set target %d\r\n", target_distance_z);
+        //set_distance = distance;
+        //set_bora = (int16_t)(-inertial_nav.get_altitude());
+        last_pilot_z_input_ms = tnow;
+        hal.shell->printf(">>set target %d\r\n", set_distance);
         if(0) {
 			static uint32_t _startup_ms = 0;
 
@@ -302,6 +315,11 @@ void Sub::althold_run_rate()
 			}
 		}
     } else { // hold z
+
+    	if (tnow > last_pilot_z_input_ms + 500) {
+        	set_distance = distance;
+        	set_bora = (int16_t)(-inertial_nav.get_altitude());
+        }
         
         if (is_z_ctrl_relaxed) {
             is_z_ctrl_relaxed = false;
@@ -383,65 +401,6 @@ void Sub::althold_run_rate()
 	        }
         }
 
-        if(0) {
-			switch(_state) {
-				case 0:
-				{
-					if(AP_HAL::millis() - _manual_ms > 2000) {
-						_manual_ms = AP_HAL::millis();
-						target_distance_z = distance_ned[dis_id];
-						_state = 1;
-					}
-				}
-				break;
-				case 1:
-				{
-					int16_t dis_err = distance_ned[dis_id] - target_distance_z;
-					if(abs(dis_err) > 2) {
-						pos_control.relax_alt_hold_controllers();
-						pos_control.set_alt_target(inertial_nav.get_altitude() - dis_err);
-
-						hal.shell->printf(">>td %d cd[%d] %d ta %f, ca %f\r\n",
-								target_distance_z, 
-								dis_id,
-								distance_ned[dis_id], 
-								inertial_nav.get_altitude() - dis_err,
-								inertial_nav.get_altitude());
-						_state = 2;
-					}
-				}
-				break;
-				case 2:
-				{
-					float alt_err = inertial_nav.get_altitude() - pos_control.get_alt_target();
-					if(fabsl(alt_err) < 1.0f) {
-						hal.shell->printf(">>arrived target %d\r\n", target_distance_z);
-						_state = 1;
-					}
-				}
-				break;
-			}
-
-			if(0) {
-				static uint32_t _startup_ms = 0;
-
-				if(_startup_ms == 0) {
-					_startup_ms = AP_HAL::millis();
-				}
-
-				if(AP_HAL::millis() - _startup_ms > 1000) {
-					_startup_ms = AP_HAL::millis();
-
-					hal.shell->printf("state %d td %d cd[%d] %d ta %f, ca %f\r\n",
-							_state,
-							target_distance_z, 
-							dis_id,
-							distance_ned[dis_id], 
-							pos_control.get_alt_target(),
-							inertial_nav.get_altitude());
-				}
-			}
-        }
 
         if(dbg_alt) {
 			pos_control.relax_alt_hold_controllers();
@@ -461,7 +420,7 @@ void Sub::althold_run_rate()
             pos_control.relax_alt_hold_controllers();
         }
 
-		if(1) {
+		if(0) {
 			int16_t dis_err = distance_ned[dis_id] - target_distance_z;
 	        //if(abs(dis_err) < 5) {
 			//	dis_err = 0;
@@ -469,7 +428,7 @@ void Sub::althold_run_rate()
 
 	        pos_control.update_z_controller((float)dis_err);
         }
-        //pos_control.update_z_controller();
+        pos_control.update_z_controller();
     }
 
     if(0) {
@@ -493,19 +452,33 @@ void Sub::althold_run_rate()
 	}
 #endif
 
+#if 1
+	//pilot_trans_thrusts.z = constrain_float(pilot_trans_thrusts.z, -0.1f, 0.15f);
+	//hal.shell->printf(">>thrusts.z %f\r\n", pilot_trans_thrusts.z);
 	if (is_affect_z) {
         // output pilot's throttle
         motors.set_throttle_pilot(pilot_trans_thrusts.z);
         attitude_control.set_throttle_out(motors.get_throttle_hover(), false, g.throttle_filt); // throttle should be zero
         
         // reset z targets to current values
-        distance_control.relax_alt_hold_controllers((float)distance_ned[dis_id]);
+        //distance_control.relax_alt_hold_controllers((float)distance_ned[dis_id]);
+        last_pilot_z_input_ms = tnow;
+        is_z_ctrl_relaxed = true;
     } else { // hold z
         motors.set_throttle_pilot(0.0f);
 
-	    distance_control.update_z_controller((float)distance_ned[dis_id]);
+        if (tnow > last_pilot_z_input_ms + 500) {
+        	if(is_z_ctrl_relaxed) {
+	        	set_distance = distance;
+	        	set_bora = (int16_t)(-inertial_nav.get_altitude());
+	        	distance_control.relax_alt_hold_controllers((float)distance);
+	        	is_z_ctrl_relaxed = false;
+        	}
+        	//distance_control.update_z_controller((float)distance_ned[dis_id]);
+	    	distance_control.update_z_controller((float)distance);
+        }    
     }
-	
+#endif	
     motors.set_forward(pilot_trans_thrusts.x);
     motors.set_lateral(pilot_trans_thrusts.y);
 }
