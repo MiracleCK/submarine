@@ -703,6 +703,8 @@ public:
     pilot_axis_t pilot_axis;
     bool is_ned_pilot = true;
     bool is_z_ctrl_relaxed = false;
+    bool is_x_ctrl_relaxed = false;
+    bool is_y_ctrl_relaxed = false;
     // Hold actual position until zero derivative is detected
     bool engageStopZ = false;
     // Get last user velocity direction to check for zero derivative points

@@ -2188,7 +2188,7 @@ void GCS_MAVLINK::send_local_position() const
 /*
   send VIBRATION message
  */
-extern float vel_cm, accl_cm;
+extern Vector3f vel_cm, accl_cm;
 void GCS_MAVLINK::send_vibration() const
 {
     const AP_InertialSensor &ins = AP::ins();
@@ -2198,9 +2198,9 @@ void GCS_MAVLINK::send_vibration() const
     mavlink_msg_vibration_send(
         chan,
         AP_HAL::micros64(),
-        vel_cm,//vibration.x,
-        accl_cm,//vibration.y,
-        0,//vibration.z,
+        accl_cm.x,//vibration.x,
+        accl_cm.y,//vibration.y,
+        accl_cm.z,//vibration.z,
         ins.get_accel_clip_count(0),
         ins.get_accel_clip_count(1),
         ins.get_accel_clip_count(2));

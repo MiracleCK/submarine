@@ -116,10 +116,10 @@ bool Sub::set_mode(const uint8_t new_mode, const ModeReason reason)
 void Sub::update_flight_mode()
 {
     if (motors.armed()) {
-		distance_bf[DISTANCE_FRONT] = 0;//rangefinder.distance_cm_filtered_orient(ROTATION_NONE);
-        distance_bf[DISTANCE_BACK] = 0;//rangefinder.distance_cm_filtered_orient(ROTATION_PITCH_180);
-        distance_bf[DISTANCE_LEFT] = 0;//rangefinder.distance_cm_filtered_orient(ROTATION_YAW_270);
-        distance_bf[DISTANCE_RIGHT] = 0;//rangefinder.distance_cm_filtered_orient(ROTATION_YAW_90);
+		distance_bf[DISTANCE_FRONT] = rangefinder.distance_cm_orient(ROTATION_NONE);
+        distance_bf[DISTANCE_BACK] = rangefinder.distance_cm_filtered_orient(ROTATION_PITCH_180);
+        distance_bf[DISTANCE_LEFT] = rangefinder.distance_cm_filtered_orient(ROTATION_YAW_270);
+        distance_bf[DISTANCE_RIGHT] = rangefinder.distance_cm_orient(ROTATION_YAW_90);
         distance_bf[DISTANCE_TOP] = 0;
         distance_bf[DISTANCE_BOTTOM] = rangefinder.distance_cm_filtered_orient(ROTATION_PITCH_270);
 
@@ -163,7 +163,7 @@ void Sub::update_flight_mode()
 			}
 		}
 
-		if(0) {
+		if(1) {
 			static uint32_t _startup_ms = 0;
 
 			if(_startup_ms == 0) {
