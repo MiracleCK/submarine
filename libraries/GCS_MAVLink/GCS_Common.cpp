@@ -1514,8 +1514,8 @@ void GCS_MAVLINK::send_system_time()
 /*
   send RC_CHANNELS messages
  */
-extern int16_t set_distance;
-extern int16_t set_bora;
+//extern int16_t set_distance;
+//extern int16_t set_bora;
 void GCS_MAVLINK::send_rc_channels() const
 {
     AP_RSSI *rssi = AP::rssi();
@@ -1546,8 +1546,8 @@ void GCS_MAVLINK::send_rc_channels() const
         values[9],
         values[10],
         values[11],
-        set_bora,//values[12],
-        set_distance,//values[13],
+        values[12],
+        values[13],
         sensor->distance_cm(), //values[14],
         sensor->distance_cm_filtered(), //values[15],
         values[16],
@@ -2188,19 +2188,19 @@ void GCS_MAVLINK::send_local_position() const
 /*
   send VIBRATION message
  */
-extern Vector3f vel_cm, accl_cm;
+//extern Vector3f vel_cm, accl_cm;
 void GCS_MAVLINK::send_vibration() const
 {
     const AP_InertialSensor &ins = AP::ins();
 
-    //Vector3f vibration = ins.get_vibration_levels();
+    Vector3f vibration = ins.get_vibration_levels();
 
     mavlink_msg_vibration_send(
         chan,
         AP_HAL::micros64(),
-        accl_cm.x,//vibration.x,
-        accl_cm.y,//vibration.y,
-        accl_cm.z,//vibration.z,
+        vibration.x,
+        vibration.y,
+        vibration.z,
         ins.get_accel_clip_count(0),
         ins.get_accel_clip_count(1),
         ins.get_accel_clip_count(2));

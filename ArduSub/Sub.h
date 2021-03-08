@@ -705,6 +705,9 @@ public:
     bool is_z_ctrl_relaxed = false;
     bool is_x_ctrl_relaxed = false;
     bool is_y_ctrl_relaxed = false;
+    uint32_t last_pilot_x_input_ms;
+    uint32_t last_pilot_y_input_ms;
+    uint32_t last_pilot_z_input_ms;
     // Hold actual position until zero derivative is detected
     bool engageStopZ = false;
     // Get last user velocity direction to check for zero derivative points
@@ -715,17 +718,6 @@ public:
     bool is_affect_z;
     bool depth_limit;
     Vector3f pilot_trans_thrusts;
-    enum distance_dir_t : uint8_t {
-        DISTANCE_FRONT    = 0,
-        DISTANCE_BACK     = 1,
-        DISTANCE_LEFT     = 2,
-        DISTANCE_RIGHT    = 3,
-        DISTANCE_TOP   	  = 4,
-        DISTANCE_BOTTOM   = 5,
-        DISTANCE_NUM
-    };
-    int16_t distance_bf[DISTANCE_NUM];
-    int16_t distance_ned[DISTANCE_NUM];
     void thrust_decomposition_select(bool is_ned, control_mode_t mode, bool is_affect_z_pos = false);
     Vector3f thrust_decomposition_ned_roll0(Vector3f& euler_rad, Vector3f thrusts, float throttle_bf);
     Vector3f thrust_decomposition_ned(Vector3f& euler_rad, Vector3f thrusts, float throttle_bf);
@@ -738,8 +730,6 @@ public:
     void stabilize_run_rate();
     bool attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int16_t yaw);
 
-	int16_t target_distance_z;
-	uint8_t dis_id;
     void althold_run_rate();
     void althold_run_rate_2();
     void get_alt_hold_pilot_desired_rate_lean_angles(float roll_rate_in, float pitch_rate_in, float &roll_out, float &pitch_out);

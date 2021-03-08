@@ -5,22 +5,50 @@
 
 extern const AP_HAL::HAL& hal;
 
- // default gains for Sub
- #define DISCONTROL_POS_Z_P                    3.0f    // vertical position controller P gain default
- #define DISCONTROL_VEL_Z_P                    8.0f    // vertical velocity controller P gain default
- #define DISCONTROL_ACC_Z_P                    0.5f    // vertical acceleration controller P gain default
- #define DISCONTROL_ACC_Z_I                    0.1f    // vertical acceleration controller I gain default
- #define DISCONTROL_ACC_Z_D                    0.0f    // vertical acceleration controller D gain default
- #define DISCONTROL_ACC_Z_IMAX                 100     // vertical acceleration controller IMAX gain default
- #define DISCONTROL_ACC_Z_FILT_HZ              20.0f   // vertical acceleration controller input filter default
- #define DISCONTROL_ACC_Z_DT                   0.0025f // vertical acceleration controller dt default
- #define DISCONTROL_POS_XY_P                   1.0f    // horizontal position controller P gain default
- #define DISCONTROL_VEL_XY_P                   1.0f    // horizontal velocity controller P gain default
- #define DISCONTROL_VEL_XY_I                   0.5f    // horizontal velocity controller I gain default
- #define DISCONTROL_VEL_XY_D                   0.0f    // horizontal velocity controller D gain default
- #define DISCONTROL_VEL_XY_IMAX                1000.0f // horizontal velocity controller IMAX gain default
- #define DISCONTROL_VEL_XY_FILT_HZ             5.0f    // horizontal velocity controller input filter
- #define DISCONTROL_VEL_XY_FILT_D_HZ           5.0f    // horizontal velocity controller input filter for D
+#define USE_DISTANCE_FILTERED 	1
+
+#define DISCONTROL_ACCEL_X                      250.0f  // default x acceleration in cm/s/s.
+#define DISCONTROL_ACCEL_Y                      250.0f  // default y acceleration in cm/s/s.
+#define DISCONTROL_ACCEL_Z                      250.0f  // default z acceleration in cm/s/s.
+
+#define DISCONTROL_DT_50HZ                      0.02f   // time difference in seconds for 50hz update rate
+#define DISCONTROL_DT_400HZ                     0.0025f // time difference in seconds for 400hz update rate
+
+#define DISCONTROL_VEL_X_ERROR_CUTOFF_FREQ        4.0f    // low-pass filter on x error (unit: hz)
+#define DISCONTROL_VEL_Y_ERROR_CUTOFF_FREQ        4.0f    // low-pass filter on y error (unit: hz)
+#define DISCONTROL_VEL_Z_ERROR_CUTOFF_FREQ        4.0f    // low-pass filter on z error (unit: hz)
+
+#define DISCONTROL_THROTTLE_CUTOFF_FREQ      2.0f    // low-pass filter on throttle error (unit: hz)
+#define DISCONTROL_OUT_X_CUTOFF_FREQ         2.0f    // low-pass filter on output error (unit: hz)
+#define DISCONTROL_OUT_Y_CUTOFF_FREQ         2.0f    // low-pass filter on output error (unit: hz)
+
+// default gains for Sub
+#define DISCONTROL_POS_Z_P                    3.0f    // vertical position controller P gain default
+#define DISCONTROL_VEL_Z_P                    8.0f    // vertical velocity controller P gain default
+#define DISCONTROL_ACC_Z_P                    0.5f    // vertical acceleration controller P gain default
+#define DISCONTROL_ACC_Z_I                    0.1f    // vertical acceleration controller I gain default
+#define DISCONTROL_ACC_Z_D                    0.0f    // vertical acceleration controller D gain default
+#define DISCONTROL_ACC_Z_IMAX                 100     // vertical acceleration controller IMAX gain default
+#define DISCONTROL_ACC_Z_FILT_HZ              20.0f   // vertical acceleration controller input filter default
+#define DISCONTROL_ACC_Z_DT                   0.0025f // vertical acceleration controller dt default
+
+#define DISCONTROL_POS_X_P                    3.0f    // vertical position controller P gain default
+#define DISCONTROL_VEL_X_P                    8.0f    // vertical velocity controller P gain default
+#define DISCONTROL_ACC_X_P                    0.5f    // vertical acceleration controller P gain default
+#define DISCONTROL_ACC_X_I                    0.1f    // vertical acceleration controller I gain default
+#define DISCONTROL_ACC_X_D                    0.0f    // vertical acceleration controller D gain default
+#define DISCONTROL_ACC_X_IMAX                 100     // vertical acceleration controller IMAX gain default
+#define DISCONTROL_ACC_X_FILT_HZ              20.0f   // vertical acceleration controller input filter default
+#define DISCONTROL_ACC_X_DT                   0.0025f // vertical acceleration controller dt default
+
+#define DISCONTROL_POS_Y_P                    3.0f    // vertical position controller P gain default
+#define DISCONTROL_VEL_Y_P                    8.0f    // vertical velocity controller P gain default
+#define DISCONTROL_ACC_Y_P                    0.5f    // vertical acceleration controller P gain default
+#define DISCONTROL_ACC_Y_I                    0.1f    // vertical acceleration controller I gain default
+#define DISCONTROL_ACC_Y_D                    0.0f    // vertical acceleration controller D gain default
+#define DISCONTROL_ACC_Y_IMAX                 100     // vertical acceleration controller IMAX gain default
+#define DISCONTROL_ACC_Y_FILT_HZ              20.0f   // vertical acceleration controller input filter default
+#define DISCONTROL_ACC_Y_DT                   0.0025f // vertical acceleration controller dt default
 
 // vibration compensation gains
 #define DISCONTROL_VIBE_COMP_P_GAIN 0.250f
@@ -75,126 +103,193 @@ const AP_Param::GroupInfo DistanceControl::var_info[] = {
     // @User: Standard
     AP_SUBGROUPINFO(_pid_accel_z, "_ACCZ_", 3, DistanceControl, AC_PID),
 
-    // @Param: _POSZ_P
-    // @DisplayName: Position (vertical) controller P gain
-    // @Description: Position (vertical) controller P gain.  Converts the difference between the desired altitude and actual altitude into a climb or descent rate which is passed to the throttle rate controller
+    // @Param: _POSX_P
+    // @DisplayName: Position (X) controller P gain
+    // @Description: Position (X) controller P gain.  Converts the difference between the desired altitude and actual altitude into a climb or descent rate which is passed to the throttle rate controller
     // @Range: 1.000 3.000
     // @User: Standard
     AP_SUBGROUPINFO(_p_pos_x, "_POSX_", 4, DistanceControl, AC_P),
 
-    // @Param: _VELZ_P
-    // @DisplayName: Velocity (vertical) controller P gain
-    // @Description: Velocity (vertical) controller P gain.  Converts the difference between desired vertical speed and actual speed into a desired acceleration that is passed to the throttle acceleration controller
+    // @Param: _VELX_P
+    // @DisplayName: Velocity (X) controller P gain
+    // @Description: Velocity (X) controller P gain.  Converts the difference between desired vertical speed and actual speed into a desired acceleration that is passed to the throttle acceleration controller
     // @Range: 1.000 8.000
     // @User: Standard
     AP_SUBGROUPINFO(_p_vel_x, "_VELX_", 5, DistanceControl, AC_P),
 
-    // @Param: _ACCZ_P
-    // @DisplayName: Acceleration (vertical) controller P gain
-    // @Description: Acceleration (vertical) controller P gain.  Converts the difference between desired vertical acceleration and actual acceleration into a motor output
+    // @Param: _ACCX_P
+    // @DisplayName: Acceleration (X) controller P gain
+    // @Description: Acceleration (X) controller P gain.  Converts the difference between desired vertical acceleration and actual acceleration into a motor output
     // @Range: 0.500 1.500
     // @Increment: 0.05
     // @User: Standard
 
-    // @Param: _ACCZ_I
-    // @DisplayName: Acceleration (vertical) controller I gain
-    // @Description: Acceleration (vertical) controller I gain.  Corrects long-term difference in desired vertical acceleration and actual acceleration
+    // @Param: _ACCX_I
+    // @DisplayName: Acceleration (X) controller I gain
+    // @Description: Acceleration (X) controller I gain.  Corrects long-term difference in desired vertical acceleration and actual acceleration
     // @Range: 0.000 3.000
     // @User: Standard
 
-    // @Param: _ACCZ_IMAX
-    // @DisplayName: Acceleration (vertical) controller I gain maximum
-    // @Description: Acceleration (vertical) controller I gain maximum.  Constrains the maximum pwm that the I term will generate
+    // @Param: _ACCX_IMAX
+    // @DisplayName: Acceleration (X) controller I gain maximum
+    // @Description: Acceleration (X) controller I gain maximum.  Constrains the maximum pwm that the I term will generate
     // @Range: 0 1000
     // @Units: d%
     // @User: Standard
 
-    // @Param: _ACCZ_D
-    // @DisplayName: Acceleration (vertical) controller D gain
-    // @Description: Acceleration (vertical) controller D gain.  Compensates for short-term change in desired vertical acceleration vs actual acceleration
+    // @Param: _ACCX_D
+    // @DisplayName: Acceleration (X) controller D gain
+    // @Description: Acceleration (X) controller D gain.  Compensates for short-term change in desired vertical acceleration vs actual acceleration
     // @Range: 0.000 0.400
     // @User: Standard
 
-    // @Param: _ACCZ_FILT
-    // @DisplayName: Acceleration (vertical) controller filter
+    // @Param: _ACCX_FILT
+    // @DisplayName: Acceleration (X) controller filter
     // @Description: Filter applied to acceleration to reduce noise.  Lower values reduce noise but add delay.
     // @Range: 1.000 100.000
     // @Units: Hz
     // @User: Standard
     AP_SUBGROUPINFO(_pid_accel_x, "_ACCX_", 6, DistanceControl, AC_PID),
     
-    // @Param: _POSZ_P
-    // @DisplayName: Position (vertical) controller P gain
-    // @Description: Position (vertical) controller P gain.  Converts the difference between the desired altitude and actual altitude into a climb or descent rate which is passed to the throttle rate controller
+    // @Param: _POSY_P
+    // @DisplayName: Position (Y) controller P gain
+    // @Description: Position (Y) controller P gain.  Converts the difference between the desired altitude and actual altitude into a climb or descent rate which is passed to the throttle rate controller
     // @Range: 1.000 3.000
     // @User: Standard
     AP_SUBGROUPINFO(_p_pos_y, "_POSY_", 7, DistanceControl, AC_P),
 
-    // @Param: _VELZ_P
-    // @DisplayName: Velocity (vertical) controller P gain
-    // @Description: Velocity (vertical) controller P gain.  Converts the difference between desired vertical speed and actual speed into a desired acceleration that is passed to the throttle acceleration controller
+    // @Param: _VELY_P
+    // @DisplayName: Velocity (Y) controller P gain
+    // @Description: Velocity (Y) controller P gain.  Converts the difference between desired vertical speed and actual speed into a desired acceleration that is passed to the throttle acceleration controller
     // @Range: 1.000 8.000
     // @User: Standard
     AP_SUBGROUPINFO(_p_vel_y, "_VELY_", 8, DistanceControl, AC_P),
 
-    // @Param: _ACCZ_P
-    // @DisplayName: Acceleration (vertical) controller P gain
-    // @Description: Acceleration (vertical) controller P gain.  Converts the difference between desired vertical acceleration and actual acceleration into a motor output
+    // @Param: _ACCY_P
+    // @DisplayName: Acceleration (Y) controller P gain
+    // @Description: Acceleration (Y) controller P gain.  Converts the difference between desired vertical acceleration and actual acceleration into a motor output
     // @Range: 0.500 1.500
     // @Increment: 0.05
     // @User: Standard
 
-    // @Param: _ACCZ_I
-    // @DisplayName: Acceleration (vertical) controller I gain
-    // @Description: Acceleration (vertical) controller I gain.  Corrects long-term difference in desired vertical acceleration and actual acceleration
+    // @Param: _ACCY_I
+    // @DisplayName: Acceleration (Y) controller I gain
+    // @Description: Acceleration (Y) controller I gain.  Corrects long-term difference in desired vertical acceleration and actual acceleration
     // @Range: 0.000 3.000
     // @User: Standard
 
-    // @Param: _ACCZ_IMAX
-    // @DisplayName: Acceleration (vertical) controller I gain maximum
-    // @Description: Acceleration (vertical) controller I gain maximum.  Constrains the maximum pwm that the I term will generate
+    // @Param: _ACCY_IMAX
+    // @DisplayName: Acceleration (Y) controller I gain maximum
+    // @Description: Acceleration (Y) controller I gain maximum.  Constrains the maximum pwm that the I term will generate
     // @Range: 0 1000
     // @Units: d%
     // @User: Standard
 
-    // @Param: _ACCZ_D
-    // @DisplayName: Acceleration (vertical) controller D gain
-    // @Description: Acceleration (vertical) controller D gain.  Compensates for short-term change in desired vertical acceleration vs actual acceleration
+    // @Param: _ACCY_D
+    // @DisplayName: Acceleration (Y) controller D gain
+    // @Description: Acceleration (Y) controller D gain.  Compensates for short-term change in desired vertical acceleration vs actual acceleration
     // @Range: 0.000 0.400
     // @User: Standard
 
-    // @Param: _ACCZ_FILT
-    // @DisplayName: Acceleration (vertical) controller filter
+    // @Param: _ACCY_FILT
+    // @DisplayName: Acceleration (Y) controller filter
     // @Description: Filter applied to acceleration to reduce noise.  Lower values reduce noise but add delay.
     // @Range: 1.000 100.000
     // @Units: Hz
     // @User: Standard
     AP_SUBGROUPINFO(_pid_accel_y, "_ACCY_", 9, DistanceControl, AC_PID),
 
-    // @Param: HOLD_ENABLE
+    // @Param: _LIMIT_P
+    // @DisplayName: distance limit P gain
+    // @Description: Less than how many centimeters for speed limit
+    // @User: Standard
+    // @units: cm
+    // @Values: < 0
+    AP_GROUPINFO("_LIMIT_P",  10, DistanceControl, _limit_p, 100.0f),
+
+    // @Param: _LIMIT_ENABLE
     // @DisplayName: Keep a distance and avoid collision
     // @Description: Keep a distance and avoid collision
     // @Values: 1:enable,0:disable
     // @User: Advanced
-    AP_GROUPINFO("HOLD_ENABLE",  14, DistanceControl, _hold_enable, 0),
+    AP_GROUPINFO("_LIMIT_ENABLE",  15, DistanceControl, _limit_enable, 1),
 
-    // @Param: FIX_ENABLE
-    // @DisplayName: Fixed distance
-    // @Description: Fixed distance
-    // @Values: 1:enable,0:disable
+	// @Param: _FRONT_LIMIT
+    // @DisplayName: front distance limit 
+    // @Description: front distance limit
+    // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("FIX_ENABLE",  15, DistanceControl, _fix_enable, 0),
+    AP_GROUPINFO("_FRONT_LIMIT",  16, DistanceControl, _front_limit_cm, 50),
 
-    AP_GROUPINFO("OFT_FRONT",  16, DistanceControl, _offset_front, 0),
-    AP_GROUPINFO("OFT_BACK",  17, DistanceControl, _offset_back, 0),
-    AP_GROUPINFO("OFT_LEFT",  18, DistanceControl, _offset_left, 0),
-    AP_GROUPINFO("OFT_RIGHT",  19, DistanceControl, _offset_right, 0),
+    // @Param: _BACK_LIMIT
+    // @DisplayName: back distance limit 
+    // @Description: back distance limit
+    // @Unit: cm
+    // @User: Advanced
+    AP_GROUPINFO("_BACK_LIMIT",  17, DistanceControl, _back_limit_cm, -0),
 
-    AP_GROUPINFO("FRONT_CM",  20, DistanceControl, _front_cm, 0),
-    AP_GROUPINFO("BACK_CM",  21, DistanceControl, _back_cm, 0),
-    AP_GROUPINFO("LEFT_CM",  22, DistanceControl, _left_cm, 0),
-    AP_GROUPINFO("RIGHT_CM",  23, DistanceControl, _right_cm, 0),
-	AP_GROUPINFO("BOTTOM_CM",  24, DistanceControl, _bottom_cm, 0),
+    // @Param: _LEFT_LIMIT
+    // @DisplayName: left distance limit 
+    // @Description: left distance limit
+    // @Unit: cm
+    // @User: Advanced
+    AP_GROUPINFO("_LEFT_LIMIT",  18, DistanceControl, _left_limit_cm, -0),
+
+    // @Param: _RIGHT_LIMIT
+    // @DisplayName: right distance limit 
+    // @Description: right distance limit
+    // @Unit: cm
+    // @User: Advanced
+    AP_GROUPINFO("_RIGHT_LIMIT",  19, DistanceControl, _right_limit_cm, 0),
+
+    // @Param: _TOP_LIMIT
+    // @DisplayName: top distance limit 
+    // @Description: top distance limit
+    // @Unit: cm
+    // @User: Advanced
+	AP_GROUPINFO("_TOP_LIMIT",  20, DistanceControl, _top_limit_cm, -0),
+
+    // @Param: _BOTTOM_LIMIT
+    // @DisplayName: bottom distance limit 
+    // @Description: bottom distance limit
+    // @Unit: cm
+    // @User: Advanced
+	AP_GROUPINFO("_BOTTOM_LIMIT",  21, DistanceControl, _bottom_limit_cm, 0),
+
+    // @Param: _FACE
+    // @DisplayName: distance face
+    // @Description: distance face
+    // @Values: 1:front 2:back 4:left 8:right 16:top 32:bottom
+    // @User: Advanced
+    AP_GROUPINFO("_FACE",  30, DistanceControl, _distance_face, 0),
+
+	// @Param: _OFT_FRONT
+    // @DisplayName: front offset
+    // @Description: front offset
+    // @Unit: cm
+    // @User: Advanced
+    AP_GROUPINFO("_OFT_FRONT",  31, DistanceControl, _front_offset, 0),
+
+    // @Param: _OFT_BACK
+    // @DisplayName: back offset
+    // @Description: back offset
+    // @Unit: cm
+    // @User: Advanced
+    AP_GROUPINFO("_OFT_BACK",  32, DistanceControl, _back_offset, 0),
+
+    // @Param: _LEFT_OFT
+    // @DisplayName: left offset
+    // @Description: left offset
+    // @Unit: cm
+    // @User: Advanced
+    AP_GROUPINFO("_LEFT_OFT",  33, DistanceControl, _left_offset, 0),
+
+    // @Param: _RIGHT_OFT
+    // @DisplayName: right offset
+    // @Description: right offset
+    // @Unit: cm
+    // @User: Advanced
+    AP_GROUPINFO("_RIGHT_OFT",  34, DistanceControl, _right_offset, 0),
 
     AP_GROUPEND
 };
@@ -211,22 +306,22 @@ DistanceControl::DistanceControl(const AP_AHRS_View& ahrs, const AP_InertialNav&
     _motors(motors),
     _attitude_control(attitude_control),
     _rangefinder(rangefinder),
-    _p_pos_x(DISCONTROL_POS_Z_P),
-    _p_vel_x(DISCONTROL_VEL_Z_P),
-    _pid_accel_x(DISCONTROL_ACC_Z_P, DISCONTROL_ACC_Z_I, DISCONTROL_ACC_Z_D, 0.0f, DISCONTROL_ACC_Z_IMAX, 0.0f, DISCONTROL_ACC_Z_FILT_HZ, 0.0f, DISCONTROL_ACC_Z_DT),
-	_p_pos_y(DISCONTROL_POS_Z_P),
-    _p_vel_y(DISCONTROL_VEL_Z_P),
-    _pid_accel_y(DISCONTROL_ACC_Z_P, DISCONTROL_ACC_Z_I, DISCONTROL_ACC_Z_D, 0.0f, DISCONTROL_ACC_Z_IMAX, 0.0f, DISCONTROL_ACC_Z_FILT_HZ, 0.0f, DISCONTROL_ACC_Z_DT),
+    _p_pos_x(DISCONTROL_POS_X_P),
+    _p_vel_x(DISCONTROL_VEL_X_P),
+    _pid_accel_x(DISCONTROL_ACC_X_P, DISCONTROL_ACC_X_I, DISCONTROL_ACC_X_D, 0.0f, DISCONTROL_ACC_X_IMAX, 0.0f, DISCONTROL_ACC_X_FILT_HZ, 0.0f, DISCONTROL_ACC_X_DT),
+	_p_pos_y(DISCONTROL_POS_Y_P),
+    _p_vel_y(DISCONTROL_VEL_Y_P),
+    _pid_accel_y(DISCONTROL_ACC_Y_P, DISCONTROL_ACC_Y_I, DISCONTROL_ACC_Y_D, 0.0f, DISCONTROL_ACC_Y_IMAX, 0.0f, DISCONTROL_ACC_Y_FILT_HZ, 0.0f, DISCONTROL_ACC_Y_DT),
     _p_pos_z(DISCONTROL_POS_Z_P),
     _p_vel_z(DISCONTROL_VEL_Z_P),
     _pid_accel_z(DISCONTROL_ACC_Z_P, DISCONTROL_ACC_Z_I, DISCONTROL_ACC_Z_D, 0.0f, DISCONTROL_ACC_Z_IMAX, 0.0f, DISCONTROL_ACC_Z_FILT_HZ, 0.0f, DISCONTROL_ACC_Z_DT),
     _dt(DISCONTROL_DT_400HZ),
     _accel_cms(DISCONTROL_ACCEL_X, DISCONTROL_ACCEL_Y, DISCONTROL_ACCEL_Z),
-    _vel_x_error_filter(DISCONTROL_VEL_ERROR_CUTOFF_FREQ),
-    _vel_y_error_filter(DISCONTROL_VEL_ERROR_CUTOFF_FREQ),
-    _vel_z_error_filter(DISCONTROL_VEL_ERROR_CUTOFF_FREQ),
-    _out_x_filter(DISCONTROL_THROTTLE_CUTOFF_FREQ),
-    _out_y_filter(DISCONTROL_THROTTLE_CUTOFF_FREQ)
+    _vel_x_error_filter(DISCONTROL_VEL_X_ERROR_CUTOFF_FREQ),
+    _vel_y_error_filter(DISCONTROL_VEL_Y_ERROR_CUTOFF_FREQ),
+    _vel_z_error_filter(DISCONTROL_VEL_Z_ERROR_CUTOFF_FREQ),
+    _out_x_filter(DISCONTROL_OUT_X_CUTOFF_FREQ),
+    _out_y_filter(DISCONTROL_OUT_Y_CUTOFF_FREQ)
 {
     AP_Param::setup_object_defaults(this, var_info);
 
@@ -246,12 +341,21 @@ DistanceControl::DistanceControl(const AP_AHRS_View& ahrs, const AP_InertialNav&
 
 void DistanceControl::update_distance(void)
 {
+#if USE_DISTANCE_FILTERED 
 	distance_bf[DISTANCE_FRONT] = _rangefinder.distance_cm_filtered_orient(ROTATION_NONE);
     distance_bf[DISTANCE_BACK] = _rangefinder.distance_cm_filtered_orient(ROTATION_PITCH_180);
     distance_bf[DISTANCE_LEFT] = _rangefinder.distance_cm_filtered_orient(ROTATION_YAW_270);
     distance_bf[DISTANCE_RIGHT] = _rangefinder.distance_cm_filtered_orient(ROTATION_YAW_90);
     distance_bf[DISTANCE_TOP] = 0;
     distance_bf[DISTANCE_BOTTOM] = _rangefinder.distance_cm_filtered_orient(ROTATION_PITCH_270);
+#else
+	distance_bf[DISTANCE_FRONT] = _rangefinder.distance_cm_orient(ROTATION_NONE);
+	distance_bf[DISTANCE_BACK] = _rangefinder.distance_cm_orient(ROTATION_PITCH_180);
+	distance_bf[DISTANCE_LEFT] = _rangefinder.distance_cm_orient(ROTATION_YAW_270);
+	distance_bf[DISTANCE_RIGHT] = _rangefinder.distance_cm_orient(ROTATION_YAW_90);
+	distance_bf[DISTANCE_TOP] = 0;
+	distance_bf[DISTANCE_BOTTOM] = _rangefinder.distance_cm_orient(ROTATION_PITCH_270);
+#endif
 
 	Matrix3f m;
 	m.from_euler(_ahrs.roll, _ahrs.pitch, 0);
@@ -293,13 +397,12 @@ void DistanceControl::update_distance(void)
 		}
 	}
 
-	distance_ned[DISTANCE_FRONT] -= _front_cm;
-	distance_ned[DISTANCE_BACK] += _back_cm;
-	distance_ned[DISTANCE_RIGHT] -= _right_cm;
-	distance_ned[DISTANCE_LEFT] += _left_cm;
-	distance_ned[DISTANCE_BOTTOM] -= _bottom_cm;
-
-	if(0) {
+	distance_ned[DISTANCE_FRONT] -= _front_offset;
+	distance_ned[DISTANCE_BACK] += _back_offset;
+	distance_ned[DISTANCE_RIGHT] -= _right_offset;
+	distance_ned[DISTANCE_LEFT] += _left_offset;
+	
+	if(1) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {
@@ -335,7 +438,87 @@ void DistanceControl::update_distance(void)
 	}
 }
 
-void DistanceControl::relax_z_controllers(float distance)
+void DistanceControl::pilot_thrusts_scale(Vector3f &thrusts)
+{
+	Vector3f dis_error;
+	
+    if(thrusts.x > 0.05f) {
+    	if(_front_limit_cm != 0 && !front_face_is_active()) {
+			dis_error.x = distance_ned[DISTANCE_FRONT] - _front_limit_cm;
+		} else {
+			dis_error.x = _limit_p;
+		}
+	} else if(thrusts.x < -0.05f) {
+		if(_back_limit_cm != 0 && !back_face_is_active()) {
+			dis_error.x = _back_limit_cm - distance_ned[DISTANCE_BACK];
+		} else {
+			dis_error.x = _limit_p;
+		}
+	} else {
+		dis_error.x = 0;
+		thrusts.x = 0;
+	}
+	thrusts.x *= constrain_float((float)dis_error.x/_limit_p, 0.0f, 1.0f);
+
+	if(thrusts.y > 0.05f) {
+		if(_right_limit_cm != 0 && !right_face_is_active()) {
+			dis_error.y = distance_ned[DISTANCE_RIGHT] - _right_limit_cm;
+		} else {
+			dis_error.y = _limit_p;
+		}
+	} else if(thrusts.y < -0.05f) {
+		if(_left_limit_cm != 0 && !left_face_is_active()) {
+			dis_error.y = _left_limit_cm - distance_ned[DISTANCE_LEFT];
+		} else {
+			dis_error.y = _limit_p;
+		}
+	} else {
+		dis_error.y = 0;
+		thrusts.y = 0;
+	}
+	thrusts.y *= constrain_float((float)dis_error.y/_limit_p, 0.0f, 1.0f);
+
+	if(thrusts.z < -0.05f) {
+		if(_bottom_limit_cm != 0 && !bottom_face_is_active()) {
+			dis_error.z = distance_ned[DISTANCE_BOTTOM] - _bottom_limit_cm;
+		} else {
+			dis_error.z = _limit_p;
+		}
+	} else if(thrusts.z > 0.05f) {
+		if(abs(distance_ned[DISTANCE_TOP]) > 10 && _top_limit_cm != 0 && !top_face_is_active())
+			dis_error.z = _top_limit_cm - distance_ned[DISTANCE_TOP];
+		else
+			dis_error.z = _limit_p;
+	} else {
+		dis_error.z = 0;
+		thrusts.z = 0;
+	}
+	thrusts.z *= constrain_float((float)dis_error.z/_limit_p, 0.0f, 1.0f);
+
+	if(1) {
+		static uint32_t _startup_ms = 0;
+
+		if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+		}
+
+		if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+
+			hal.shell->printf("dis_error [%.4f %.4f %.4f]\r\n",
+					dis_error.x, 
+					dis_error.y, 
+					dis_error.z);
+
+			hal.shell->printf("thrusts [%.4f %.4f %.4f]\r\n",
+					thrusts.x, 
+					thrusts.y,
+					thrusts.z); 
+		}
+	}
+}
+
+void DistanceControl::relax_z_controller(float distance)
 {
     _pos_target.z = distance;
     _vel_desired.z = 0.0f;
@@ -348,7 +531,6 @@ void DistanceControl::relax_z_controllers(float distance)
     _pid_accel_z.reset_filter();
 }
 
-Vector3f vel_cm, accl_cm;
 void DistanceControl::update_z_controller(float distance)
 {
     float curr_alt = distance;
@@ -372,7 +554,7 @@ void DistanceControl::update_z_controller(float distance)
     _pos_error.z = _pos_target.z - curr_alt;
 
     if(print_flag) {
-		hal.shell->printf("pt[%.4f] pc[%.4f] pe[%.4f]\r\n", 
+		hal.shell->printf("pt.z[%.4f] pc.z[%.4f] pe.z[%.4f]\r\n", 
 					_pos_target.z,
 					curr_alt,
 					_pos_error.z);
@@ -389,7 +571,6 @@ void DistanceControl::update_z_controller(float distance)
     // the following section calculates acceleration required to achieve the velocity target
 
     const Vector3f& curr_vel = _inav.get_velocity();
-    vel_cm.z = curr_vel.z;
 
     // TODO: remove velocity derivative calculation
     // reset last velocity target to current target
@@ -424,7 +605,7 @@ void DistanceControl::update_z_controller(float distance)
     }
 
 	if(print_flag) {
-		hal.shell->printf("vt[%.4f] vc[%.4f] ve[%.4f]\r\n", 
+		hal.shell->printf("vt.z[%.4f] vc.z[%.4f] ve.z[%.4f]\r\n", 
 					_vel_target.z,
 					curr_vel.z,
 					_vel_error.z);
@@ -440,7 +621,6 @@ void DistanceControl::update_z_controller(float distance)
 
     // Calculate Earth Frame Z acceleration
     z_accel_meas = -(_ahrs.get_accel_ef_blended().z + GRAVITY_MSS) * 100.0f;
-	accl_cm.z = z_accel_meas;
 	
     // ensure imax is always large enough to overpower hover throttle
     if (_motors.get_throttle_hover() * 1000.0f > _pid_accel_z.imax()) {
@@ -465,7 +645,7 @@ void DistanceControl::update_z_controller(float distance)
     thr_out = pid_out + _motors.get_throttle_hover();
 
     if(print_flag) {
-		hal.shell->printf("at[%.4f] ac[%.4f] ae[%.4f] pout[%.4f] hover[%.4f] out[%.4f]\r\n", 
+		hal.shell->printf("at.z[%.4f] ac.z[%.4f] ae.z[%.4f] pout.z[%.4f] hover[%.4f] out.z[%.4f]\r\n", 
 					_accel_target.z,
 					z_accel_meas,
 					_accel_target.z - z_accel_meas,
@@ -481,7 +661,7 @@ void DistanceControl::update_z_controller(float distance)
 }
 
 
-void DistanceControl::relax_x_controllers(float distance)
+void DistanceControl::relax_x_controller(float distance)
 {
     _pos_target.x = distance;
     _vel_desired.x = 0.0f;
@@ -517,7 +697,7 @@ void DistanceControl::update_x_controller(float distance)
     _pos_error.x = _pos_target.x - curr_dis;
 
     if(print_flag) {
-		hal.shell->printf("pt[%.4f] pc[%.4f] pe[%.4f]\r\n", 
+		hal.shell->printf("pt.x[%.4f] pc.x[%.4f] pe.x[%.4f]\r\n", 
 					_pos_target.x,
 					curr_dis,
 					_pos_error.x);
@@ -568,7 +748,7 @@ void DistanceControl::update_x_controller(float distance)
     }
 
 	if(print_flag) {
-		hal.shell->printf("vt[%.4f] vc[%.4f] ve[%.4f]\r\n", 
+		hal.shell->printf("vt.x[%.4f] vc.x[%.4f] ve.x[%.4f]\r\n", 
 					_vel_target.x,
 					curr_vel.x,
 					_vel_error.x);
@@ -588,22 +768,11 @@ void DistanceControl::update_x_controller(float distance)
     float pid_out, out_filtered;
     pid_out = -_pid_accel_x.update_all(_accel_target.x, x_accel_meas, false) * 0.001f;
     if(print_flag) {
-		hal.shell->printf("at[%.4f] ac[%.4f] ae[%.4f] pout[%.4f]\r\n", 
+		hal.shell->printf("at.x[%.4f] ac.x[%.4f] ae.x[%.4f] pout.x[%.4f]\r\n", 
 					_accel_target.x,
 					x_accel_meas,
 					_accel_target.x - x_accel_meas,
 					pid_out);
-	}
-
-	Vector3f accel_meas = _ahrs.get_accel_ef_blended();
-	accl_cm.x = accel_meas.x * 100.0f;
-	accl_cm.y = accel_meas.y * 100.0f;
-	accl_cm.z = -(accel_meas.z + GRAVITY_MSS) * 100.0f;
-	if(print_flag) {
-		hal.shell->printf("ax[%.4f] ay[%.4f] az[%.4f]\r\n", 
-					accel_meas.x,
-					accel_meas.y,
-					accel_meas.z);
 	}
 
 	out_filtered = _out_x_filter.apply(pid_out, _dt);
@@ -612,7 +781,7 @@ void DistanceControl::update_x_controller(float distance)
     print_flag = 0;
 }
 
-void DistanceControl::relax_y_controllers(float distance)
+void DistanceControl::relax_y_controller(float distance)
 {
     _pos_target.y = distance;
     _vel_desired.y = 0.0f;
@@ -648,7 +817,7 @@ void DistanceControl::update_y_controller(float distance)
     _pos_error.y = _pos_target.y - curr_dis;
 
     if(print_flag) {
-		hal.shell->printf("pt[%.4f] pc[%.4f] pe[%.4f]\r\n", 
+		hal.shell->printf("pt.y[%.4f] pc.y[%.4f] pe.y[%.4f]\r\n", 
 					_pos_target.y,
 					curr_dis,
 					_pos_error.y);
@@ -699,7 +868,7 @@ void DistanceControl::update_y_controller(float distance)
     }
 
 	if(print_flag) {
-		hal.shell->printf("vt[%.4f] vc[%.4f] ve[%.4f]\r\n", 
+		hal.shell->printf("vt.y[%.4f] vc.y[%.4f] ve.y[%.4f]\r\n", 
 					_vel_target.y,
 					curr_vel.y,
 					_vel_error.y);
@@ -719,22 +888,11 @@ void DistanceControl::update_y_controller(float distance)
     float pid_out, out_filtered;
     pid_out = -_pid_accel_y.update_all(_accel_target.y, y_accel_meas, false) * 0.001f;
     if(print_flag) {
-		hal.shell->printf("at[%.4f] ac[%.4f] ae[%.4f] pout[%.4f]\r\n", 
+		hal.shell->printf("at.y[%.4f] ac.y[%.4f] ae.y[%.4f] pout.y[%.4f]\r\n", 
 					_accel_target.y,
 					y_accel_meas,
 					_accel_target.y - y_accel_meas,
 					pid_out);
-	}
-
-	Vector3f accel_meas = _ahrs.get_accel_ef_blended();
-	accl_cm.x = accel_meas.x * 100.0f;
-	accl_cm.y = accel_meas.y * 100.0f;
-	accl_cm.z = -(accel_meas.z + GRAVITY_MSS) * 100.0f;
-	if(print_flag) {
-		hal.shell->printf("ax[%.4f] ay[%.4f] az[%.4f]\r\n", 
-					accel_meas.x,
-					accel_meas.y,
-					accel_meas.z);
 	}
 
 	out_filtered = _out_y_filter.apply(pid_out, _dt);
