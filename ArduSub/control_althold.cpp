@@ -292,9 +292,9 @@ void Sub::althold_run_rate()
 	    }
 	} else {
 		if(is_ned_pilot && distance_control.limit_enable()) {
-			if((distance_control.get_bottom_limit_cm() != 0 && 
+			if((pilot_trans_thrusts.z > 0.05f && distance_control.get_bottom_limit_cm() != 0 && 
 				distance_control.get_bottom_cm() < distance_control.get_bottom_limit_cm()) ||
-		   		(distance_control.get_top_limit_cm() != 0 && 
+		   		(pilot_trans_thrusts.z < -0.05f && distance_control.get_top_limit_cm() != 0 && 
 		   		distance_control.get_top_cm() > distance_control.get_top_limit_cm())) {
 				is_affect_z = false;
 		   	}
@@ -368,13 +368,13 @@ void Sub::althold_run_rate()
 		        }  
 		    }
 		} else if(distance_control.limit_enable()) {
-			if(distance_control.get_front_limit_cm() != 0 && 
+			if(pilot_trans_thrusts.x > 0.05f && distance_control.get_front_limit_cm() != 0 && 
 				distance_control.get_front_cm() < distance_control.get_front_limit_cm()) {
 				if(!is_equal(distance_control.get_target_x(), (float)distance_control.get_front_limit_cm())) {
 		        	distance_control.relax_x_controller((float)distance_control.get_front_limit_cm());
 	        	}
 		    	distance_control.update_x_controller((float)distance_control.get_front_cm());
-	        } else if(distance_control.get_back_limit_cm() != 0 && 
+	        } else if(pilot_trans_thrusts.x < -0.05f && distance_control.get_back_limit_cm() != 0 && 
 		   		distance_control.get_back_cm() > distance_control.get_back_limit_cm()) {
 				if(!is_equal(distance_control.get_target_x(), (float)distance_control.get_back_limit_cm())) {
 		        	distance_control.relax_x_controller((float)distance_control.get_back_limit_cm());
@@ -413,7 +413,7 @@ void Sub::althold_run_rate()
 		        }  
 		    }
 		} else if(distance_control.limit_enable()) {
-			if(distance_control.get_right_limit_cm() != 0 && 
+			if(pilot_trans_thrusts.y > 0.05f && distance_control.get_right_limit_cm() != 0 && 
 				distance_control.get_right_cm() < distance_control.get_right_limit_cm()) {
 				hal.shell->printf("right\r\n");
 				if(!is_equal(distance_control.get_target_y(), (float)distance_control.get_right_limit_cm())) {
@@ -421,7 +421,7 @@ void Sub::althold_run_rate()
 		        	hal.shell->printf("right relax\r\n");
 	        	}
 		    	distance_control.update_y_controller((float)distance_control.get_right_cm());
-	        } else if(distance_control.get_left_limit_cm() != 0 && 
+	        } else if(pilot_trans_thrusts.y < -0.05f && distance_control.get_left_limit_cm() != 0 && 
 		   		distance_control.get_left_cm() > distance_control.get_left_limit_cm()) {
 		   		hal.shell->printf("left\r\n");
 				if(!is_equal(distance_control.get_target_y(), (float)distance_control.get_left_limit_cm())) {
