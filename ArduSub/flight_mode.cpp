@@ -120,7 +120,7 @@ void Sub::update_flight_mode()
         pilot_trans_thrusts.y = channel_lateral->slew_norm_input_bidirectional();
         pilot_trans_thrusts.z = channel_throttle->slew_norm_input_bidirectional();
         
-        if(is_ned_pilot) {
+        if(is_ned_pilot && distance_control.limit_enable()) {
 			distance_control.pilot_thrusts_scale(pilot_trans_thrusts);
         }
 

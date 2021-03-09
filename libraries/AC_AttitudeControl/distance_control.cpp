@@ -212,14 +212,14 @@ const AP_Param::GroupInfo DistanceControl::var_info[] = {
     // @Description: Keep a distance and avoid collision
     // @Values: 1:enable,0:disable
     // @User: Advanced
-    AP_GROUPINFO("_LIMIT_ENABLE",  15, DistanceControl, _limit_enable, 1),
+    AP_GROUPINFO("_LIMIT_ENABLE",  15, DistanceControl, _limit_enable, 0),
 
 	// @Param: _FRONT_LIMIT
     // @DisplayName: front distance limit 
     // @Description: front distance limit
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_FRONT_LIMIT",  16, DistanceControl, _front_limit_cm, 50),
+    AP_GROUPINFO("_FRONT_LIMIT",  16, DistanceControl, _front_limit_cm, 0),
 
     // @Param: _BACK_LIMIT
     // @DisplayName: back distance limit 
@@ -261,7 +261,7 @@ const AP_Param::GroupInfo DistanceControl::var_info[] = {
     // @Description: distance face
     // @Values: 1:front 2:back 4:left 8:right 16:top 32:bottom
     // @User: Advanced
-    AP_GROUPINFO("_FACE",  30, DistanceControl, _distance_face, 0),
+    AP_GROUPINFO("_FACE",  30, DistanceControl, _distance_face, 32),
 
 	// @Param: _OFT_FRONT
     // @DisplayName: front offset
@@ -337,6 +337,8 @@ DistanceControl::DistanceControl(const AP_AHRS_View& ahrs, const AP_InertialNav&
     _flags.reset_rate_to_accel_z = true;
     _flags.freeze_ff_z = true;
     _flags.use_desvel_ff_z = true;
+
+    _singleton = this;
 }
 
 void DistanceControl::update_distance(void)
@@ -660,7 +662,6 @@ void DistanceControl::update_z_controller(float distance)
     print_flag = 0;
 }
 
-
 void DistanceControl::relax_x_controller(float distance)
 {
     _pos_target.x = distance;
@@ -899,6 +900,17 @@ void DistanceControl::update_y_controller(float distance)
     _motors.set_lateral(out_filtered);
     
     print_flag = 0;
+}
+
+DistanceControl *DistanceControl::_singleton;
+
+namespace AP {
+
+DistanceControl *distancecontrol()
+{
+    return DistanceControl::get_singleton();
+}
+
 }
 
 

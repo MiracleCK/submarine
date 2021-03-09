@@ -51,6 +51,13 @@ public:
     int16_t get_top_cm() const { return distance_ned[DISTANCE_TOP]; }
     int16_t get_bottom_cm() const { return distance_ned[DISTANCE_BOTTOM]; }
 
+    int16_t get_front_cm_bf() const { return distance_bf[DISTANCE_FRONT]; }
+    int16_t get_back_cm_bf() const { return distance_bf[DISTANCE_BACK]; }
+    int16_t get_left_cm_bf() const { return distance_bf[DISTANCE_LEFT]; }
+    int16_t get_right_cm_bf() const { return distance_bf[DISTANCE_RIGHT]; }
+    int16_t get_top_cm_bf() const { return distance_bf[DISTANCE_TOP]; }
+    int16_t get_bottom_cm_bf() const { return distance_bf[DISTANCE_BOTTOM]; }
+
     int16_t get_front_limit_cm() const { return _front_limit_cm.get(); }
     int16_t get_back_limit_cm() const { return _back_limit_cm.get(); }
     int16_t get_left_limit_cm() const { return _left_limit_cm.get(); }
@@ -60,10 +67,12 @@ public:
 
 	void update_distance();
 	void pilot_thrusts_scale(Vector3f &thrusts);
+	static DistanceControl *get_singleton(void) { return _singleton; }
 	
     static const struct AP_Param::GroupInfo var_info[];
-
-protected:
+	
+private:
+	static DistanceControl *_singleton;
 
     // general purpose flags
     struct DISCONTROL_flags {
@@ -153,3 +162,8 @@ protected:
     AP_Int8 	_top_limit_cm;
     AP_Int8 	_bottom_limit_cm;
 };
+
+namespace AP {
+    DistanceControl *distancecontrol();
+};
+

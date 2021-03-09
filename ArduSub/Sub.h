@@ -69,6 +69,7 @@
 #include <AP_LeakDetector/AP_LeakDetector.h> // Leak detector
 #include <AP_TemperatureSensor/TSYS01.h>
 #include <AP_Common/AP_FWVersion.h>
+#include <AC_AttitudeControl/distance_control.h> 
 
 // Local modules
 #include "defines.h"
@@ -80,7 +81,6 @@
 #include "GCS_Sub.h"
 #include "factory.h"
 #include "factory_proto.h"
-#include "distance_control.h"
 
 // libraries which are dependent on #defines in defines.h and/or config.h
 #if OPTFLOW == ENABLED
