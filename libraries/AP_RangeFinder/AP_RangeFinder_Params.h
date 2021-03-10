@@ -29,4 +29,5 @@ public:
     AP_Int8  orientation;
     AP_Int16 sample_freq;
     AP_Int16 cutoff_freq;
+    AP_Float range;
 };

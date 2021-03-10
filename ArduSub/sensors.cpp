@@ -19,14 +19,17 @@ void Sub::init_rangefinder()
 {
 #if RANGEFINDER_ENABLED == ENABLED
     rangefinder.init(ROTATION_PITCH_270);
-    rangefinder_state.alt_cm_filt.set_cutoff_frequency(RANGEFINDER_WPNAV_FILT_HZ);
-    rangefinder_state.enabled = rangefinder.has_orientation(ROTATION_PITCH_270);
+    //rangefinder_state.alt_cm_filt.set_cutoff_frequency(RANGEFINDER_WPNAV_FILT_HZ);
+    //rangefinder_state.enabled = rangefinder.has_orientation(ROTATION_PITCH_270);
 #endif
 }
 
 // return rangefinder altitude in centimeters
 void Sub::read_rangefinder()
 {
+	rangefinder.update();
+#if 0
+
 #if RANGEFINDER_ENABLED == ENABLED
     rangefinder.update();
 
@@ -61,6 +64,8 @@ void Sub::read_rangefinder()
     rangefinder_state.enabled = false;
     rangefinder_state.alt_healthy = false;
     rangefinder_state.alt_cm = 0;
+#endif
+
 #endif
 }
 

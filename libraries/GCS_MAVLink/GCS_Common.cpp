@@ -1517,7 +1517,8 @@ void GCS_MAVLINK::send_system_time()
  */
 //extern int16_t set_distance;
 //extern int16_t set_bora;
-void GCS_MAVLINK::send_rc_channels() const
+//void GCS_MAVLINK::send_rc_channels() const
+void GCS_MAVLINK::send_rc_channels()
 {
     AP_RSSI *rssi = AP::rssi();
     uint8_t receiver_rssi = 0;
@@ -1532,6 +1533,7 @@ void GCS_MAVLINK::send_rc_channels() const
 	AP_RangeFinder_Backend *sensor = rangefinder->get_backend(0);
 	AC_DistanceControl *distance_control = AC_DistanceControl::get_singleton();
 
+	set_mavlink_message_id_interval(MAVLINK_MSG_ID_RC_CHANNELS, 25);
     mavlink_msg_rc_channels_send(
         chan,
         AP_HAL::millis(),

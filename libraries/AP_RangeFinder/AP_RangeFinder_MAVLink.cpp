@@ -32,7 +32,7 @@ AP_RangeFinder_MAVLink::AP_RangeFinder_MAVLink(RangeFinder::RangeFinder_State &_
     distance_cm = 0;
     sample_freq = params.sample_freq.get();
     cutoff_freq = params.cutoff_freq.get();
-    _distance_filter.set_cutoff_frequency((float)sample_freq, (float)cutoff_freq);
+    //_distance_filter.set_cutoff_frequency((float)sample_freq, (float)cutoff_freq);
 }
 
 /*
@@ -46,6 +46,59 @@ bool AP_RangeFinder_MAVLink::detect()
     return true;
 }
 
+static constexpr float FILTER_KOEF = 0.1f;
+
+/* Check that the baro value is valid by using a mean filter. If the
+ * value is further than filtrer_range from mean value, it is
+ * rejected. 
+*/
+bool AP_RangeFinder_MAVLink::distance_ok(float distance)
+{
+    
+    if (isinf(distance) || isnan(distance)) {
+        return false;
+    }
+
+    const float _range = params.range.get();
+    if (_range <= 0) {
+        return true;
+    }
+
+    bool ret = true;
+    if (is_zero(_mean_distance)) {
+        _mean_distance = distance;
+    } else {
+        const float d = fabsf(_mean_distance - distance) / (_mean_distance + distance);  // diff divide by mean value in percent ( with the * 200.0f on later line)
+        float koeff = FILTER_KOEF;
+
+		if(0) {
+			static uint32_t _startup_ms = 0;
+
+			if(_startup_ms == 0) {
+				_startup_ms = AP_HAL::millis();
+			}
+
+			if(AP_HAL::millis() - _startup_ms > 1000) {
+				_startup_ms = AP_HAL::millis();
+				
+				hal.shell->printf("distance %.04f %.04f %.04f\r\n", 
+							_mean_distance,
+							distance, 
+							d);
+			}
+		}
+        if (d * 200.0f > _range) {  // check the difference from mean value outside allowed range
+            //hal.shell->printf("\r\ndistance error: mean %f got %f\r\n", (double)_mean_distance, (double)distance );
+            ret = false;
+            koeff /= (d * 10.0f);  // 2.5 and more, so one bad sample never change mean more than 4%
+            _error_count++;
+        }
+        _mean_distance = _mean_distance * (1 - koeff) + distance * koeff; // complimentary filter 1/k
+    }
+    return ret;
+}
+
+
 /*
    Set the distance based on a MAVLINK message
 */
@@ -58,10 +111,10 @@ void AP_RangeFinder_MAVLink::handle_msg(const mavlink_message_t &msg)
     //if (packet.orientation == MAV_SENSOR_ROTATION_PITCH_270) {
     if (packet.orientation == (Rotation)params.orientation.get()) {
     	//hal.shell->printf("ms: %d\r\n", AP_HAL::millis() - state.last_reading_ms);
-        state.last_reading_ms = AP_HAL::millis();
+    	state.last_reading_ms = AP_HAL::millis();
         distance_cm = packet.current_distance;
         sensor_type = (MAV_DISTANCE_SENSOR)packet.type;  
-        distance_cm_filtered = _distance_filter.apply(distance_cm);
+        //distance_cm_filtered = _distance_filter.apply(distance_cm);
     }
 }
 
@@ -77,8 +130,13 @@ void AP_RangeFinder_MAVLink::update(void)
         state.distance_cm = 0;
     } else {
         state.distance_cm = distance_cm;
-        state.distance_cm_filtered = distance_cm_filtered;
+        //state.distance_cm_filtered = distance_cm_filtered;
+        //state.distance_cm_filtered = _distance_filter.apply(distance_cm);
         update_status();
+    }
+
+    if(distance_ok((float)state.distance_cm)) {
+    	state.distance_cm_filtered = state.distance_cm;
     }
 
     if((sample_freq != params.sample_freq.get()) ||
@@ -86,6 +144,6 @@ void AP_RangeFinder_MAVLink::update(void)
 		sample_freq = params.sample_freq.get();
 	    cutoff_freq = params.cutoff_freq.get();
 	    hal.shell->printf("sample_freq: %d, cutoff_freq: %d\r\n", sample_freq, cutoff_freq);
-	    _distance_filter.set_cutoff_frequency((float)sample_freq, (float)cutoff_freq);
+	    //_distance_filter.set_cutoff_frequency((float)sample_freq, (float)cutoff_freq);
     }
 }

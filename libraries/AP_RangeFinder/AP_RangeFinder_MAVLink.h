@@ -23,6 +23,8 @@ public:
     // Get update from mavlink
     void handle_msg(const mavlink_message_t &msg) override;
 
+    bool distance_ok(float distance);
+
 protected:
 
     MAV_DISTANCE_SENSOR _get_mav_distance_sensor_type() const override {
@@ -35,6 +37,8 @@ private:
     LowPassFilter2pInt _distance_filter;
     int16_t sample_freq;
     int16_t cutoff_freq;
+    float _mean_distance;
+    uint32_t _error_count;
     // start a reading
     static bool start_reading(void);
     static bool get_reading(uint16_t &reading_cm);
