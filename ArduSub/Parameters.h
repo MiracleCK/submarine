@@ -304,9 +304,6 @@ public:
     AP_Float                surface_depth;
     AP_Int8                 frame_configuration;
     AP_Float                depth_limit;
-    AP_Int8					distance_enable;
-    AP_Int16        		distance_limit;
-    AP_Float        		distance_p;
 
     // Note: keep initializers here in the same order as they are declared
     // above.

@@ -12,12 +12,12 @@
 #include <AP_Motors/AP_Motors.h>          // motors library
 #include <AP_Vehicle/AP_Vehicle.h>         // common vehicle parameters
 
-class DistanceControl
+class AC_DistanceControl
 {
 public:
 
     /// Constructor
-    DistanceControl(const AP_AHRS_View& ahrs, const AP_InertialNav& inav,
+    AC_DistanceControl(const AP_AHRS_View& ahrs, const AP_InertialNav& inav,
                   AP_Motors& motors, AC_AttitudeControl& attitude_control, const RangeFinder& rangefinder);
 
 
@@ -67,12 +67,12 @@ public:
 
 	void update_distance();
 	void pilot_thrusts_scale(Vector3f &thrusts);
-	static DistanceControl *get_singleton(void) { return _singleton; }
+	static AC_DistanceControl *get_singleton(void) { return _singleton; }
 	
     static const struct AP_Param::GroupInfo var_info[];
 	
 private:
-	static DistanceControl *_singleton;
+	static AC_DistanceControl *_singleton;
 
     // general purpose flags
     struct DISCONTROL_flags {
@@ -164,6 +164,6 @@ private:
 };
 
 namespace AP {
-    DistanceControl *distancecontrol();
+    AC_DistanceControl *distance_control();
 };
 

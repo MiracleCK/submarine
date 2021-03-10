@@ -45,29 +45,6 @@ const AP_Param::Info Sub::var_info[] = {
     // @Values: < 0
     GSCALAR(depth_limit, "DEPTH_LIMIT", -100.0f),
 
-    // @Param: DISTANCE_ENABLE
-    // @DisplayName: distance enable
-    // @Description: Range function enable
-    // @User: Standard
-    // @Values: =0 disable, =1 enable
-    GSCALAR(distance_enable, "DISTANCE_ENABLE", 1),
-
-    // @Param: DISTANCE LIMIT
-    // @DisplayName: distance limit
-    // @Description: Machine collision avoidance
-    // @User: Standard
-    // @units: cm
-    // @Values: < 0
-    GSCALAR(distance_limit, "DISTANCE_LIMIT", 20),
-
-    // @Param: DISTANCE_P
-    // @DisplayName: distance P gain
-    // @Description: Less than how many centimeters for speed limit
-    // @User: Standard
-    // @units: cm
-    // @Values: < 0
-    GSCALAR(distance_p, "DISTANCE_P", 200.0f),
-
     // @Param: SYSID_SW_MREV
     // @DisplayName: Eeprom format version number
     // @Description: This value is incremented when changes are made to the eeprom format
@@ -481,8 +458,8 @@ const AP_Param::Info Sub::var_info[] = {
     GOBJECT(pos_control, "PSC", AC_PosControl),
 
     // @Group: DIS
-    // @Path: distance_control.cpp
-    GOBJECT(distance_control, "DIS", DistanceControl),
+    // @Path: AC_DistanceControl.cpp
+    GOBJECT(distance_control, "DIS", AC_DistanceControl),
 
     // @Group: SR0_
     // @Path: GCS_Mavlink.cpp

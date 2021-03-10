@@ -1,5 +1,5 @@
 #include <AP_HAL/AP_HAL.h>
-#include "distance_control.h"
+#include "AC_DistanceControl.h"
 #include <AP_Math/AP_Math.h>
 #include <AP_Logger/AP_Logger.h>
 
@@ -54,20 +54,20 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_VIBE_COMP_P_GAIN 0.250f
 #define DISCONTROL_VIBE_COMP_I_GAIN 0.125f
 
-const AP_Param::GroupInfo DistanceControl::var_info[] = {
+const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
    	// @Param: _POSZ_P
     // @DisplayName: Position (vertical) controller P gain
     // @Description: Position (vertical) controller P gain.  Converts the difference between the desired altitude and actual altitude into a climb or descent rate which is passed to the throttle rate controller
     // @Range: 1.000 3.000
     // @User: Standard
-    AP_SUBGROUPINFO(_p_pos_z, "_POSZ_", 1, DistanceControl, AC_P),
+    AP_SUBGROUPINFO(_p_pos_z, "_POSZ_", 1, AC_DistanceControl, AC_P),
 
     // @Param: _VELZ_P
     // @DisplayName: Velocity (vertical) controller P gain
     // @Description: Velocity (vertical) controller P gain.  Converts the difference between desired vertical speed and actual speed into a desired acceleration that is passed to the throttle acceleration controller
     // @Range: 1.000 8.000
     // @User: Standard
-    AP_SUBGROUPINFO(_p_vel_z, "_VELZ_", 2, DistanceControl, AC_P),
+    AP_SUBGROUPINFO(_p_vel_z, "_VELZ_", 2, AC_DistanceControl, AC_P),
 
     // @Param: _ACCZ_P
     // @DisplayName: Acceleration (vertical) controller P gain
@@ -101,21 +101,21 @@ const AP_Param::GroupInfo DistanceControl::var_info[] = {
     // @Range: 1.000 100.000
     // @Units: Hz
     // @User: Standard
-    AP_SUBGROUPINFO(_pid_accel_z, "_ACCZ_", 3, DistanceControl, AC_PID),
+    AP_SUBGROUPINFO(_pid_accel_z, "_ACCZ_", 3, AC_DistanceControl, AC_PID),
 
     // @Param: _POSX_P
     // @DisplayName: Position (X) controller P gain
     // @Description: Position (X) controller P gain.  Converts the difference between the desired altitude and actual altitude into a climb or descent rate which is passed to the throttle rate controller
     // @Range: 1.000 3.000
     // @User: Standard
-    AP_SUBGROUPINFO(_p_pos_x, "_POSX_", 4, DistanceControl, AC_P),
+    AP_SUBGROUPINFO(_p_pos_x, "_POSX_", 4, AC_DistanceControl, AC_P),
 
     // @Param: _VELX_P
     // @DisplayName: Velocity (X) controller P gain
     // @Description: Velocity (X) controller P gain.  Converts the difference between desired vertical speed and actual speed into a desired acceleration that is passed to the throttle acceleration controller
     // @Range: 1.000 8.000
     // @User: Standard
-    AP_SUBGROUPINFO(_p_vel_x, "_VELX_", 5, DistanceControl, AC_P),
+    AP_SUBGROUPINFO(_p_vel_x, "_VELX_", 5, AC_DistanceControl, AC_P),
 
     // @Param: _ACCX_P
     // @DisplayName: Acceleration (X) controller P gain
@@ -149,21 +149,21 @@ const AP_Param::GroupInfo DistanceControl::var_info[] = {
     // @Range: 1.000 100.000
     // @Units: Hz
     // @User: Standard
-    AP_SUBGROUPINFO(_pid_accel_x, "_ACCX_", 6, DistanceControl, AC_PID),
+    AP_SUBGROUPINFO(_pid_accel_x, "_ACCX_", 6, AC_DistanceControl, AC_PID),
     
     // @Param: _POSY_P
     // @DisplayName: Position (Y) controller P gain
     // @Description: Position (Y) controller P gain.  Converts the difference between the desired altitude and actual altitude into a climb or descent rate which is passed to the throttle rate controller
     // @Range: 1.000 3.000
     // @User: Standard
-    AP_SUBGROUPINFO(_p_pos_y, "_POSY_", 7, DistanceControl, AC_P),
+    AP_SUBGROUPINFO(_p_pos_y, "_POSY_", 7, AC_DistanceControl, AC_P),
 
     // @Param: _VELY_P
     // @DisplayName: Velocity (Y) controller P gain
     // @Description: Velocity (Y) controller P gain.  Converts the difference between desired vertical speed and actual speed into a desired acceleration that is passed to the throttle acceleration controller
     // @Range: 1.000 8.000
     // @User: Standard
-    AP_SUBGROUPINFO(_p_vel_y, "_VELY_", 8, DistanceControl, AC_P),
+    AP_SUBGROUPINFO(_p_vel_y, "_VELY_", 8, AC_DistanceControl, AC_P),
 
     // @Param: _ACCY_P
     // @DisplayName: Acceleration (Y) controller P gain
@@ -197,7 +197,7 @@ const AP_Param::GroupInfo DistanceControl::var_info[] = {
     // @Range: 1.000 100.000
     // @Units: Hz
     // @User: Standard
-    AP_SUBGROUPINFO(_pid_accel_y, "_ACCY_", 9, DistanceControl, AC_PID),
+    AP_SUBGROUPINFO(_pid_accel_y, "_ACCY_", 9, AC_DistanceControl, AC_PID),
 
     // @Param: _LIMIT_P
     // @DisplayName: distance limit P gain
@@ -205,91 +205,91 @@ const AP_Param::GroupInfo DistanceControl::var_info[] = {
     // @User: Standard
     // @units: cm
     // @Values: < 0
-    AP_GROUPINFO("_LIMIT_P",  10, DistanceControl, _limit_p, 100.0f),
+    AP_GROUPINFO("_LIMIT_P",  10, AC_DistanceControl, _limit_p, 100.0f),
 
     // @Param: _LIMIT_ENABLE
     // @DisplayName: Keep a distance and avoid collision
     // @Description: Keep a distance and avoid collision
     // @Values: 1:enable,0:disable
     // @User: Advanced
-    AP_GROUPINFO("_LIMIT_ENABLE",  15, DistanceControl, _limit_enable, 0),
+    AP_GROUPINFO("_LIMIT_ENABLE",  15, AC_DistanceControl, _limit_enable, 0),
 
 	// @Param: _FRONT_LIMIT
     // @DisplayName: front distance limit 
     // @Description: front distance limit
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_FRONT_LIMIT",  16, DistanceControl, _front_limit_cm, 0),
+    AP_GROUPINFO("_FRONT_LIMIT",  16, AC_DistanceControl, _front_limit_cm, 0),
 
     // @Param: _BACK_LIMIT
     // @DisplayName: back distance limit 
     // @Description: back distance limit
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_BACK_LIMIT",  17, DistanceControl, _back_limit_cm, -0),
+    AP_GROUPINFO("_BACK_LIMIT",  17, AC_DistanceControl, _back_limit_cm, -0),
 
     // @Param: _LEFT_LIMIT
     // @DisplayName: left distance limit 
     // @Description: left distance limit
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_LEFT_LIMIT",  18, DistanceControl, _left_limit_cm, -0),
+    AP_GROUPINFO("_LEFT_LIMIT",  18, AC_DistanceControl, _left_limit_cm, -0),
 
     // @Param: _RIGHT_LIMIT
     // @DisplayName: right distance limit 
     // @Description: right distance limit
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_RIGHT_LIMIT",  19, DistanceControl, _right_limit_cm, 0),
+    AP_GROUPINFO("_RIGHT_LIMIT",  19, AC_DistanceControl, _right_limit_cm, 0),
 
     // @Param: _TOP_LIMIT
     // @DisplayName: top distance limit 
     // @Description: top distance limit
     // @Unit: cm
     // @User: Advanced
-	AP_GROUPINFO("_TOP_LIMIT",  20, DistanceControl, _top_limit_cm, -0),
+	AP_GROUPINFO("_TOP_LIMIT",  20, AC_DistanceControl, _top_limit_cm, -0),
 
     // @Param: _BOTTOM_LIMIT
     // @DisplayName: bottom distance limit 
     // @Description: bottom distance limit
     // @Unit: cm
     // @User: Advanced
-	AP_GROUPINFO("_BOTTOM_LIMIT",  21, DistanceControl, _bottom_limit_cm, 0),
+	AP_GROUPINFO("_BOTTOM_LIMIT",  21, AC_DistanceControl, _bottom_limit_cm, 0),
 
     // @Param: _FACE
     // @DisplayName: distance face
     // @Description: distance face
     // @Values: 1:front 2:back 4:left 8:right 16:top 32:bottom
     // @User: Advanced
-    AP_GROUPINFO("_FACE",  30, DistanceControl, _distance_face, 32),
+    AP_GROUPINFO("_FACE",  30, AC_DistanceControl, _distance_face, 32),
 
 	// @Param: _OFT_FRONT
     // @DisplayName: front offset
     // @Description: front offset
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_OFT_FRONT",  31, DistanceControl, _front_offset, 0),
+    AP_GROUPINFO("_OFT_FRONT",  31, AC_DistanceControl, _front_offset, 0),
 
     // @Param: _OFT_BACK
     // @DisplayName: back offset
     // @Description: back offset
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_OFT_BACK",  32, DistanceControl, _back_offset, 0),
+    AP_GROUPINFO("_OFT_BACK",  32, AC_DistanceControl, _back_offset, 0),
 
     // @Param: _LEFT_OFT
     // @DisplayName: left offset
     // @Description: left offset
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_LEFT_OFT",  33, DistanceControl, _left_offset, 0),
+    AP_GROUPINFO("_LEFT_OFT",  33, AC_DistanceControl, _left_offset, 0),
 
     // @Param: _RIGHT_OFT
     // @DisplayName: right offset
     // @Description: right offset
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_RIGHT_OFT",  34, DistanceControl, _right_offset, 0),
+    AP_GROUPINFO("_RIGHT_OFT",  34, AC_DistanceControl, _right_offset, 0),
 
     AP_GROUPEND
 };
@@ -298,7 +298,7 @@ const AP_Param::GroupInfo DistanceControl::var_info[] = {
 // Note that the Vector/Matrix constructors already implicitly zero
 // their values.
 //
-DistanceControl::DistanceControl(const AP_AHRS_View& ahrs, const AP_InertialNav& inav,
+AC_DistanceControl::AC_DistanceControl(const AP_AHRS_View& ahrs, const AP_InertialNav& inav,
                              AP_Motors& motors, AC_AttitudeControl& attitude_control,
                              const RangeFinder& rangefinder) :
     _ahrs(ahrs),
@@ -341,7 +341,7 @@ DistanceControl::DistanceControl(const AP_AHRS_View& ahrs, const AP_InertialNav&
     _singleton = this;
 }
 
-void DistanceControl::update_distance(void)
+void AC_DistanceControl::update_distance(void)
 {
 #if USE_DISTANCE_FILTERED 
 	distance_bf[DISTANCE_FRONT] = _rangefinder.distance_cm_filtered_orient(ROTATION_NONE);
@@ -440,7 +440,7 @@ void DistanceControl::update_distance(void)
 	}
 }
 
-void DistanceControl::pilot_thrusts_scale(Vector3f &thrusts)
+void AC_DistanceControl::pilot_thrusts_scale(Vector3f &thrusts)
 {
 	Vector3f dis_error;
 	
@@ -520,7 +520,7 @@ void DistanceControl::pilot_thrusts_scale(Vector3f &thrusts)
 	}
 }
 
-void DistanceControl::relax_z_controller(float distance)
+void AC_DistanceControl::relax_z_controller(float distance)
 {
     _pos_target.z = distance;
     _vel_desired.z = 0.0f;
@@ -533,7 +533,7 @@ void DistanceControl::relax_z_controller(float distance)
     _pid_accel_z.reset_filter();
 }
 
-void DistanceControl::update_z_controller(float distance)
+void AC_DistanceControl::update_z_controller(float distance)
 {
     float curr_alt = distance;
     static uint8_t print_flag = 0;
@@ -662,7 +662,7 @@ void DistanceControl::update_z_controller(float distance)
     print_flag = 0;
 }
 
-void DistanceControl::relax_x_controller(float distance)
+void AC_DistanceControl::relax_x_controller(float distance)
 {
     _pos_target.x = distance;
     _vel_desired.x = 0.0f;
@@ -675,7 +675,7 @@ void DistanceControl::relax_x_controller(float distance)
     _pid_accel_x.reset_filter();
 }
 
-void DistanceControl::update_x_controller(float distance)
+void AC_DistanceControl::update_x_controller(float distance)
 {
     float curr_dis = distance;
     static uint8_t print_flag = 0;
@@ -782,7 +782,7 @@ void DistanceControl::update_x_controller(float distance)
     print_flag = 0;
 }
 
-void DistanceControl::relax_y_controller(float distance)
+void AC_DistanceControl::relax_y_controller(float distance)
 {
     _pos_target.y = distance;
     _vel_desired.y = 0.0f;
@@ -795,7 +795,7 @@ void DistanceControl::relax_y_controller(float distance)
     _pid_accel_y.reset_filter();
 }
 
-void DistanceControl::update_y_controller(float distance)
+void AC_DistanceControl::update_y_controller(float distance)
 {
     float curr_dis = distance;
     static uint8_t print_flag = 0;
@@ -902,13 +902,13 @@ void DistanceControl::update_y_controller(float distance)
     print_flag = 0;
 }
 
-DistanceControl *DistanceControl::_singleton;
+AC_DistanceControl *AC_DistanceControl::_singleton;
 
 namespace AP {
 
-DistanceControl *distancecontrol()
+AC_DistanceControl *distance_control()
 {
-    return DistanceControl::get_singleton();
+    return AC_DistanceControl::get_singleton();
 }
 
 }

@@ -69,7 +69,7 @@
 #include <AP_LeakDetector/AP_LeakDetector.h> // Leak detector
 #include <AP_TemperatureSensor/TSYS01.h>
 #include <AP_Common/AP_FWVersion.h>
-#include <AC_AttitudeControl/distance_control.h> 
+#include <AC_AttitudeControl/AC_DistanceControl.h> 
 
 // Local modules
 #include "defines.h"
@@ -366,7 +366,7 @@ private:
     AC_AttitudeControl_Sub attitude_control;
 
     AC_PosControl_Sub pos_control;
-    DistanceControl distance_control;
+    AC_DistanceControl distance_control;
 
     AC_WPNav wp_nav;
     AC_Loiter loiter_nav;

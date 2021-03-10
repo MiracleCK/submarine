@@ -41,7 +41,7 @@
 #include <AP_Baro/AP_Baro.h>
 #include <AP_EFI/AP_EFI.h>
 #include <AP_Proximity/AP_Proximity.h>
-#include <AC_AttitudeControl/distance_control.h>
+#include <AC_AttitudeControl/AC_DistanceControl.h>
 
 #include <stdio.h>
 
@@ -1530,7 +1530,7 @@ void GCS_MAVLINK::send_rc_channels() const
 
     RangeFinder *rangefinder = RangeFinder::get_singleton();
 	AP_RangeFinder_Backend *sensor = rangefinder->get_backend(0);
-	DistanceControl *distance_control = DistanceControl::get_singleton();
+	AC_DistanceControl *distance_control = AC_DistanceControl::get_singleton();
 
     mavlink_msg_rc_channels_send(
         chan,
