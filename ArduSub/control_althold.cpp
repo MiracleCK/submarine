@@ -243,6 +243,20 @@ void Sub::althold_run_rate()
         attitude_control.relax_attitude_controllers();
         pos_control.relax_alt_hold_controllers(motors.get_throttle_hover());
 
+        if(distance_control.bottom_face_is_active()) {
+	    	distance_control.relax_z_controller((float)distance_control.get_bottom_cm());
+	    } else if(distance_control.top_face_is_active()) {
+	    	distance_control.relax_z_controller((float)distance_control.get_top_cm());
+	    } else if(distance_control.front_face_is_active()) {
+	    	distance_control.relax_x_controller((float)distance_control.get_front_cm());
+	    } else if(distance_control.back_face_is_active()) {
+	    	distance_control.relax_x_controller((float)distance_control.get_back_cm());
+	    } else if(distance_control.right_face_is_active()) {
+	    	distance_control.relax_y_controller((float)distance_control.get_right_cm());
+	    } else if(distance_control.left_face_is_active()) {
+	    	distance_control.relax_y_controller((float)distance_control.get_left_cm());
+	    }
+
         is_z_ctrl_relaxed = false;
         engageStopZ = false;
         lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
@@ -367,7 +381,7 @@ void Sub::althold_run_rate()
 		        last_pilot_x_input_ms = tnow;
 		        is_x_ctrl_relaxed = true;
 		    } else { // hold x
-		        if (tnow - last_pilot_x_input_ms > 500) {
+		        if (tnow - last_pilot_x_input_ms > 1500) {
 		        	if(is_x_ctrl_relaxed) {
 			        	distance_control.relax_x_controller((float)distance);
 			        	is_x_ctrl_relaxed = false;
@@ -415,7 +429,7 @@ void Sub::althold_run_rate()
 		        last_pilot_y_input_ms = tnow;
 		        is_y_ctrl_relaxed = true;
 		    } else { // hold y
-		        if (tnow - last_pilot_y_input_ms > 500) {
+		        if (tnow - last_pilot_y_input_ms > 1500) {
 		        	if(is_y_ctrl_relaxed) {
 			        	distance_control.relax_y_controller((float)distance);
 			        	is_y_ctrl_relaxed = false;

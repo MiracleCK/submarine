@@ -23,6 +23,7 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_OUT_Y_CUTOFF_FREQ         2.0f    // low-pass filter on output error (unit: hz)
 
 // default gains for Sub
+// ousailong z- 6 8 0.8 0.1
 #define DISCONTROL_POS_Z_P                    3.0f    // vertical position controller P gain default
 #define DISCONTROL_VEL_Z_P                    8.0f    // vertical velocity controller P gain default
 #define DISCONTROL_ACC_Z_P                    0.5f    // vertical acceleration controller P gain default
@@ -32,6 +33,7 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_ACC_Z_FILT_HZ              20.0f   // vertical acceleration controller input filter default
 #define DISCONTROL_ACC_Z_DT                   0.0025f // vertical acceleration controller dt default
 
+// ousailong x- 5 5 0.8 0.1
 #define DISCONTROL_POS_X_P                    3.0f    // vertical position controller P gain default
 #define DISCONTROL_VEL_X_P                    8.0f    // vertical velocity controller P gain default
 #define DISCONTROL_ACC_X_P                    0.5f    // vertical acceleration controller P gain default
@@ -41,6 +43,7 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_ACC_X_FILT_HZ              20.0f   // vertical acceleration controller input filter default
 #define DISCONTROL_ACC_X_DT                   0.0025f // vertical acceleration controller dt default
 
+// ousailong y- 6 8 0.8 0.1
 #define DISCONTROL_POS_Y_P                    3.0f    // vertical position controller P gain default
 #define DISCONTROL_VEL_Y_P                    8.0f    // vertical velocity controller P gain default
 #define DISCONTROL_ACC_Y_P                    0.5f    // vertical acceleration controller P gain default
