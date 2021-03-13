@@ -236,6 +236,10 @@ void Sub::althold_run_rate()
     pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
     pos_control.set_max_accel_z(g.pilot_accel_z);
 
+    if(is_ned_pilot) {
+    	distance_control.update_distance();
+    }
+
     if (!motors.armed()) {
         motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::GROUND_IDLE);
         // Sub vehicles do not stabilize roll/pitch/yaw when not auto-armed (i.e. on the ground, pilot has never raised throttle)
@@ -272,10 +276,6 @@ void Sub::althold_run_rate()
         is_request_reset_rp = false;
     }
 
-	if(is_ned_pilot) {
-    	distance_control.update_distance();
-    }
-
     uint32_t tnow = AP_HAL::millis();
 	
 	if(	is_ned_pilot &&
@@ -299,7 +299,7 @@ void Sub::althold_run_rate()
 	        last_pilot_z_input_ms = tnow;
 	        is_z_ctrl_relaxed = true;
 	    } else { // hold z
-	        if (tnow - last_pilot_z_input_ms > 1500) {
+	        if (tnow - last_pilot_z_input_ms > 500) {
 	        	if(is_z_ctrl_relaxed) {
 		        	distance_control.relax_z_controller((float)distance);
 		        	is_z_ctrl_relaxed = false;
@@ -381,7 +381,7 @@ void Sub::althold_run_rate()
 		        last_pilot_x_input_ms = tnow;
 		        is_x_ctrl_relaxed = true;
 		    } else { // hold x
-		        if (tnow - last_pilot_x_input_ms > 1500) {
+		        if (tnow - last_pilot_x_input_ms > 500) {
 		        	if(is_x_ctrl_relaxed) {
 			        	distance_control.relax_x_controller((float)distance);
 			        	is_x_ctrl_relaxed = false;
@@ -429,7 +429,7 @@ void Sub::althold_run_rate()
 		        last_pilot_y_input_ms = tnow;
 		        is_y_ctrl_relaxed = true;
 		    } else { // hold y
-		        if (tnow - last_pilot_y_input_ms > 1500) {
+		        if (tnow - last_pilot_y_input_ms > 500) {
 		        	if(is_y_ctrl_relaxed) {
 			        	distance_control.relax_y_controller((float)distance);
 			        	is_y_ctrl_relaxed = false;

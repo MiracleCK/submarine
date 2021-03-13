@@ -848,15 +848,15 @@ void Sub::load_parameters()
     AP_Param::set_default_by_name("GND_POS1_Z", 0.0555);
 
     AP_Param::set_default_by_name("RNGFND1_TYPE", 10);
-    AP_Param::set_default_by_name("RNGFND1_ORIENT", 25);
+    AP_Param::set_and_save_by_name("RNGFND1_ORIENT", 25);
     AP_Param::set_default_by_name("RNGFND2_TYPE", 10);
-    AP_Param::set_default_by_name("RNGFND2_ORIENT", 0);
+    AP_Param::set_and_save_by_name("RNGFND2_ORIENT", 0);
     AP_Param::set_default_by_name("RNGFND3_TYPE", 10);
-    AP_Param::set_default_by_name("RNGFND3_ORIENT", 12);
+    AP_Param::set_and_save_by_name("RNGFND3_ORIENT", 12);
     AP_Param::set_default_by_name("RNGFND4_TYPE", 10);
-    AP_Param::set_default_by_name("RNGFND4_ORIENT", 6);
+    AP_Param::set_and_save_by_name("RNGFND4_ORIENT", 6);
     AP_Param::set_default_by_name("RNGFND5_TYPE", 10);
-    AP_Param::set_default_by_name("RNGFND5_ORIENT", 2);
+    AP_Param::set_and_save_by_name("RNGFND5_ORIENT", 2);
 }
 
 void Sub::convert_old_parameters()
