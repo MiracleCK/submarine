@@ -266,19 +266,19 @@ const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("_FACE",  30, AC_DistanceControl, _distance_face, 32),
 
-	// @Param: _OFT_FRONT
+	// @Param: _FRONT_OFT
     // @DisplayName: front offset
     // @Description: front offset
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_OFT_FRONT",  31, AC_DistanceControl, _front_offset, 0),
+    AP_GROUPINFO("_FRONT_OFT",  31, AC_DistanceControl, _front_offset, 0),
 
-    // @Param: _OFT_BACK
+    // @Param: _BACK_OFT
     // @DisplayName: back offset
     // @Description: back offset
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_OFT_BACK",  32, AC_DistanceControl, _back_offset, 0),
+    AP_GROUPINFO("_BACK_OFT",  32, AC_DistanceControl, _back_offset, 0),
 
     // @Param: _LEFT_OFT
     // @DisplayName: left offset
@@ -402,10 +402,14 @@ void AC_DistanceControl::update_distance(void)
 		}
 	}
 
-	distance_ned[DISTANCE_FRONT] -= _front_offset;
-	distance_ned[DISTANCE_BACK] += _back_offset;
-	distance_ned[DISTANCE_RIGHT] -= _right_offset;
-	distance_ned[DISTANCE_LEFT] += _left_offset;
+	if(distance_ned[DISTANCE_FRONT] >=  _front_offset)
+		distance_ned[DISTANCE_FRONT] -= _front_offset;
+	if(distance_ned[DISTANCE_BACK] <= -_back_offset)
+		distance_ned[DISTANCE_BACK] += _back_offset;
+	if(distance_ned[DISTANCE_RIGHT] >=  _right_offset)
+		distance_ned[DISTANCE_RIGHT] -= _right_offset;
+	if(distance_ned[DISTANCE_LEFT] <= -_left_offset)
+		distance_ned[DISTANCE_LEFT] += _left_offset;
 	
 	if(1) {
 		static uint32_t _startup_ms = 0;

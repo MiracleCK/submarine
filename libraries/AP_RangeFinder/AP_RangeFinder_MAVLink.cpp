@@ -55,7 +55,7 @@ static constexpr float FILTER_KOEF = 0.1f;
 bool AP_RangeFinder_MAVLink::distance_ok(float distance)
 {
     
-    if (isinf(distance) || isnan(distance)) {
+    if (isinf(distance) || isnan(distance) || distance > 600.0f || distance < 5) {
         return false;
     }
 
