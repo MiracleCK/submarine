@@ -452,13 +452,13 @@ void AC_DistanceControl::pilot_thrusts_scale(Vector3f &thrusts)
 	Vector3f dis_error;
 	
     if(thrusts.x > 0.05f) {
-    	if(_front_limit_cm != 0 && !front_face_is_active()) {
+    	if(_front_limit_cm != 0 && distance_ned[DISTANCE_FRONT] != 0 && !front_face_is_active()) {
 			dis_error.x = distance_ned[DISTANCE_FRONT] - _front_limit_cm;
 		} else {
 			dis_error.x = _limit_p;
 		}
 	} else if(thrusts.x < -0.05f) {
-		if(_back_limit_cm != 0 && !back_face_is_active()) {
+		if(_back_limit_cm != 0 && distance_ned[DISTANCE_BACK] != 0 && !back_face_is_active()) {
 			dis_error.x = _back_limit_cm - distance_ned[DISTANCE_BACK];
 		} else {
 			dis_error.x = _limit_p;
@@ -470,13 +470,13 @@ void AC_DistanceControl::pilot_thrusts_scale(Vector3f &thrusts)
 	thrusts.x *= constrain_float((float)dis_error.x/_limit_p, 0.0f, 1.0f);
 
 	if(thrusts.y > 0.05f) {
-		if(_right_limit_cm != 0 && !right_face_is_active()) {
+		if(_right_limit_cm != 0 && distance_ned[DISTANCE_RIGHT] != 0 && !right_face_is_active()) {
 			dis_error.y = distance_ned[DISTANCE_RIGHT] - _right_limit_cm;
 		} else {
 			dis_error.y = _limit_p;
 		}
 	} else if(thrusts.y < -0.05f) {
-		if(_left_limit_cm != 0 && !left_face_is_active()) {
+		if(_left_limit_cm != 0 && distance_ned[DISTANCE_LEFT] != 0 && !left_face_is_active()) {
 			dis_error.y = _left_limit_cm - distance_ned[DISTANCE_LEFT];
 		} else {
 			dis_error.y = _limit_p;
@@ -488,7 +488,7 @@ void AC_DistanceControl::pilot_thrusts_scale(Vector3f &thrusts)
 	thrusts.y *= constrain_float((float)dis_error.y/_limit_p, 0.0f, 1.0f);
 
 	if(thrusts.z < -0.05f) {
-		if(_bottom_limit_cm != 0 && !bottom_face_is_active()) {
+		if(_bottom_limit_cm != 0 && distance_ned[DISTANCE_BOTTOM] != 0 && !bottom_face_is_active()) {
 			dis_error.z = distance_ned[DISTANCE_BOTTOM] - _bottom_limit_cm;
 		} else {
 			dis_error.z = _limit_p;

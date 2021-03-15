@@ -1530,7 +1530,7 @@ void GCS_MAVLINK::send_rc_channels()
     rc().get_radio_in(values, ARRAY_SIZE(values));
 
     RangeFinder *rangefinder = RangeFinder::get_singleton();
-	AP_RangeFinder_Backend *sensor = rangefinder->get_backend(0);
+	AP_RangeFinder_Backend *sensor = rangefinder->get_backend(1);
 	AC_DistanceControl *distance_control = AC_DistanceControl::get_singleton();
 
 	set_mavlink_message_id_interval(MAVLINK_MSG_ID_RC_CHANNELS, 25);
@@ -1550,8 +1550,8 @@ void GCS_MAVLINK::send_rc_channels()
         values[9],
         values[10],
         values[11],
-        (int16_t)distance_control->get_target_z(),//values[12],
-        distance_control->get_bottom_cm_bf(),//values[13],
+        (int16_t)distance_control->get_target_x(),//values[12],
+        distance_control->get_front_cm_bf(),//values[13],
         sensor->distance_cm(), //values[14],
         sensor->distance_cm_filtered(), //values[15],
         values[16],
