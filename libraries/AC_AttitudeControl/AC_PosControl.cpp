@@ -1089,7 +1089,7 @@ void AC_PosControl::run_xy_controller(float dt)
 
         _vel_target = sqrt_controller(_pos_error, kP, _accel_cms);
 
-        if (1) {
+        if (0) {
 	    	static uint32_t _startup_ms = 0;
 
 	        if(_startup_ms == 0) {
@@ -1159,7 +1159,7 @@ void AC_PosControl::run_xy_controller(float dt)
     _vel_error.y = _vel_target.y - _vehicle_horiz_vel.y;
     // TODO: constrain velocity error and velocity target
 
-    if (1) {
+    if (0) {
     	static uint32_t _startup_ms = 0;
 
         if(_startup_ms == 0) {
@@ -1255,7 +1255,7 @@ void AC_PosControl::run_xy_controller(float dt)
     float accel_max = MIN(GRAVITY_MSS * 100.0f * tanf(ToRad(angle_max * 0.01f)), POSCONTROL_ACCEL_XY_MAX);
     _limit.accel_xy = limit_vector_length(_accel_target.x, _accel_target.y, accel_max);
 
-    if (1) {
+    if (0) {
     	static uint32_t _startup_ms = 0;
 
         if(_startup_ms == 0) {
@@ -1284,7 +1284,7 @@ void AC_PosControl::run_xy_controller(float dt)
     // update angle targets that will be passed to stabilize controller
     accel_to_lean_angles(_accel_target.x, _accel_target.y, _roll_target, _pitch_target);
 
-    if (1) {
+    if (0) {
     	static uint32_t _startup_ms = 0;
 
         if(_startup_ms == 0) {
@@ -1429,7 +1429,7 @@ Vector3f AC_PosControl::sqrt_controller(const Vector3f& error, float p, float se
         //return Vector3f(error.x * p, error.y * p, error.z);
     }
 
-    if (1) {
+    if (0) {
     	
     	static uint32_t _startup_ms = 0;
 

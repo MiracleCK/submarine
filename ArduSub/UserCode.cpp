@@ -57,6 +57,7 @@ void Sub::userhook_SuperSlowLoop()
 
     if(count.x > 5 || count.y > 5) {
 		gcs().send_text(MAV_SEVERITY_WARNING, "May hit an obstacle");
+		hal.shell->printf("May hit an obstacle\r\n");
     }
 }
 #endif
