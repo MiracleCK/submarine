@@ -364,7 +364,7 @@ void Sub::althold_run_rate()
 
 	if(is_ned_pilot) {
 		if((distance_control.front_face_is_active() && 
-		    (distance_control.get_front_cm() > 5 && distance_control.get_front_cm() < 200)) ||
+		    (distance_control.get_front_cm() >= 0 && distance_control.get_front_cm() < 500)) ||
 		    (distance_control.back_face_is_active() && 
 		    (distance_control.get_back_cm() < -5 && distance_control.get_back_cm() > -200))) {
 		    int16_t distance;
@@ -381,7 +381,7 @@ void Sub::althold_run_rate()
 		        last_pilot_x_input_ms = tnow;
 		        is_x_ctrl_relaxed = true;
 		    } else { // hold x
-		        if (tnow - last_pilot_x_input_ms > 500) {
+		        if (tnow - last_pilot_x_input_ms > 200) {
 		        	if(is_x_ctrl_relaxed) {
 			        	distance_control.relax_x_controller((float)distance);
 			        	is_x_ctrl_relaxed = false;

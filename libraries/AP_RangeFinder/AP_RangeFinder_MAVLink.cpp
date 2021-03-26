@@ -116,6 +116,12 @@ void AP_RangeFinder_MAVLink::handle_msg(const mavlink_message_t &msg)
         distance_cm = packet.current_distance;
         sensor_type = (MAV_DISTANCE_SENSOR)packet.type;  
         //distance_cm_filtered = _distance_filter.apply(distance_cm);
+        //hal.shell->printf("orientation %d, distance_cm %d\r\n", (int)packet.orientation, distance_cm);
+        
+        if(distance_ok((float)distance_cm)) {
+	    	distance_cm_filtered = distance_cm;
+	    	//hal.shell->printf("orientation %d, distance_cm_filtered %d\r\n", (int)packet.orientation, distance_cm_filtered);
+	    }
     }
 }
 
@@ -126,6 +132,7 @@ void AP_RangeFinder_MAVLink::update(void)
 {
     //Time out on incoming data; if we don't get new
     //data in 500ms, dump it
+#if 0
     if (AP_HAL::millis() - state.last_reading_ms > AP_RANGEFINDER_MAVLINK_TIMEOUT_MS) {
         set_status(RangeFinder::Status::NoData);
         state.distance_cm = 0;
@@ -139,6 +146,17 @@ void AP_RangeFinder_MAVLink::update(void)
     if(distance_ok((float)state.distance_cm)) {
     	state.distance_cm_filtered = state.distance_cm;
     }
+#endif
+
+	state.distance_cm = distance_cm;
+	state.distance_cm_filtered = distance_cm_filtered;
+	//state.distance_cm_filtered = _distance_filter.apply(distance_cm);
+
+	//if(distance_ok((float)state.distance_cm)) {
+    //	state.distance_cm_filtered = state.distance_cm;
+    //}
+    
+	set_status(RangeFinder::Status::Good);
 
     if((sample_freq != params.sample_freq.get()) ||
        (cutoff_freq != params.cutoff_freq.get())) {

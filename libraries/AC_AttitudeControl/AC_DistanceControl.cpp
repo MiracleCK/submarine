@@ -5,7 +5,7 @@
 
 extern const AP_HAL::HAL& hal;
 
-#define USE_DISTANCE_FILTERED 	1
+#define USE_DISTANCE_FILTERED 	0
 
 #define DISCONTROL_ACCEL_X                      250.0f  // default x acceleration in cm/s/s.
 #define DISCONTROL_ACCEL_Y                      250.0f  // default y acceleration in cm/s/s.
@@ -271,28 +271,28 @@ const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
     // @Description: front offset
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_FRONT_OFT",  31, AC_DistanceControl, _front_offset, 0),
+    AP_GROUPINFO("_FRONT_OFT",  31, AC_DistanceControl, _front_offset, 0), //16
 
     // @Param: _BACK_OFT
     // @DisplayName: back offset
     // @Description: back offset
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_BACK_OFT",  32, AC_DistanceControl, _back_offset, 0),
+    AP_GROUPINFO("_BACK_OFT",  32, AC_DistanceControl, _back_offset, 0), //24
 
     // @Param: _LEFT_OFT
     // @DisplayName: left offset
     // @Description: left offset
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_LEFT_OFT",  33, AC_DistanceControl, _left_offset, 0),
+    AP_GROUPINFO("_LEFT_OFT",  33, AC_DistanceControl, _left_offset, 0), //8
 
     // @Param: _RIGHT_OFT
     // @DisplayName: right offset
     // @Description: right offset
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_RIGHT_OFT",  34, AC_DistanceControl, _right_offset, 0),
+    AP_GROUPINFO("_RIGHT_OFT",  34, AC_DistanceControl, _right_offset, 0), //8
 
     AP_GROUPEND
 };
@@ -362,6 +362,26 @@ void AC_DistanceControl::update_distance(void)
 	distance_bf[DISTANCE_BOTTOM] = _rangefinder.distance_cm_orient(ROTATION_PITCH_270);
 #endif
 
+	if(distance_bf[DISTANCE_FRONT] >=  _front_offset)
+		distance_bf[DISTANCE_FRONT] -= _front_offset;
+	else 
+		distance_bf[DISTANCE_FRONT] = 0;
+		
+	if(distance_bf[DISTANCE_BACK] >= _back_offset)
+		distance_bf[DISTANCE_BACK] -= _back_offset;
+	else 
+		distance_bf[DISTANCE_BACK] = 0;
+		
+	if(distance_bf[DISTANCE_RIGHT] >=  _right_offset)
+		distance_bf[DISTANCE_RIGHT] -= _right_offset;
+	else 
+		distance_bf[DISTANCE_RIGHT] = 0;
+		
+	if(distance_bf[DISTANCE_LEFT] >= _left_offset)
+		distance_bf[DISTANCE_LEFT] -= _left_offset;
+	else 
+		distance_bf[DISTANCE_LEFT] = 0;
+		
 	Matrix3f m;
 	m.from_euler(_ahrs.roll, _ahrs.pitch, 0);
 
@@ -401,15 +421,6 @@ void AC_DistanceControl::update_distance(void)
 				distance_ned[DISTANCE_TOP] = dist[i].z;
 		}
 	}
-
-	if(distance_ned[DISTANCE_FRONT] >=  _front_offset)
-		distance_ned[DISTANCE_FRONT] -= _front_offset;
-	if(distance_ned[DISTANCE_BACK] <= -_back_offset)
-		distance_ned[DISTANCE_BACK] += _back_offset;
-	if(distance_ned[DISTANCE_RIGHT] >=  _right_offset)
-		distance_ned[DISTANCE_RIGHT] -= _right_offset;
-	if(distance_ned[DISTANCE_LEFT] <= -_left_offset)
-		distance_ned[DISTANCE_LEFT] += _left_offset;
 	
 	if(1) {
 		static uint32_t _startup_ms = 0;
