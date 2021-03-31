@@ -78,7 +78,7 @@ bool AP_RangeFinder_MAVLink::distance_ok(float distance)
             _error_count++;
         }
 
-        if(1 && (Rotation)params.orientation.get() == ROTATION_NONE) {
+        if(0 && (Rotation)params.orientation.get() == ROTATION_NONE) {
 			static uint32_t _startup_ms = 0;
 
 			if(_startup_ms == 0) {

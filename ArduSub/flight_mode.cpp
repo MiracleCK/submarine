@@ -119,6 +119,14 @@ void Sub::update_flight_mode()
 		pilot_trans_thrusts.x = channel_forward->slew_norm_input_bidirectional();
         pilot_trans_thrusts.y = channel_lateral->slew_norm_input_bidirectional();
         pilot_trans_thrusts.z = channel_throttle->slew_norm_input_bidirectional();
+
+        if(bottom_face_actived || top_face_actived ||
+           left_face_actived || right_face_actived ||
+           front_face_actived || back_face_actived) {
+			pilot_trans_thrusts.x *= 0.3f;
+			pilot_trans_thrusts.y *= 0.3f;
+			pilot_trans_thrusts.z *= 0.3f;
+        }
         
         if(is_ned_pilot && distance_control.limit_enable()) {
 			distance_control.pilot_thrusts_scale(pilot_trans_thrusts);

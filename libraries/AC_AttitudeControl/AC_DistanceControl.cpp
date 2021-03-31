@@ -280,42 +280,42 @@ const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
     // @Description: front distance limit
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_FRONT_LIMIT",  16, AC_DistanceControl, _front_limit_cm, 0),
+    AP_GROUPINFO("_FRONT_LIMIT",  16, AC_DistanceControl, _front_limit_cm, 5),
 
     // @Param: _BACK_LIMIT
     // @DisplayName: back distance limit 
     // @Description: back distance limit
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_BACK_LIMIT",  17, AC_DistanceControl, _back_limit_cm, -0),
+    AP_GROUPINFO("_BACK_LIMIT",  17, AC_DistanceControl, _back_limit_cm, -5),
 
     // @Param: _LEFT_LIMIT
     // @DisplayName: left distance limit 
     // @Description: left distance limit
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_LEFT_LIMIT",  18, AC_DistanceControl, _left_limit_cm, -0),
+    AP_GROUPINFO("_LEFT_LIMIT",  18, AC_DistanceControl, _left_limit_cm, -5),
 
     // @Param: _RIGHT_LIMIT
     // @DisplayName: right distance limit 
     // @Description: right distance limit
     // @Unit: cm
     // @User: Advanced
-    AP_GROUPINFO("_RIGHT_LIMIT",  19, AC_DistanceControl, _right_limit_cm, 0),
+    AP_GROUPINFO("_RIGHT_LIMIT",  19, AC_DistanceControl, _right_limit_cm, 5),
 
     // @Param: _TOP_LIMIT
     // @DisplayName: top distance limit 
     // @Description: top distance limit
     // @Unit: cm
     // @User: Advanced
-	AP_GROUPINFO("_TOP_LIMIT",  20, AC_DistanceControl, _top_limit_cm, -0),
+	AP_GROUPINFO("_TOP_LIMIT",  20, AC_DistanceControl, _top_limit_cm, -5),
 
     // @Param: _BOTTOM_LIMIT
     // @DisplayName: bottom distance limit 
     // @Description: bottom distance limit
     // @Unit: cm
     // @User: Advanced
-	AP_GROUPINFO("_BOTTOM_LIMIT",  21, AC_DistanceControl, _bottom_limit_cm, 0),
+	AP_GROUPINFO("_BOTTOM_LIMIT",  21, AC_DistanceControl, _bottom_limit_cm, 5),
 
     // @Param: _FACE
     // @DisplayName: distance face
@@ -480,7 +480,7 @@ void AC_DistanceControl::update_distance(void)
 		}
 	}
 	
-	if(0) {
+	if(1) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {

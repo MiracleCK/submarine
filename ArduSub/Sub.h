@@ -708,6 +708,13 @@ public:
     uint32_t last_pilot_x_input_ms;
     uint32_t last_pilot_y_input_ms;
     uint32_t last_pilot_z_input_ms;
+    bool bottom_face_actived;
+    bool top_face_actived;
+    bool left_face_actived;
+    bool right_face_actived;
+    bool front_face_actived;
+    bool back_face_actived;
+    uint32_t last_face_active_ms;
     // Hold actual position until zero derivative is detected
     bool engageStopZ = false;
     // Get last user velocity direction to check for zero derivative points

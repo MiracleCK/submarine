@@ -236,8 +236,36 @@ void Sub::althold_run_rate()
     pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
     pos_control.set_max_accel_z(g.pilot_accel_z);
 
+    uint32_t tnow = AP_HAL::millis();
+
     if(is_ned_pilot) {
     	distance_control.update_distance();
+    	
+		if (tnow - last_face_active_ms > 1000) {
+	    	if(bottom_face_actived != distance_control.bottom_face_is_active() ||
+	    	   top_face_actived != distance_control.top_face_is_active()) {
+				bottom_face_actived = distance_control.bottom_face_is_active();
+				top_face_actived = distance_control.top_face_is_active();
+				last_pilot_z_input_ms = tnow;
+		    	is_z_ctrl_relaxed = true;
+	    	}
+
+	    	if(front_face_actived != distance_control.front_face_is_active() ||
+	    	   back_face_actived != distance_control.back_face_is_active()) {
+				front_face_actived = distance_control.front_face_is_active();
+				back_face_actived = distance_control.back_face_is_active();
+				last_pilot_x_input_ms = tnow;
+		    	is_x_ctrl_relaxed = true;
+	    	}
+
+	    	if(right_face_actived != distance_control.right_face_is_active() ||
+	    	   left_face_actived != distance_control.left_face_is_active()) {
+				right_face_actived = distance_control.right_face_is_active();
+				left_face_actived = distance_control.left_face_is_active();
+				last_pilot_y_input_ms = tnow;
+			    is_y_ctrl_relaxed = true;
+	    	}
+    	}
     }
 
     if (!motors.armed()) {
@@ -246,25 +274,18 @@ void Sub::althold_run_rate()
         attitude_control.set_throttle_out(0,true,g.throttle_filt);
         attitude_control.relax_attitude_controllers();
         pos_control.relax_alt_hold_controllers(motors.get_throttle_hover());
-
-        if(distance_control.bottom_face_is_active()) {
-	    	distance_control.relax_z_controller((float)distance_control.get_bottom_cm());
-	    } else if(distance_control.top_face_is_active()) {
-	    	distance_control.relax_z_controller((float)distance_control.get_top_cm());
-	    } else if(distance_control.front_face_is_active()) {
-	    	distance_control.relax_x_controller((float)distance_control.get_front_cm());
-	    } else if(distance_control.back_face_is_active()) {
-	    	distance_control.relax_x_controller((float)distance_control.get_back_cm());
-	    } else if(distance_control.right_face_is_active()) {
-	    	distance_control.relax_y_controller((float)distance_control.get_right_cm());
-	    } else if(distance_control.left_face_is_active()) {
-	    	distance_control.relax_y_controller((float)distance_control.get_left_cm());
-	    }
-
         is_z_ctrl_relaxed = false;
         engageStopZ = false;
         lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
         is_request_reset_rp = true; // to reset rp when arm
+
+        bottom_face_actived = false;
+        top_face_actived = false;
+        front_face_actived = false;
+        back_face_actived = false;
+        right_face_actived = false;
+        left_face_actived = false;
+        last_face_active_ms = tnow;
         return;
     }
 
@@ -275,22 +296,36 @@ void Sub::althold_run_rate()
     if (is_request_reset_rp) {
         is_request_reset_rp = false;
     }
-
-    uint32_t tnow = AP_HAL::millis();
 	
-	if(	is_ned_pilot &&
-		((distance_control.bottom_face_is_active() && 
-		(distance_control.get_bottom_cm() > 5 && distance_control.get_bottom_cm() < 200)) ||
-	    (distance_control.top_face_is_active() && 
-	    (distance_control.get_top_cm() < -5 && distance_control.get_top_cm() > -200)))) {
+	if(is_ned_pilot && (bottom_face_actived || top_face_actived)) {
 	    int16_t distance;
-	    if(distance_control.bottom_face_is_active()) {
+	    if(bottom_face_actived) {
 	    	distance = distance_control.get_bottom_cm();
+	    	if(distance_control.limit_enable() && 
+	    	   pilot_trans_thrusts.z < -0.0f && 
+	    	   distance_control.get_bottom_limit_cm() != 0 && 
+			   distance < distance_control.get_bottom_limit_cm()) {
+				distance = distance_control.get_bottom_limit_cm();
+				distance_control.relax_z_controller((float)distance);
+		        last_pilot_z_input_ms = tnow - 250;
+		        is_z_ctrl_relaxed = false;
+				pilot_trans_thrusts.z = 0.0f;
+			}
 	    } else {
 	    	distance = distance_control.get_top_cm();
+	    	if(distance_control.limit_enable() && 
+	    	   pilot_trans_thrusts.z > 0.0f && 
+	    	   distance_control.get_top_limit_cm() != 0 && 
+		   	   distance > distance_control.get_top_limit_cm()) {
+				distance = distance_control.get_top_limit_cm();
+				distance_control.relax_z_controller((float)distance);
+		        last_pilot_z_input_ms = tnow - 250;
+		        is_z_ctrl_relaxed = false;
+				pilot_trans_thrusts.z = 0.0f;
+			}
 	    }
 	    	
-		if (fabsf(pilot_trans_thrusts.z) > 0.05f) {
+		if (fabsf(pilot_trans_thrusts.z) > 0.01f) {
 	        // output pilot's throttle
 	        motors.set_throttle_pilot(pilot_trans_thrusts.z);
 	        attitude_control.set_throttle_out(motors.get_throttle_hover(), false, g.throttle_filt);
@@ -299,7 +334,7 @@ void Sub::althold_run_rate()
 	        last_pilot_z_input_ms = tnow;
 	        is_z_ctrl_relaxed = true;
 	    } else { // hold z
-	        if (tnow - last_pilot_z_input_ms > 500) {
+	        if (tnow - last_pilot_z_input_ms > 250) {
 	        	if(is_z_ctrl_relaxed) {
 		        	distance_control.relax_z_controller((float)distance);
 		        	is_z_ctrl_relaxed = false;
@@ -309,7 +344,6 @@ void Sub::althold_run_rate()
 				motors.set_throttle_pilot(0);
 				attitude_control.set_throttle_out(motors.get_throttle_hover(), false, g.throttle_filt); 
 	        }
-	        pos_control.relax_alt_hold_controllers();
 	    }
 	} else {
 		if(is_ned_pilot && distance_control.limit_enable()) {
@@ -363,15 +397,32 @@ void Sub::althold_run_rate()
 	}
 
 	if(is_ned_pilot) {
-		if((distance_control.front_face_is_active() && 
-		    (distance_control.get_front_cm() >= 0 && distance_control.get_front_cm() < 500)) ||
-		    (distance_control.back_face_is_active() && 
-		    (distance_control.get_back_cm() < -5 && distance_control.get_back_cm() > -200))) {
+		if(front_face_actived || back_face_actived) {
 		    int16_t distance;
-		    if(distance_control.front_face_is_active()) {
+		    if(front_face_actived) {
 		    	distance = distance_control.get_front_cm();
+		    	if(distance_control.limit_enable() && 
+		    	   pilot_trans_thrusts.x >= 0.0f && 
+		    	   distance_control.get_front_limit_cm() != 0 && 
+				   distance < distance_control.get_front_limit_cm()) {
+				   	distance = distance_control.get_front_limit_cm();
+				   	distance_control.relax_x_controller((float)distance);
+			        last_pilot_x_input_ms = tnow - 250;
+			        is_x_ctrl_relaxed = false;
+					pilot_trans_thrusts.x = 0.0f;
+				}
 		    } else {
 		    	distance = distance_control.get_back_cm();
+		    	if(distance_control.limit_enable() && 
+		    	   pilot_trans_thrusts.x <= -0.0f && 
+		    	   distance_control.get_back_limit_cm() != 0 && 
+		   		   distance > distance_control.get_back_limit_cm()) {
+		   		   	distance = distance_control.get_back_limit_cm();
+		   		   	distance_control.relax_x_controller((float)distance);
+			        last_pilot_x_input_ms = tnow - 250;
+			        is_x_ctrl_relaxed = false;
+					pilot_trans_thrusts.x = 0.0f;
+				}
 		    }
 		    
 			if (fabsf(pilot_trans_thrusts.x) > 0.05f) {
@@ -381,7 +432,7 @@ void Sub::althold_run_rate()
 		        last_pilot_x_input_ms = tnow;
 		        is_x_ctrl_relaxed = true;
 		    } else { // hold x
-		        if (tnow - last_pilot_x_input_ms > 200) {
+		        if (tnow - last_pilot_x_input_ms > 250) {
 		        	if(is_x_ctrl_relaxed) {
 			        	distance_control.relax_x_controller((float)distance);
 			        	is_x_ctrl_relaxed = false;
@@ -411,15 +462,32 @@ void Sub::althold_run_rate()
 			motors.set_forward(pilot_trans_thrusts.x);	
 		}
 
-	    if((distance_control.right_face_is_active() && 
-	    	(distance_control.get_right_cm() > 5 && distance_control.get_right_cm() < 200)) ||
-		    (distance_control.left_face_is_active() && 
-		    (distance_control.get_left_cm() < -5 && distance_control.get_left_cm() > -200))) {
+	    if(right_face_actived || left_face_actived) {
 		    int16_t distance;
 		    if(distance_control.right_face_is_active()) {
 		    	distance = distance_control.get_right_cm();
+		    	if(distance_control.limit_enable() && 
+		    	   pilot_trans_thrusts.y >= 0.0f && 
+		    	   distance_control.get_right_limit_cm() != 0 && 
+				   distance < distance_control.get_right_limit_cm()) {
+					distance = distance_control.get_right_limit_cm();
+		   		   	distance_control.relax_y_controller((float)distance);
+			        last_pilot_y_input_ms = tnow - 250;
+			        is_y_ctrl_relaxed = false;
+					pilot_trans_thrusts.y = 0.0f;
+				}
 		    } else {
 		    	distance = distance_control.get_left_cm();
+		    	if(distance_control.limit_enable() && 
+		    	   pilot_trans_thrusts.y <= -0.0f && 
+		    	   distance_control.get_left_limit_cm() != 0 && 
+		   		   distance > distance_control.get_left_limit_cm()) {
+		   		   	distance = distance_control.get_left_limit_cm();
+					distance_control.relax_y_controller((float)distance);
+			        last_pilot_y_input_ms = tnow - 250;
+			        is_y_ctrl_relaxed = false;
+					pilot_trans_thrusts.y = 0.0f;
+				}
 		    }
 		    
 			if (fabsf(pilot_trans_thrusts.y) > 0.05f) {
@@ -429,7 +497,7 @@ void Sub::althold_run_rate()
 		        last_pilot_y_input_ms = tnow;
 		        is_y_ctrl_relaxed = true;
 		    } else { // hold y
-		        if (tnow - last_pilot_y_input_ms > 500) {
+		        if (tnow - last_pilot_y_input_ms > 250) {
 		        	if(is_y_ctrl_relaxed) {
 			        	distance_control.relax_y_controller((float)distance);
 			        	is_y_ctrl_relaxed = false;
@@ -442,7 +510,6 @@ void Sub::althold_run_rate()
 		} else if(distance_control.limit_enable()) {
 			if(pilot_trans_thrusts.y >= 0.0f && distance_control.get_right_limit_cm() != 0 && 
 				distance_control.get_right_cm() < distance_control.get_right_limit_cm()) {
-				//hal.shell->printf("right\r\n");
 				if(!is_equal(distance_control.get_target_y(), (float)distance_control.get_right_limit_cm())) {
 		        	distance_control.relax_y_controller((float)distance_control.get_right_limit_cm());
 		        	hal.shell->printf("right relax\r\n");

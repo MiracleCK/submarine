@@ -1535,7 +1535,7 @@ void GCS_MAVLINK::send_rc_channels()
 	AP_RangeFinder_Backend *back = rangefinder->get_backend(2);
 	AP_RangeFinder_Backend *left = rangefinder->get_backend(3);
 	AP_RangeFinder_Backend *right = rangefinder->get_backend(4);
-	//AC_DistanceControl *distance_control = AC_DistanceControl::get_singleton();
+	AC_DistanceControl *distance_control = AC_DistanceControl::get_singleton();
 
 	set_mavlink_message_id_interval(MAVLINK_MSG_ID_RC_CHANNELS, 25);
 #if 0
@@ -1577,9 +1577,9 @@ void GCS_MAVLINK::send_rc_channels()
         back->distance_cm_filtered(), //8,
         left->distance_cm_filtered(), //9,
         right->distance_cm_filtered(), //10,
-        0, //11,
-        0, //12,
-        0, //13,
+        (int16_t)distance_control->get_target_x(), //11,
+        (int16_t)distance_control->get_target_y(), //12,
+        (int16_t)distance_control->get_target_z(), //13,
         0, //14,
         0, //15,
         0, //16,
