@@ -46,7 +46,7 @@ bool AP_RangeFinder_MAVLink::detect()
     return true;
 }
 
-static constexpr float FILTER_KOEF = 0.1f;
+//static constexpr float FILTER_KOEF = 0.1f;
 
 /* Check that the baro value is valid by using a mean filter. If the
  * value is further than filtrer_range from mean value, it is
@@ -54,9 +54,8 @@ static constexpr float FILTER_KOEF = 0.1f;
 */
 bool AP_RangeFinder_MAVLink::distance_ok(float distance)
 {
-    
-    //if (isinf(distance) || isnan(distance) || distance > 600.0f || distance < 5) {
-    if (isinf(distance) || isnan(distance)) {
+    if (isinf(distance) || isnan(distance) || distance > 600.0f || distance < 5) {
+    //if (isinf(distance) || isnan(distance)) {
         return false;
     }
 
@@ -70,9 +69,16 @@ bool AP_RangeFinder_MAVLink::distance_ok(float distance)
         _mean_distance = distance;
     } else {
         const float d = fabsf(_mean_distance - distance) / (_mean_distance + distance);  // diff divide by mean value in percent ( with the * 200.0f on later line)
-        float koeff = FILTER_KOEF;
+        float koeff = params.koef.get();//FILTER_KOEF;
 
-		if(0) {
+        if (d * 200.0f > _range) {  // check the difference from mean value outside allowed range
+            //hal.shell->printf("\r\ndistance error: mean %f got %f\r\n", (double)_mean_distance, (double)distance );
+            ret = false;
+            koeff /= (d * 10.0f);  // 2.5 and more, so one bad sample never change mean more than 4%
+            _error_count++;
+        }
+
+        if(1 && (Rotation)params.orientation.get() == ROTATION_NONE) {
 			static uint32_t _startup_ms = 0;
 
 			if(_startup_ms == 0) {
@@ -82,18 +88,13 @@ bool AP_RangeFinder_MAVLink::distance_ok(float distance)
 			if(AP_HAL::millis() - _startup_ms > 1000) {
 				_startup_ms = AP_HAL::millis();
 				
-				hal.shell->printf("distance %.04f %.04f %.04f\r\n", 
+				hal.shell->printf("%.04f %.04f %.04f %.04f\r\n", 
 							_mean_distance,
 							distance, 
-							d);
+							d,
+							koeff);
 			}
 		}
-        if (d * 200.0f > _range) {  // check the difference from mean value outside allowed range
-            //hal.shell->printf("\r\ndistance error: mean %f got %f\r\n", (double)_mean_distance, (double)distance );
-            ret = false;
-            koeff /= (d * 10.0f);  // 2.5 and more, so one bad sample never change mean more than 4%
-            _error_count++;
-        }
         _mean_distance = _mean_distance * (1 - koeff) + distance * koeff; // complimentary filter 1/k
     }
     return ret;
@@ -111,6 +112,10 @@ void AP_RangeFinder_MAVLink::handle_msg(const mavlink_message_t &msg)
     // only accept distances for downward facing sensors
     //if (packet.orientation == MAV_SENSOR_ROTATION_PITCH_270) {
     if (packet.orientation == (Rotation)params.orientation.get()) {
+    	//if(packet.current_distance > 600 || packet.current_distance < 5) {
+		//	return ;
+    	//}
+    	
     	//hal.shell->printf("orientation %d, ms %d\r\n", (int)packet.orientation, AP_HAL::millis() - state.last_reading_ms);
     	state.last_reading_ms = AP_HAL::millis();
         distance_cm = packet.current_distance;

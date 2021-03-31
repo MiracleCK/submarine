@@ -5,7 +5,7 @@
 
 extern const AP_HAL::HAL& hal;
 
-#define USE_DISTANCE_FILTERED 	0
+#define USE_DISTANCE_FILTERED 	1
 
 #define DISCONTROL_ACCEL_X                      250.0f  // default x acceleration in cm/s/s.
 #define DISCONTROL_ACCEL_Y                      250.0f  // default y acceleration in cm/s/s.
@@ -22,8 +22,8 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_OUT_X_CUTOFF_FREQ         2.0f    // low-pass filter on output error (unit: hz)
 #define DISCONTROL_OUT_Y_CUTOFF_FREQ         2.0f    // low-pass filter on output error (unit: hz)
 
+#if 0 // default
 // default gains for Sub
-// ousailong z- 6 8 0.8 0.1
 #define DISCONTROL_POS_Z_P                    3.0f    // vertical position controller P gain default
 #define DISCONTROL_VEL_Z_P                    8.0f    // vertical velocity controller P gain default
 #define DISCONTROL_ACC_Z_P                    0.5f    // vertical acceleration controller P gain default
@@ -33,7 +33,6 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_ACC_Z_FILT_HZ              20.0f   // vertical acceleration controller input filter default
 #define DISCONTROL_ACC_Z_DT                   0.0025f // vertical acceleration controller dt default
 
-// ousailong x- 5 5 0.8 0.1
 #define DISCONTROL_POS_X_P                    3.0f    // vertical position controller P gain default
 #define DISCONTROL_VEL_X_P                    8.0f    // vertical velocity controller P gain default
 #define DISCONTROL_ACC_X_P                    0.5f    // vertical acceleration controller P gain default
@@ -43,7 +42,6 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_ACC_X_FILT_HZ              20.0f   // vertical acceleration controller input filter default
 #define DISCONTROL_ACC_X_DT                   0.0025f // vertical acceleration controller dt default
 
-// ousailong y- 6 8 0.8 0.1
 #define DISCONTROL_POS_Y_P                    3.0f    // vertical position controller P gain default
 #define DISCONTROL_VEL_Y_P                    8.0f    // vertical velocity controller P gain default
 #define DISCONTROL_ACC_Y_P                    0.5f    // vertical acceleration controller P gain default
@@ -52,6 +50,66 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_ACC_Y_IMAX                 100     // vertical acceleration controller IMAX gain default
 #define DISCONTROL_ACC_Y_FILT_HZ              20.0f   // vertical acceleration controller input filter default
 #define DISCONTROL_ACC_Y_DT                   0.0025f // vertical acceleration controller dt default
+#endif
+
+#if 0  // ousailong
+// default gains for Sub
+#define DISCONTROL_POS_Z_P                    6.0f    // vertical position controller P gain default
+#define DISCONTROL_VEL_Z_P                    8.0f    // vertical velocity controller P gain default
+#define DISCONTROL_ACC_Z_P                    0.8f    // vertical acceleration controller P gain default
+#define DISCONTROL_ACC_Z_I                    0.1f    // vertical acceleration controller I gain default
+#define DISCONTROL_ACC_Z_D                    0.0f    // vertical acceleration controller D gain default
+#define DISCONTROL_ACC_Z_IMAX                 100     // vertical acceleration controller IMAX gain default
+#define DISCONTROL_ACC_Z_FILT_HZ              20.0f   // vertical acceleration controller input filter default
+#define DISCONTROL_ACC_Z_DT                   0.0025f // vertical acceleration controller dt default
+
+#define DISCONTROL_POS_X_P                    5.0f    // vertical position controller P gain default
+#define DISCONTROL_VEL_X_P                    5.0f    // vertical velocity controller P gain default
+#define DISCONTROL_ACC_X_P                    0.8f    // vertical acceleration controller P gain default
+#define DISCONTROL_ACC_X_I                    0.1f    // vertical acceleration controller I gain default
+#define DISCONTROL_ACC_X_D                    0.0f    // vertical acceleration controller D gain default
+#define DISCONTROL_ACC_X_IMAX                 100     // vertical acceleration controller IMAX gain default
+#define DISCONTROL_ACC_X_FILT_HZ              20.0f   // vertical acceleration controller input filter default
+#define DISCONTROL_ACC_X_DT                   0.0025f // vertical acceleration controller dt default
+
+#define DISCONTROL_POS_Y_P                    6.0f    // vertical position controller P gain default
+#define DISCONTROL_VEL_Y_P                    8.0f    // vertical velocity controller P gain default
+#define DISCONTROL_ACC_Y_P                    0.8f    // vertical acceleration controller P gain default
+#define DISCONTROL_ACC_Y_I                    0.1f    // vertical acceleration controller I gain default
+#define DISCONTROL_ACC_Y_D                    0.0f    // vertical acceleration controller D gain default
+#define DISCONTROL_ACC_Y_IMAX                 100     // vertical acceleration controller IMAX gain default
+#define DISCONTROL_ACC_Y_FILT_HZ              20.0f   // vertical acceleration controller input filter default
+#define DISCONTROL_ACC_Y_DT                   0.0025f // vertical acceleration controller dt default
+#endif
+
+#if 1  // dayu - 500K_100倍_5合1单前轴_35ms
+#define DISCONTROL_POS_Z_P                    6.0f    // vertical position controller P gain default
+#define DISCONTROL_VEL_Z_P                    5.0f    // vertical velocity controller P gain default
+#define DISCONTROL_ACC_Z_P                    0.8f    // vertical acceleration controller P gain default
+#define DISCONTROL_ACC_Z_I                    0.1f    // vertical acceleration controller I gain default
+#define DISCONTROL_ACC_Z_D                    0.0f    // vertical acceleration controller D gain default
+#define DISCONTROL_ACC_Z_IMAX                 100     // vertical acceleration controller IMAX gain default
+#define DISCONTROL_ACC_Z_FILT_HZ              20.0f   // vertical acceleration controller input filter default
+#define DISCONTROL_ACC_Z_DT                   0.0025f // vertical acceleration controller dt default
+
+#define DISCONTROL_POS_X_P                    6.0f    // vertical position controller P gain default
+#define DISCONTROL_VEL_X_P                    5.0f    // vertical velocity controller P gain default
+#define DISCONTROL_ACC_X_P                    0.8f    // vertical acceleration controller P gain default
+#define DISCONTROL_ACC_X_I                    0.1f    // vertical acceleration controller I gain default
+#define DISCONTROL_ACC_X_D                    0.0f    // vertical acceleration controller D gain default
+#define DISCONTROL_ACC_X_IMAX                 100     // vertical acceleration controller IMAX gain default
+#define DISCONTROL_ACC_X_FILT_HZ              20.0f   // vertical acceleration controller input filter default
+#define DISCONTROL_ACC_X_DT                   0.0025f // vertical acceleration controller dt default
+
+#define DISCONTROL_POS_Y_P                    3.0f    // vertical position controller P gain default
+#define DISCONTROL_VEL_Y_P                    8.0f    // vertical velocity controller P gain default
+#define DISCONTROL_ACC_Y_P                    0.5f    // vertical acceleration controller P gain default
+#define DISCONTROL_ACC_Y_I                    0.1f    // vertical acceleration controller I gain default
+#define DISCONTROL_ACC_Y_D                    0.0f    // vertical acceleration controller D gain default
+#define DISCONTROL_ACC_Y_IMAX                 100     // vertical acceleration controller IMAX gain default
+#define DISCONTROL_ACC_Y_FILT_HZ              20.0f   // vertical acceleration controller input filter default
+#define DISCONTROL_ACC_Y_DT                   0.0025f // vertical acceleration controller dt default
+#endif
 
 // vibration compensation gains
 #define DISCONTROL_VIBE_COMP_P_GAIN 0.250f
@@ -264,7 +322,7 @@ const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
     // @Description: distance face
     // @Values: 1:front 2:back 4:left 8:right 16:top 32:bottom
     // @User: Advanced
-    AP_GROUPINFO("_FACE",  30, AC_DistanceControl, _distance_face, 32),
+    AP_GROUPINFO("_FACE",  30, AC_DistanceControl, _distance_face, 0),
 
 	// @Param: _FRONT_OFT
     // @DisplayName: front offset
@@ -422,7 +480,7 @@ void AC_DistanceControl::update_distance(void)
 		}
 	}
 	
-	if(1) {
+	if(0) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {

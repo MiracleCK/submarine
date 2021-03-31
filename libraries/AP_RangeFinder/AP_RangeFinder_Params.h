@@ -30,4 +30,5 @@ public:
     AP_Int16 sample_freq;
     AP_Int16 cutoff_freq;
     AP_Float range;
+    AP_Float koef;
 };

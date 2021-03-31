@@ -1530,10 +1530,15 @@ void GCS_MAVLINK::send_rc_channels()
     rc().get_radio_in(values, ARRAY_SIZE(values));
 
     RangeFinder *rangefinder = RangeFinder::get_singleton();
-	AP_RangeFinder_Backend *sensor = rangefinder->get_backend(1);
-	AC_DistanceControl *distance_control = AC_DistanceControl::get_singleton();
+	AP_RangeFinder_Backend *bottom = rangefinder->get_backend(0);
+	AP_RangeFinder_Backend *front = rangefinder->get_backend(1);
+	AP_RangeFinder_Backend *back = rangefinder->get_backend(2);
+	AP_RangeFinder_Backend *left = rangefinder->get_backend(3);
+	AP_RangeFinder_Backend *right = rangefinder->get_backend(4);
+	//AC_DistanceControl *distance_control = AC_DistanceControl::get_singleton();
 
 	set_mavlink_message_id_interval(MAVLINK_MSG_ID_RC_CHANNELS, 25);
+#if 0
     mavlink_msg_rc_channels_send(
         chan,
         AP_HAL::millis(),
@@ -1556,7 +1561,31 @@ void GCS_MAVLINK::send_rc_channels()
         sensor->distance_cm_filtered(), //values[15],
         values[16],
         values[17],
-        receiver_rssi);        
+        receiver_rssi); 
+#endif
+	mavlink_msg_rc_channels_send(
+        chan,
+        AP_HAL::millis(),
+        RC_Channels::get_valid_channel_count(),
+        bottom->distance_cm(), //1,
+        front->distance_cm(), //2,
+        back->distance_cm(), //3,
+        left->distance_cm(), //4,
+        right->distance_cm(), //5,
+        bottom->distance_cm_filtered(), //6,
+        front->distance_cm_filtered(), //7,
+        back->distance_cm_filtered(), //8,
+        left->distance_cm_filtered(), //9,
+        right->distance_cm_filtered(), //10,
+        0, //11,
+        0, //12,
+        0, //13,
+        0, //14,
+        0, //15,
+        0, //16,
+        values[16],
+        values[17],
+        receiver_rssi);  
 }
 
 bool GCS_MAVLINK::sending_mavlink1() const

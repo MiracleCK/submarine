@@ -129,6 +129,8 @@ const AP_Param::GroupInfo AP_RangeFinder_Params::var_info[] = {
 
     AP_GROUPINFO("RANGE", 56, AP_RangeFinder_Params, range, 40.0f),
 
+    AP_GROUPINFO("KOEF", 57, AP_RangeFinder_Params, koef, 0.1f),
+
     AP_GROUPEND
 };
 
