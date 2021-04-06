@@ -391,6 +391,7 @@ private:
         DRIVER_MAG3110  =14,
         DRIVER_IST8308  = 15,
 		DRIVER_RM3100   =16,
+		DRIVER_VCM1193  =17,
     };
 
     bool _driver_enabled(enum DriverType driver_type);

@@ -1037,21 +1037,10 @@ void AC_PosControl::run_xy_controller(float dt)
         _pos_error.x = _pos_target.x - curr_pos.x;
         _pos_error.y = _pos_target.y - curr_pos.y;
 
-        // Constrain _pos_error and target position
-        // Constrain the maximum length of _vel_target to the maximum position correction velocity
-        // TODO: replace the leash length with a user definable maximum position correction
-        //_leash = _lean_limit;
-        if (limit_vector_length(_pos_error.x, _pos_error.y, _leash)) {
-            //_pos_target.x = curr_pos.x + _pos_error.x;
-            //_pos_target.y = curr_pos.y + _pos_error.y;
-            //_flags._gps_drift = true;
-            //hal.shell->printf("GPS drift, _leash %f\r\n", _leash);
-        }
-
         _vel_target = sqrt_controller(_pos_error, kP, _accel_cms);
     }
 
-    if (1) {
+    if (0) {
     	static uint32_t _startup_ms = 0;
 
         if(_startup_ms == 0) {
@@ -1094,14 +1083,14 @@ void AC_PosControl::run_xy_controller(float dt)
     _vel_error.y = _vel_target.y - _vehicle_horiz_vel.y;
     // TODO: constrain velocity error and velocity target
 
-    if (1) {
+    if (0) {
     	static uint32_t _startup_ms = 0;
 
         if(_startup_ms == 0) {
 			_startup_ms = AP_HAL::millis();
         }
 
-        if(AP_HAL::millis() - _startup_ms > 100) {
+        if(AP_HAL::millis() - _startup_ms > 1000) {
 			_startup_ms = AP_HAL::millis();
 			
 		    AP::logger().Write("XYVE", "TimeUS,VDX,VDY,VTX,VTY,VHVX,VHVY,VEX,VEY", "Qffffffff", 
@@ -1134,7 +1123,7 @@ void AC_PosControl::run_xy_controller(float dt)
     // get d
     vel_xy_d = _pid_vel_xy.get_d();
 
-    if (1) {
+    if (0) {
     	static uint32_t _startup_ms = 0;
 
         if(_startup_ms == 0) {
@@ -1185,7 +1174,7 @@ void AC_PosControl::run_xy_controller(float dt)
     float accel_max = MIN(GRAVITY_MSS * 100.0f * tanf(ToRad(angle_max * 0.01f)), POSCONTROL_ACCEL_XY_MAX);
     _limit.accel_xy = limit_vector_length(_accel_target.x, _accel_target.y, accel_max);
 
-    if (1) {
+    if (0) {
     	static uint32_t _startup_ms = 0;
 
         if(_startup_ms == 0) {
@@ -1210,23 +1199,6 @@ void AC_PosControl::run_xy_controller(float dt)
 
     // update angle targets that will be passed to stabilize controller
     accel_to_lean_angles(_accel_target.x, _accel_target.y, _roll_target, _pitch_target);
-
-    if (1) {
-    	static uint32_t _startup_ms = 0;
-
-        if(_startup_ms == 0) {
-			_startup_ms = AP_HAL::millis();
-        }
-
-        if(AP_HAL::millis() - _startup_ms > 100) {
-			_startup_ms = AP_HAL::millis();
-			
-		    AP::logger().Write("XYAN", "TimeUS,RT,PT", "Qff", 
-                            AP_HAL::micros64(), 
-                             _roll_target,
-                             _pitch_target);
-        }
-	}
 }
 
 // get_lean_angles_to_accel - convert roll, pitch lean angles to lat/lon frame accelerations in cm/s/s
