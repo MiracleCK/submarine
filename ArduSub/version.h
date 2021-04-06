@@ -9,7 +9,7 @@
 #define THISFIRMWARE "F1 v1.2.0dev"
 
 // the following line is parsed by the autotest scripts
-#define FIRMWARE_VERSION 1,1,9,FIRMWARE_VERSION_TYPE_DEV
+#define FIRMWARE_VERSION 1,2,0,FIRMWARE_VERSION_TYPE_DEV
 
 #define FW_MAJOR 1
 #define FW_MINOR 2
