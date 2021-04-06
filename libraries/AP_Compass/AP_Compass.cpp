@@ -25,6 +25,7 @@
 #include "AP_Compass_MMC3416.h"
 #include "AP_Compass_MAG3110.h"
 #include "AP_Compass_RM3100.h"
+#include "AP_Compass_VCM1193.h"
 #include "AP_Compass.h"
 #include "Compass_learn.h"
 #include <stdio.h>
@@ -701,6 +702,11 @@ void Compass::_probe_external_i2c_compasses(void)
             ADD_BACKEND(DRIVER_QMC5883L, AP_Compass_QMC5883L::probe(GET_I2C_DEVICE(i, HAL_COMPASS_QMC5883L_I2C_ADDR),
                                                                     all_external, ROTATION_CUSTOM_MAG));
                                                                     // all_external?HAL_COMPASS_QMC5883L_ORIENTATION_EXTERNAL:HAL_COMPASS_QMC5883L_ORIENTATION_INTERNAL));
+        }
+
+        FOREACH_I2C_INTERNAL(i) {
+            ADD_BACKEND(DRIVER_VCM1193, AP_Compass_VCM1193::probe(GET_I2C_DEVICE(i, HAL_COMPASS_VCM1193_I2C_ADDR),
+                                                                    all_external, ROTATION_CUSTOM_MAG));                    
         }
     }
 
