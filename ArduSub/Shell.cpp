@@ -74,7 +74,17 @@ const param_name_t params[] = {
     {"wsp", "WPNAV_SPEED"},
     {"wac", "WPNAV_ACCEL"},
     {"lsp", "LOIT_SPEED"},
-    {"lac", "LOIT_ACC_MAX"}
+    {"lac", "LOIT_ACC_MAX"},
+
+    {"cfx", "COMPASS_OFS_X"},
+    {"cfy", "COMPASS_OFS_Y"},
+    {"cfz", "COMPASS_OFS_Z"},
+	{"cdx", "COMPASS_DIA_X"},
+	{"cdy", "COMPASS_DIA_Y"},
+	{"cdz", "COMPASS_DIA_Z"},
+	{"cox", "COMPASS_ODI_X"},
+	{"coy", "COMPASS_ODI_Y"},
+	{"coz", "COMPASS_ODI_Z"},
 };
 
 static int params_cnt = sizeof(params) / sizeof(params[0]);
