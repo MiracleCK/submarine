@@ -4,7 +4,7 @@
 
 #define COMPASS_CAL_NUM_SPHERE_PARAMS       4
 #define COMPASS_CAL_NUM_ELLIPSOID_PARAMS    9
-#define COMPASS_CAL_NUM_SAMPLES             300     // number of samples required before fitting begins
+#define COMPASS_CAL_NUM_SAMPLES             100     // number of samples required before fitting begins
 
 #define COMPASS_MIN_SCALE_FACTOR 0.85
 #define COMPASS_MAX_SCALE_FACTOR 1.3
@@ -26,6 +26,7 @@ public:
     // update the state machine and calculate offsets, diagonals and offdiagonals
     void update(bool &failure);
     void new_sample(const Vector3f &sample);
+    bool ahrs_accept_sample();
 
     bool check_for_timeout();
 

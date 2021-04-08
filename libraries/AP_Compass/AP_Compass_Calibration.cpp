@@ -303,6 +303,7 @@ MAV_RESULT Compass::handle_mag_cal_command(const mavlink_command_long_t &packet)
 
     switch (packet.command) {
     case MAV_CMD_DO_START_MAG_CAL: {
+    	hal.shell->printf("->MAV_CMD_DO_START_MAG_CAL\r\n");
         result = MAV_RESULT_ACCEPTED;
         if (hal.util->get_soft_armed()) {
             hal.console->printf("Disarm for compass calibration\n");
@@ -332,6 +333,7 @@ MAV_RESULT Compass::handle_mag_cal_command(const mavlink_command_long_t &packet)
     }
 
     case MAV_CMD_DO_ACCEPT_MAG_CAL: {
+    	hal.shell->printf("->MAV_CMD_DO_ACCEPT_MAG_CAL\r\n");
         result = MAV_RESULT_ACCEPTED;
         if (packet.param1 < 0 || packet.param1 > 255) {
             result = MAV_RESULT_FAILED;
@@ -351,6 +353,7 @@ MAV_RESULT Compass::handle_mag_cal_command(const mavlink_command_long_t &packet)
     }
 
     case MAV_CMD_DO_CANCEL_MAG_CAL: {
+    	hal.shell->printf("->MAV_CMD_DO_CANCEL_MAG_CAL\r\n");
         result = MAV_RESULT_ACCEPTED;
         if (packet.param1 < 0 || packet.param1 > 255) {
             result = MAV_RESULT_FAILED;

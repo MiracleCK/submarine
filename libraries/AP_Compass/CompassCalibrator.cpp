@@ -127,9 +127,8 @@ float CompassCalibrator::get_completion_percent() const
         case Status::WAITING_TO_START:
             return 0.0f;
         case Status::RUNNING_STEP_ONE:
-            return 33.3f * _samples_collected/COMPASS_CAL_NUM_SAMPLES;
+            return 99.0f * _samples_collected/COMPASS_CAL_NUM_SAMPLES;
         case Status::RUNNING_STEP_TWO:
-            return 33.3f + 65.7f*((float)(_samples_collected-_samples_thinned)/(COMPASS_CAL_NUM_SAMPLES-_samples_thinned));
         case Status::SUCCESS:
             return 100.0f;
         case Status::FAILED:
@@ -178,6 +177,23 @@ bool CompassCalibrator::check_for_timeout()
     return false;
 }
 
+bool CompassCalibrator::ahrs_accept_sample()
+{
+	//hal.shell->printf("pitch_sensor %d\r\n", abs(AP::ahrs().pitch_sensor));
+	if(_samples_collected <= (COMPASS_CAL_NUM_SAMPLES/2) && 
+		abs(AP::ahrs().roll_sensor) < 1000 && 
+		abs(AP::ahrs().pitch_sensor) < 1000) {
+			return true;
+	} 
+
+	if(_samples_collected > (COMPASS_CAL_NUM_SAMPLES/2) && 
+	   abs(AP::ahrs().pitch_sensor) > 8000) {
+			return true;
+	}
+
+	return false;
+}
+
 void CompassCalibrator::new_sample(const Vector3f& sample)
 {
     _last_sample_ms = AP_HAL::millis();
@@ -186,11 +202,12 @@ void CompassCalibrator::new_sample(const Vector3f& sample)
         set_status(Status::RUNNING_STEP_ONE);
     }
 
-    if (running() && _samples_collected < COMPASS_CAL_NUM_SAMPLES && accept_sample(sample)) {
+    if (running() && _samples_collected < COMPASS_CAL_NUM_SAMPLES && accept_sample(sample) && ahrs_accept_sample()) {
         update_completion_mask(sample);
         _sample_buffer[_samples_collected].set(sample);
         _sample_buffer[_samples_collected].att.set_from_ahrs();
         _samples_collected++;
+        hal.shell->printf("_samples_collected %d\r\n", _samples_collected);
     }
 }
 
@@ -203,36 +220,27 @@ void CompassCalibrator::update(bool &failure)
         return;
     }
 
-    if (_status == Status::RUNNING_STEP_ONE) {
-        if (_fit_step >= 10) {
-            if (is_equal(_fitness, _initial_fitness) || isnan(_fitness)) {  // if true, means that fitness is diverging instead of converging
-                set_status(Status::FAILED);
-                failure = true;
-            } else {
-                set_status(Status::RUNNING_STEP_TWO);
-            }
-        } else {
-            if (_fit_step == 0) {
-                calc_initial_offset();
-            }
-            run_sphere_fit();
-            _fit_step++;
-        }
-    } else if (_status == Status::RUNNING_STEP_TWO) {
+	if (_status == Status::RUNNING_STEP_ONE) {
         if (_fit_step >= 35) {
             if (fit_acceptable() && fix_radius()){// && calculate_orientation()) {
                 set_status(Status::SUCCESS);
+                hal.shell->printf("_fitness %f, SUCCESS\r\n", _fitness);
             } else {
                 set_status(Status::FAILED);
                 failure = true;
+                hal.shell->printf("_fitness %f, FAILED\r\n", _fitness);
             }
-        } else if (_fit_step < 15) {
+        } else if (_fit_step == 0) {
+        	calc_initial_offset();
+        	_fit_step++;
+        } else if (_fit_step > 0 && _fit_step < 15) {
             run_sphere_fit();
             _fit_step++;
         } else {
             run_ellipsoid_fit();
             _fit_step++;
         }
+        hal.shell->printf("_status %d, _fit_step %d, _fitness %f\r\n", _status, _fit_step, _fitness);
     }
 }
 
@@ -329,9 +337,9 @@ bool CompassCalibrator::set_status(CompassCalibrator::Status status)
             return true;
 
         case Status::SUCCESS:
-            if (_status != Status::RUNNING_STEP_TWO) {
-                return false;
-            }
+            //if (_status != Status::RUNNING_STEP_TWO) {
+            //    return false;
+            //}
 
             if (_sample_buffer != nullptr) {
                 free(_sample_buffer);

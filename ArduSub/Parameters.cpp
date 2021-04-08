@@ -773,6 +773,8 @@ void Sub::load_parameters()
 
     AP_Param::set_default_by_name("WPNAV_RADIUS", 50.0);
 
+    AP_Param::set_default_by_name("COMPASS_CAL_FIT", 8);
+
     //AP_Param::set_default_by_name("INS_POS1_X", 0.04);
 
     AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", WP_YAW_BEHAVIOR_LOOK_AT_NEXT_WP); // look at next wp
