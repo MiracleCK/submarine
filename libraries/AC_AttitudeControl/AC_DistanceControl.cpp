@@ -109,6 +109,11 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_ACC_Y_IMAX                 100     // vertical acceleration controller IMAX gain default
 #define DISCONTROL_ACC_Y_FILT_HZ              20.0f   // vertical acceleration controller input filter default
 #define DISCONTROL_ACC_Y_DT                   0.0025f // vertical acceleration controller dt default
+
+#define DISCONTROL_LIMIT_X_P                  1000.0f    // discontrol limit x P gain default
+#define DISCONTROL_LIMIT_Y_P                  1000.0f    // discontrol limit y P gain default
+#define DISCONTROL_LIMIT_Z_P                  1000.0f    // discontrol limit z P gain default
+
 #endif
 
 // vibration compensation gains
@@ -260,13 +265,29 @@ const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
     // @User: Standard
     AP_SUBGROUPINFO(_pid_accel_y, "_ACCY_", 9, AC_DistanceControl, AC_PID),
 
-    // @Param: _LIMIT_P
-    // @DisplayName: distance limit P gain
+    // @Param: _LIMIT_X_P
+    // @DisplayName: distance x limit P gain
     // @Description: Less than how many centimeters for speed limit
     // @User: Standard
     // @units: cm
     // @Values: < 0
-    AP_GROUPINFO("_LIMIT_P",  10, AC_DistanceControl, _limit_p, 100.0f),
+    AP_GROUPINFO("_LIMIT_X_P",  10, AC_DistanceControl, _limit_x_p, DISCONTROL_LIMIT_X_P),
+
+    // @Param: _LIMIT_Y_P
+    // @DisplayName: distance y limit P gain
+    // @Description: Less than how many centimeters for speed limit
+    // @User: Standard
+    // @units: cm
+    // @Values: < 0
+    AP_GROUPINFO("_LIMIT_Y_P",  11, AC_DistanceControl, _limit_y_p, DISCONTROL_LIMIT_Y_P),
+
+    // @Param: _LIMIT_Z_P
+    // @DisplayName: distance z limit P gain
+    // @Description: Less than how many centimeters for speed limit
+    // @User: Standard
+    // @units: cm
+    // @Values: < 0
+    AP_GROUPINFO("_LIMIT_Z_P",  12, AC_DistanceControl, _limit_z_p, DISCONTROL_LIMIT_Z_P),
 
     // @Param: _LIMIT_ENABLE
     // @DisplayName: Keep a distance and avoid collision
@@ -524,54 +545,54 @@ void AC_DistanceControl::pilot_thrusts_scale(Vector3f &thrusts)
     	if(_front_limit_cm != 0 && distance_ned[DISTANCE_FRONT] != 0 && !front_face_is_active()) {
 			dis_error.x = distance_ned[DISTANCE_FRONT] - _front_limit_cm;
 		} else {
-			dis_error.x = _limit_p;
+			dis_error.x = _limit_x_p;
 		}
 	} else if(thrusts.x < -0.05f) {
 		if(_back_limit_cm != 0 && distance_ned[DISTANCE_BACK] != 0 && !back_face_is_active()) {
 			dis_error.x = _back_limit_cm - distance_ned[DISTANCE_BACK];
 		} else {
-			dis_error.x = _limit_p;
+			dis_error.x = _limit_x_p;
 		}
 	} else {
 		dis_error.x = 0;
 		thrusts.x = 0;
 	}
-	thrusts.x *= constrain_float((float)dis_error.x/_limit_p, 0.0f, 1.0f);
+	thrusts.x *= constrain_float(sq(dis_error.x/_limit_x_p), 0.0f, 1.0f);
 
 	if(thrusts.y > 0.05f) {
 		if(_right_limit_cm != 0 && distance_ned[DISTANCE_RIGHT] != 0 && !right_face_is_active()) {
 			dis_error.y = distance_ned[DISTANCE_RIGHT] - _right_limit_cm;
 		} else {
-			dis_error.y = _limit_p;
+			dis_error.y = _limit_y_p;
 		}
 	} else if(thrusts.y < -0.05f) {
 		if(_left_limit_cm != 0 && distance_ned[DISTANCE_LEFT] != 0 && !left_face_is_active()) {
 			dis_error.y = _left_limit_cm - distance_ned[DISTANCE_LEFT];
 		} else {
-			dis_error.y = _limit_p;
+			dis_error.y = _limit_y_p;
 		}
 	} else {
 		dis_error.y = 0;
 		thrusts.y = 0;
 	}
-	thrusts.y *= constrain_float((float)dis_error.y/_limit_p, 0.0f, 1.0f);
+	thrusts.y *= constrain_float(sq(dis_error.y/_limit_y_p), 0.0f, 1.0f);
 
 	if(thrusts.z < -0.05f) {
 		if(_bottom_limit_cm != 0 && distance_ned[DISTANCE_BOTTOM] != 0 && !bottom_face_is_active()) {
 			dis_error.z = distance_ned[DISTANCE_BOTTOM] - _bottom_limit_cm;
 		} else {
-			dis_error.z = _limit_p;
+			dis_error.z = _limit_z_p;
 		}
 	} else if(thrusts.z > 0.05f) {
 		if(abs(distance_ned[DISTANCE_TOP]) > 10 && _top_limit_cm != 0 && !top_face_is_active())
 			dis_error.z = _top_limit_cm - distance_ned[DISTANCE_TOP];
 		else
-			dis_error.z = _limit_p;
+			dis_error.z = _limit_z_p;
 	} else {
 		dis_error.z = 0;
 		thrusts.z = 0;
 	}
-	thrusts.z *= constrain_float((float)dis_error.z/_limit_p, 0.0f, 1.0f);
+	thrusts.z *= constrain_float(sq(dis_error.z/_limit_z_p), 0.0f, 1.0f);
 
 	if(1) {
 		static uint32_t _startup_ms = 0;

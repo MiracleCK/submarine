@@ -147,7 +147,9 @@ private:
     int16_t distance_bf[DISTANCE_NUM];
     int16_t distance_ned[DISTANCE_NUM];
 
-	AP_Float	_limit_p;
+	AP_Float	_limit_x_p;
+	AP_Float	_limit_y_p;
+	AP_Float	_limit_z_p;
     AP_Int8     _limit_enable;
 	AP_Int8     _distance_face;
     AP_Int8 	_front_offset;
