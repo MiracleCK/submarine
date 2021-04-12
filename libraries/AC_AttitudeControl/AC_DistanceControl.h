@@ -66,7 +66,8 @@ public:
     int16_t get_bottom_limit_cm() const { return _bottom_limit_cm.get(); }
 
 	void update_distance();
-	void pilot_thrusts_scale(Vector3f &thrusts);
+	void pilot_thrusts_scale(Vector3f &thrusts) { thrusts *= _thr_p; }
+	void pilot_thrusts_limit(Vector3f &thrusts);
 	static AC_DistanceControl *get_singleton(void) { return _singleton; }
 	
     static const struct AP_Param::GroupInfo var_info[];
@@ -147,6 +148,7 @@ private:
     int16_t distance_bf[DISTANCE_NUM];
     int16_t distance_ned[DISTANCE_NUM];
 
+	AP_Float	_thr_p;
 	AP_Float	_limit_x_p;
 	AP_Float	_limit_y_p;
 	AP_Float	_limit_z_p;
