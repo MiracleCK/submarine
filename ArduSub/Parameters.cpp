@@ -857,6 +857,9 @@ void Sub::load_parameters()
     AP_Param::set_and_save_by_name("RNGFND4_ORIENT", 6);
     AP_Param::set_default_by_name("RNGFND5_TYPE", 10);
     AP_Param::set_and_save_by_name("RNGFND5_ORIENT", 2);
+
+    AP_Param::set_default_by_name("MOT_SLEW_DN_TIME", 0.25f);
+    AP_Param::set_default_by_name("MOT_SLEW_UP_TIME", 0.25f);
 }
 
 void Sub::convert_old_parameters()
