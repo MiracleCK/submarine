@@ -153,15 +153,20 @@ void AP_RangeFinder_MAVLink::update(void)
     }
 #endif
 
-	state.distance_cm = distance_cm;
-	state.distance_cm_filtered = distance_cm_filtered;
-	//state.distance_cm_filtered = _distance_filter.apply(distance_cm);
+	if (AP_HAL::millis() - state.last_reading_ms > AP_RANGEFINDER_MAVLINK_TIMEOUT_MS) {
+        set_status(RangeFinder::Status::NoData);
+        state.distance_cm = 0;
+    } else {
+        state.distance_cm = distance_cm;
+		state.distance_cm_filtered = distance_cm_filtered;
+		//state.distance_cm_filtered = _distance_filter.apply(distance_cm);
 
-	//if(distance_ok((float)state.distance_cm)) {
-    //	state.distance_cm_filtered = state.distance_cm;
-    //}
-    
-	set_status(RangeFinder::Status::Good);
+		//if(distance_ok((float)state.distance_cm)) {
+	    //	state.distance_cm_filtered = state.distance_cm;
+	    //}
+	    
+		set_status(RangeFinder::Status::Good);
+    }
 
     if((sample_freq != params.sample_freq.get()) ||
        (cutoff_freq != params.cutoff_freq.get())) {

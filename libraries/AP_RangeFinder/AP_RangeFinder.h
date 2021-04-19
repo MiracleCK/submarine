@@ -120,6 +120,8 @@ public:
 
     // prearm checks
     bool prearm_healthy(char *failure_msg, const uint8_t failure_msg_len) const;
+    
+	bool healthy(enum Rotation orientation);
 
     // detect and initialise any available rangefinders
     void init(enum Rotation orientation_default);

@@ -124,7 +124,7 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_ACC_Z_P                    0.8f    // vertical acceleration controller P gain default
 #define DISCONTROL_ACC_Z_I                    0.1f    // vertical acceleration controller I gain default
 #define DISCONTROL_ACC_Z_D                    0.0f    // vertical acceleration controller D gain default
-#define DISCONTROL_ACC_Z_IMAX                 100     // vertical acceleration controller IMAX gain default
+#define DISCONTROL_ACC_Z_IMAX                 200     // vertical acceleration controller IMAX gain default
 #define DISCONTROL_ACC_Z_FILT_HZ              20.0f   // vertical acceleration controller input filter default
 #define DISCONTROL_ACC_Z_DT                   0.0025f // vertical acceleration controller dt default
 
@@ -133,7 +133,7 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_ACC_X_P                    0.8f    // vertical acceleration controller P gain default
 #define DISCONTROL_ACC_X_I                    0.1f    // vertical acceleration controller I gain default
 #define DISCONTROL_ACC_X_D                    0.0f    // vertical acceleration controller D gain default
-#define DISCONTROL_ACC_X_IMAX                 100     // vertical acceleration controller IMAX gain default
+#define DISCONTROL_ACC_X_IMAX                 200     // vertical acceleration controller IMAX gain default
 #define DISCONTROL_ACC_X_FILT_HZ              20.0f   // vertical acceleration controller input filter default
 #define DISCONTROL_ACC_X_DT                   0.0025f // vertical acceleration controller dt default
 
@@ -142,7 +142,7 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_ACC_Y_P                    0.5f    // vertical acceleration controller P gain default
 #define DISCONTROL_ACC_Y_I                    0.1f    // vertical acceleration controller I gain default
 #define DISCONTROL_ACC_Y_D                    0.0f    // vertical acceleration controller D gain default
-#define DISCONTROL_ACC_Y_IMAX                 100     // vertical acceleration controller IMAX gain default
+#define DISCONTROL_ACC_Y_IMAX                 200     // vertical acceleration controller IMAX gain default
 #define DISCONTROL_ACC_Y_FILT_HZ              20.0f   // vertical acceleration controller input filter default
 #define DISCONTROL_ACC_Y_DT                   0.0025f // vertical acceleration controller dt default
 
@@ -598,13 +598,13 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 {
 	Vector3f dis_error;
 	
-    if(thrusts.x > 0.05f) {
+    if(thrusts.x > 0.0f) {
     	if(_front_limit_cm != 0 && distance_ned[DISTANCE_FRONT] != 0 && !front_face_is_active()) {
 			dis_error.x = distance_ned[DISTANCE_FRONT] - _front_limit_cm;
 		} else {
 			dis_error.x = _limit_x_p;
 		}
-	} else if(thrusts.x < -0.05f) {
+	} else if(thrusts.x < -0.0f) {
 		if(_back_limit_cm != 0 && distance_ned[DISTANCE_BACK] != 0 && !back_face_is_active()) {
 			dis_error.x = _back_limit_cm - distance_ned[DISTANCE_BACK];
 		} else {
@@ -616,13 +616,13 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 	}
 	thrusts.x *= constrain_float(powf(dis_error.x/_limit_x_p, 3), 0.0f, 1.0f);
 
-	if(thrusts.y > 0.05f) {
+	if(thrusts.y > 0.0f) {
 		if(_right_limit_cm != 0 && distance_ned[DISTANCE_RIGHT] != 0 && !right_face_is_active()) {
 			dis_error.y = distance_ned[DISTANCE_RIGHT] - _right_limit_cm;
 		} else {
 			dis_error.y = _limit_y_p;
 		}
-	} else if(thrusts.y < -0.05f) {
+	} else if(thrusts.y < -0.0f) {
 		if(_left_limit_cm != 0 && distance_ned[DISTANCE_LEFT] != 0 && !left_face_is_active()) {
 			dis_error.y = _left_limit_cm - distance_ned[DISTANCE_LEFT];
 		} else {
@@ -634,13 +634,13 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 	}
 	thrusts.y *= constrain_float(powf(dis_error.y/_limit_y_p, 3), 0.0f, 1.0f);
 
-	if(thrusts.z < -0.05f) {
+	if(thrusts.z < -0.0f) {
 		if(_bottom_limit_cm != 0 && distance_ned[DISTANCE_BOTTOM] != 0 && !bottom_face_is_active()) {
 			dis_error.z = distance_ned[DISTANCE_BOTTOM] - _bottom_limit_cm;
 		} else {
 			dis_error.z = _limit_z_p;
 		}
-	} else if(thrusts.z > 0.05f) {
+	} else if(thrusts.z > 0.0f) {
 		if(abs(distance_ned[DISTANCE_TOP]) > 10 && _top_limit_cm != 0 && !top_face_is_active())
 			dis_error.z = _top_limit_cm - distance_ned[DISTANCE_TOP];
 		else

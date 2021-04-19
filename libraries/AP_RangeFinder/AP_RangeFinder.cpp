@@ -553,15 +553,6 @@ AP_RangeFinder_Backend *RangeFinder::find_instance(enum Rotation orientation) co
     for (uint8_t i=0; i<num_instances; i++) {
         AP_RangeFinder_Backend *backend = get_backend(i);
         if (backend != nullptr &&
-            backend->orientation() == orientation &&
-            backend->status() == Status::Good) {
-            return backend;
-        }
-    }
-    // if none in range then return first with correct orientation
-    for (uint8_t i=0; i<num_instances; i++) {
-        AP_RangeFinder_Backend *backend = get_backend(i);
-        if (backend != nullptr &&
             backend->orientation() == orientation) {
             return backend;
         }
@@ -575,6 +566,11 @@ uint16_t RangeFinder::distance_cm_orient(enum Rotation orientation) const
     if (backend == nullptr) {
         return 0;
     }
+
+    if (backend->status() != Status::Good) {
+        return 0;
+    }
+    
     return backend->distance_cm();
 }
 
@@ -584,7 +580,22 @@ uint16_t RangeFinder::distance_cm_filtered_orient(enum Rotation orientation) con
     if (backend == nullptr) {
         return 0;
     }
+
+    if (backend->status() != Status::Good) {
+        return 0;
+    }
+    
     return backend->distance_cm_filtered();
+}
+
+bool RangeFinder::healthy(enum Rotation orientation)
+{
+	AP_RangeFinder_Backend *backend = find_instance(orientation);
+    if (backend == nullptr) {
+        return false;
+    }
+
+    return (backend->status() == Status::Good);
 }
 
 uint16_t RangeFinder::voltage_mv_orient(enum Rotation orientation) const

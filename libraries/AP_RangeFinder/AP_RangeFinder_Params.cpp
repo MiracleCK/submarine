@@ -127,9 +127,9 @@ const AP_Param::GroupInfo AP_RangeFinder_Params::var_info[] = {
 
     AP_GROUPINFO("CUTOFF", 55, AP_RangeFinder_Params, cutoff_freq, 20),
 
-    AP_GROUPINFO("RANGE", 56, AP_RangeFinder_Params, range, 40.0f),
+    AP_GROUPINFO("RANGE", 56, AP_RangeFinder_Params, range, 10.0f),  //40.0f
 
-    AP_GROUPINFO("KOEF", 57, AP_RangeFinder_Params, koef, 0.1f),
+    AP_GROUPINFO("KOEF", 57, AP_RangeFinder_Params, koef, 0.3f), //0.1f
 
     AP_GROUPEND
 };
