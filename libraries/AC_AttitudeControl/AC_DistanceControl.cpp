@@ -7,10 +7,6 @@ extern const AP_HAL::HAL& hal;
 
 #define USE_DISTANCE_FILTERED 	1
 
-#define DISCONTROL_ACCEL_X                      250.0f  // default x acceleration in cm/s/s.
-#define DISCONTROL_ACCEL_Y                      250.0f  // default y acceleration in cm/s/s.
-#define DISCONTROL_ACCEL_Z                      250.0f  // default z acceleration in cm/s/s.
-
 #define DISCONTROL_DT_50HZ                      0.02f   // time difference in seconds for 50hz update rate
 #define DISCONTROL_DT_400HZ                     0.0025f // time difference in seconds for 400hz update rate
 
@@ -163,6 +159,14 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_BACK_OFT_CM               24    // discontrol back offset default
 #define DISCONTROL_LEFT_OFT_CM                8    // discontrol left offset default
 #define DISCONTROL_RIGHT_OFT_CM               8    // discontrol right offset default
+
+#define DISCONTROL_DELAY_MS_X                 250    // discontrol x delay time
+#define DISCONTROL_DELAY_MS_Y                 250    // discontrol y delay time
+#define DISCONTROL_DELAY_MS_Z                 250    // discontrol z delay time
+
+#define DISCONTROL_MAX_ACCEL_X                500.0f  // default x acceleration in cm/s/s.
+#define DISCONTROL_MAX_ACCEL_Y                500.0f  // default y acceleration in cm/s/s.
+#define DISCONTROL_MAX_ACCEL_Z                500.0f  // default z acceleration in cm/s/s.
 #endif
 
 // vibration compensation gains
@@ -430,6 +434,54 @@ const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("_RIGHT_OFT",  34, AC_DistanceControl, _right_offset, DISCONTROL_RIGHT_OFT_CM),
 
+    // @Param: _DELAY_X
+    // @DisplayName: x delay time
+    // @Description: x delay time
+    // @User: Standard
+    // @units: ms
+    // @Values: > 0
+    AP_GROUPINFO("_DELAY_X",  35, AC_DistanceControl, _delay_ms_x, DISCONTROL_DELAY_MS_X),
+
+    // @Param: _DELAY_Y
+    // @DisplayName: y delay time
+    // @Description: y delay time
+    // @User: Standard
+    // @units: ms
+    // @Values: > 0
+    AP_GROUPINFO("_DELAY_Y",  36, AC_DistanceControl, _delay_ms_y, DISCONTROL_DELAY_MS_Y),
+
+    // @Param: _DELAY_Z
+    // @DisplayName: z delay time
+    // @Description: z delay time
+    // @User: Standard
+    // @units: ms
+    // @Values: > 0
+    AP_GROUPINFO("_DELAY_Z",  37, AC_DistanceControl, _delay_ms_z, DISCONTROL_DELAY_MS_Z),
+
+    // @Param: _ACCEL_X
+    // @DisplayName: x max accel
+    // @Description: x max accel
+    // @User: Standard
+    // @units: cm/s/s
+    // @Values: > 0
+    AP_GROUPINFO("_ACCEL_X",  38, AC_DistanceControl, _max_accel_x, DISCONTROL_MAX_ACCEL_X),
+
+    // @Param: _ACCEL_Y
+    // @DisplayName: y max accel
+    // @Description: y max accel
+    // @User: Standard
+    // @units: cm/s/s
+    // @Values: > 0
+    AP_GROUPINFO("_ACCEL_Y",  39, AC_DistanceControl, _max_accel_y, DISCONTROL_MAX_ACCEL_Y),
+
+    // @Param: _ACCEL_Z
+    // @DisplayName: z max accel
+    // @Description: z max accel
+    // @User: Standard
+    // @units: cm/s/s
+    // @Values: > 0
+    AP_GROUPINFO("_ACCEL_Z",  40, AC_DistanceControl, _max_accel_z, DISCONTROL_MAX_ACCEL_Z),
+
     AP_GROUPEND
 };
 
@@ -455,7 +507,6 @@ AC_DistanceControl::AC_DistanceControl(const AP_AHRS_View& ahrs, const AP_Inerti
     _p_vel_z(DISCONTROL_VEL_Z_P),
     _pid_accel_z(DISCONTROL_ACC_Z_P, DISCONTROL_ACC_Z_I, DISCONTROL_ACC_Z_D, 0.0f, DISCONTROL_ACC_Z_IMAX, 0.0f, DISCONTROL_ACC_Z_FILT_HZ, 0.0f, DISCONTROL_ACC_Z_DT),
     _dt(DISCONTROL_DT_400HZ),
-    _accel_cms(DISCONTROL_ACCEL_X, DISCONTROL_ACCEL_Y, DISCONTROL_ACCEL_Z),
     _vel_x_error_filter(DISCONTROL_VEL_X_ERROR_CUTOFF_FREQ),
     _vel_y_error_filter(DISCONTROL_VEL_Y_ERROR_CUTOFF_FREQ),
     _vel_z_error_filter(DISCONTROL_VEL_Z_ERROR_CUTOFF_FREQ),
@@ -649,7 +700,7 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 		dis_error.z = 0;
 		thrusts.z = 0;
 	}
-	thrusts.z *= constrain_float(powf(dis_error.z/_limit_z_p, 3), 0.0f, 1.0f);
+	thrusts.z *= constrain_float(powf(dis_error.z/_limit_z_p, 1), 0.0f, 1.0f);
 
 	if(1) {
 		static uint32_t _startup_ms = 0;
@@ -717,7 +768,7 @@ void AC_DistanceControl::update_z_controller(float distance)
 	}
 
     // calculate _vel_target.z using from _pos_error.z using sqrt controller
-    _vel_target.z = AC_AttitudeControl::sqrt_controller(_pos_error.z, _p_pos_z.kP(), _accel_cms.z, _dt);
+    _vel_target.z = AC_AttitudeControl::sqrt_controller(_pos_error.z, _p_pos_z.kP(), _max_accel_z, _dt);
 
     // add feed forward component
     if (_flags.use_desvel_ff_z) {
@@ -859,7 +910,7 @@ void AC_DistanceControl::update_x_controller(float distance)
 	}
 
     // calculate _vel_target.x using from _pos_error.x using sqrt controller
-    _vel_target.x = AC_AttitudeControl::sqrt_controller(_pos_error.x, _p_pos_x.kP(), _accel_cms.x, _dt);
+    _vel_target.x = AC_AttitudeControl::sqrt_controller(_pos_error.x, _p_pos_x.kP(), _max_accel_x, _dt);
 
     // add feed forward component
     if (_flags.use_desvel_ff_x) {
@@ -979,7 +1030,7 @@ void AC_DistanceControl::update_y_controller(float distance)
 	}
 
     // calculate _vel_target.y using from _pos_error.y using sqrt controller
-    _vel_target.y = AC_AttitudeControl::sqrt_controller(_pos_error.y, _p_pos_y.kP(), _accel_cms.y, _dt);
+    _vel_target.y = AC_AttitudeControl::sqrt_controller(_pos_error.y, _p_pos_y.kP(), _max_accel_y, _dt);
 
     // add feed forward component
     if (_flags.use_desvel_ff_y) {

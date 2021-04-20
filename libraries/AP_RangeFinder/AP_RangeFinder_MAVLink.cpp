@@ -32,7 +32,7 @@ AP_RangeFinder_MAVLink::AP_RangeFinder_MAVLink(RangeFinder::RangeFinder_State &_
     distance_cm = 0;
     sample_freq = params.sample_freq.get();
     cutoff_freq = params.cutoff_freq.get();
-    //_distance_filter.set_cutoff_frequency((float)sample_freq, (float)cutoff_freq);
+    _distance_filter.set_cutoff_frequency((float)sample_freq, (float)cutoff_freq);
 }
 
 /*
@@ -54,7 +54,7 @@ bool AP_RangeFinder_MAVLink::detect()
 */
 bool AP_RangeFinder_MAVLink::distance_ok(float distance)
 {
-    if (isinf(distance) || isnan(distance) || distance > 600.0f || distance < 5) {
+    if (isinf(distance) || isnan(distance) || distance > 500.0f || distance < 5) {
     //if (isinf(distance) || isnan(distance)) {
         return false;
     }
@@ -122,7 +122,7 @@ void AP_RangeFinder_MAVLink::handle_msg(const mavlink_message_t &msg)
         sensor_type = (MAV_DISTANCE_SENSOR)packet.type;  
         //distance_cm_filtered = _distance_filter.apply(distance_cm);
         //hal.shell->printf("orientation %d, distance_cm %d\r\n", (int)packet.orientation, distance_cm);
-        
+
         if(distance_ok((float)distance_cm)) {
 	    	distance_cm_filtered = distance_cm;
 	    	//hal.shell->printf("orientation %d, distance_cm_filtered %d\r\n", (int)packet.orientation, distance_cm_filtered);
@@ -159,6 +159,7 @@ void AP_RangeFinder_MAVLink::update(void)
     } else {
         state.distance_cm = distance_cm;
 		state.distance_cm_filtered = distance_cm_filtered;
+		//state.distance_cm_filtered = _distance_filter.apply(distance_cm_filtered);
 		//state.distance_cm_filtered = _distance_filter.apply(distance_cm);
 
 		//if(distance_ok((float)state.distance_cm)) {
@@ -173,6 +174,6 @@ void AP_RangeFinder_MAVLink::update(void)
 		sample_freq = params.sample_freq.get();
 	    cutoff_freq = params.cutoff_freq.get();
 	    hal.shell->printf("sample_freq: %d, cutoff_freq: %d\r\n", sample_freq, cutoff_freq);
-	    //_distance_filter.set_cutoff_frequency((float)sample_freq, (float)cutoff_freq);
+	    _distance_filter.set_cutoff_frequency((float)sample_freq, (float)cutoff_freq);
     }
 }

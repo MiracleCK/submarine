@@ -65,6 +65,10 @@ public:
     int16_t get_top_limit_cm() const { return _top_limit_cm.get(); }
     int16_t get_bottom_limit_cm() const { return _bottom_limit_cm.get(); }
 
+    int16_t get_delayms_x() const { return _delay_ms_x.get(); }
+    int16_t get_delayms_y() const { return _delay_ms_y.get(); }
+    int16_t get_delayms_z() const { return _delay_ms_z.get(); }
+
 	void update_distance();
 	void pilot_thrusts_scale(Vector3f &thrusts) { thrusts *= _thr_p; }
 	void pilot_thrusts_limit(Vector3f &thrusts);
@@ -115,7 +119,6 @@ private:
 	
     // internal variables
     float       _dt;                    // time difference (in seconds) between calls from the main program
-    Vector3f    _accel_cms;           // max acceleration in cm/s/s
     
     // position controller internal variables
     Vector3f    _pos_target;            // target location in cm from home
@@ -165,6 +168,14 @@ private:
     AP_Int8 	_right_limit_cm;
     AP_Int8 	_top_limit_cm;
     AP_Int8 	_bottom_limit_cm;
+
+    AP_Int16 	_delay_ms_x;
+    AP_Int16 	_delay_ms_y;
+    AP_Int16 	_delay_ms_z;
+
+    AP_Float	_max_accel_x;
+	AP_Float	_max_accel_y;
+	AP_Float	_max_accel_z;
 };
 
 namespace AP {
