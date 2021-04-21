@@ -68,10 +68,8 @@ public:
     int16_t get_delayms_x() const { return _delay_ms_x.get(); }
     int16_t get_delayms_y() const { return _delay_ms_y.get(); }
     int16_t get_delayms_z() const { return _delay_ms_z.get(); }
-
-	void update_distance();
-	void pilot_thrusts_scale(Vector3f &thrusts) { thrusts *= _thr_p; }
-	void pilot_thrusts_limit(Vector3f &thrusts);
+    
+	void update_backend(Vector3f &thrusts);
 	static AC_DistanceControl *get_singleton(void) { return _singleton; }
 	
     static const struct AP_Param::GroupInfo var_info[];
@@ -96,7 +94,10 @@ private:
 
     /// Proportional controller with piecewise sqrt sections to constrain second derivative
     static Vector3f sqrt_controller(const Vector3f& error, float p, float second_ord_lim);
-
+	void update_distance();
+	void pilot_thrusts_scale(Vector3f &thrusts);
+	void pilot_thrusts_limit(Vector3f &thrusts);
+	void attitude_filter(Vector3f &thrusts);
 
     // references to inertial nav and ahrs libraries
     const AP_AHRS_View &        _ahrs;
@@ -151,7 +152,8 @@ private:
     int16_t distance_bf[DISTANCE_NUM];
     int16_t distance_ned[DISTANCE_NUM];
 
-	AP_Float	_thr_p;
+	AP_Float	_thr_face_p;
+	AP_Float	_thr_limit_p;
 	AP_Float	_limit_x_p;
 	AP_Float	_limit_y_p;
 	AP_Float	_limit_z_p;
@@ -176,6 +178,10 @@ private:
     AP_Float	_max_accel_x;
 	AP_Float	_max_accel_y;
 	AP_Float	_max_accel_z;
+
+	AP_Int8 	_curve_x;
+    AP_Int8 	_curve_y;
+    AP_Int8 	_curve_z;
 };
 
 namespace AP {

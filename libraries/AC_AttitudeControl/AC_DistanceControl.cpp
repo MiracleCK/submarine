@@ -115,26 +115,26 @@ extern const AP_HAL::HAL& hal;
 #endif
 
 #if 1  // dayu - 500K_100倍_5合1单前轴_35ms
-#define DISCONTROL_POS_Z_P                    6.0f    // vertical position controller P gain default
+#define DISCONTROL_POS_Z_P                    8.0f    // vertical position controller P gain default
 #define DISCONTROL_VEL_Z_P                    5.0f    // vertical velocity controller P gain default
-#define DISCONTROL_ACC_Z_P                    0.8f    // vertical acceleration controller P gain default
+#define DISCONTROL_ACC_Z_P                    0.5f    // vertical acceleration controller P gain default
 #define DISCONTROL_ACC_Z_I                    0.1f    // vertical acceleration controller I gain default
 #define DISCONTROL_ACC_Z_D                    0.0f    // vertical acceleration controller D gain default
 #define DISCONTROL_ACC_Z_IMAX                 200     // vertical acceleration controller IMAX gain default
 #define DISCONTROL_ACC_Z_FILT_HZ              20.0f   // vertical acceleration controller input filter default
 #define DISCONTROL_ACC_Z_DT                   0.0025f // vertical acceleration controller dt default
 
-#define DISCONTROL_POS_X_P                    6.0f    // vertical position controller P gain default
+#define DISCONTROL_POS_X_P                    8.0f    // vertical position controller P gain default
 #define DISCONTROL_VEL_X_P                    5.0f    // vertical velocity controller P gain default
-#define DISCONTROL_ACC_X_P                    0.8f    // vertical acceleration controller P gain default
+#define DISCONTROL_ACC_X_P                    0.5f    // vertical acceleration controller P gain default
 #define DISCONTROL_ACC_X_I                    0.1f    // vertical acceleration controller I gain default
 #define DISCONTROL_ACC_X_D                    0.0f    // vertical acceleration controller D gain default
 #define DISCONTROL_ACC_X_IMAX                 200     // vertical acceleration controller IMAX gain default
 #define DISCONTROL_ACC_X_FILT_HZ              20.0f   // vertical acceleration controller input filter default
 #define DISCONTROL_ACC_X_DT                   0.0025f // vertical acceleration controller dt default
 
-#define DISCONTROL_POS_Y_P                    3.0f    // vertical position controller P gain default
-#define DISCONTROL_VEL_Y_P                    8.0f    // vertical velocity controller P gain default
+#define DISCONTROL_POS_Y_P                    10.0f    // vertical position controller P gain default
+#define DISCONTROL_VEL_Y_P                    3.0f    // vertical velocity controller P gain default
 #define DISCONTROL_ACC_Y_P                    0.5f    // vertical acceleration controller P gain default
 #define DISCONTROL_ACC_Y_I                    0.1f    // vertical acceleration controller I gain default
 #define DISCONTROL_ACC_Y_D                    0.0f    // vertical acceleration controller D gain default
@@ -142,11 +142,12 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_ACC_Y_FILT_HZ              20.0f   // vertical acceleration controller input filter default
 #define DISCONTROL_ACC_Y_DT                   0.0025f // vertical acceleration controller dt default
 
-#define DISCONTROL_LIMIT_X_P                  100.0f    // discontrol limit x P gain default
-#define DISCONTROL_LIMIT_Y_P                  100.0f    // discontrol limit y P gain default
-#define DISCONTROL_LIMIT_Z_P                  100.0f    // discontrol limit z P gain default
+#define DISCONTROL_LIMIT_X_P                  80.0f    // discontrol limit x P gain default
+#define DISCONTROL_LIMIT_Y_P                  80.0f    // discontrol limit y P gain default
+#define DISCONTROL_LIMIT_Z_P                  80.0f    // discontrol limit z P gain default
 
-#define DISCONTROL_THRUSTS_P                  0.3f    // discontrol thrusts scale P gain default
+#define DISCONTROL_THRUSTS_FACE_P             0.3f    // discontrol face thrusts scale P gain default
+#define DISCONTROL_THRUSTS_LIMIT_P            1.0f    // discontrol limit thrusts scale P gain default
 
 #define DISCONTROL_FRONT_LIMIT_CM             30    // discontrol front limit default
 #define DISCONTROL_BACK_LIMIT_CM             -30    // discontrol back limit default
@@ -160,13 +161,17 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_LEFT_OFT_CM                8    // discontrol left offset default
 #define DISCONTROL_RIGHT_OFT_CM               8    // discontrol right offset default
 
-#define DISCONTROL_DELAY_MS_X                 250    // discontrol x delay time
-#define DISCONTROL_DELAY_MS_Y                 250    // discontrol y delay time
-#define DISCONTROL_DELAY_MS_Z                 250    // discontrol z delay time
+#define DISCONTROL_DELAY_MS_X                 1000    // discontrol x delay time
+#define DISCONTROL_DELAY_MS_Y                 1500    // discontrol y delay time
+#define DISCONTROL_DELAY_MS_Z                 1000    // discontrol z delay time
 
 #define DISCONTROL_MAX_ACCEL_X                500.0f  // default x acceleration in cm/s/s.
 #define DISCONTROL_MAX_ACCEL_Y                500.0f  // default y acceleration in cm/s/s.
 #define DISCONTROL_MAX_ACCEL_Z                500.0f  // default z acceleration in cm/s/s.
+
+#define DISCONTROL_CURVE_X                    2  // default x curve
+#define DISCONTROL_CURVE_Y                    2  // default y curve
+#define DISCONTROL_CURVE_Z                    2  // default z curve
 #endif
 
 // vibration compensation gains
@@ -323,7 +328,7 @@ const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
     // @Description: Less than how many centimeters for speed limit
     // @User: Standard
     // @units: cm
-    // @Values: < 0
+    // @Values: > 0
     AP_GROUPINFO("_LIMIT_X_P",  10, AC_DistanceControl, _limit_x_p, DISCONTROL_LIMIT_X_P),
 
     // @Param: _LIMIT_Y_P
@@ -331,7 +336,7 @@ const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
     // @Description: Less than how many centimeters for speed limit
     // @User: Standard
     // @units: cm
-    // @Values: < 0
+    // @Values: > 0
     AP_GROUPINFO("_LIMIT_Y_P",  11, AC_DistanceControl, _limit_y_p, DISCONTROL_LIMIT_Y_P),
 
     // @Param: _LIMIT_Z_P
@@ -339,16 +344,22 @@ const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
     // @Description: Less than how many centimeters for speed limit
     // @User: Standard
     // @units: cm
-    // @Values: < 0
+    // @Values: > 0
     AP_GROUPINFO("_LIMIT_Z_P",  12, AC_DistanceControl, _limit_z_p, DISCONTROL_LIMIT_Z_P),
 
-    // @Param: _THR_P
-    // @DisplayName: thrusts scale P gain
-    // @Description: Less than how many centimeters for speed limit
+    // @Param: _THR_FACE_P
+    // @DisplayName: face thrusts scale P gain
+    // @Description: face thrusts scale P gain
     // @User: Standard
-    // @units: cm
-    // @Values: < 0
-    AP_GROUPINFO("_THR_P",  13, AC_DistanceControl, _thr_p, DISCONTROL_THRUSTS_P),
+    // @Values: > 0
+    AP_GROUPINFO("_THR_FACE_P",  13, AC_DistanceControl, _thr_face_p, DISCONTROL_THRUSTS_FACE_P),
+
+    // @Param: _THR_LIMIT_P
+    // @DisplayName: limit thrusts scale P gain
+    // @Description: limit thrusts scale P gain
+    // @User: Standard
+    // @Values: > 0
+    AP_GROUPINFO("_THR_LIMIT_P",  14, AC_DistanceControl, _thr_limit_p, DISCONTROL_THRUSTS_LIMIT_P),
 
     // @Param: _LIMIT_ENABLE
     // @DisplayName: Keep a distance and avoid collision
@@ -482,6 +493,27 @@ const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
     // @Values: > 0
     AP_GROUPINFO("_ACCEL_Z",  40, AC_DistanceControl, _max_accel_z, DISCONTROL_MAX_ACCEL_Z),
 
+    // @Param: _CURVE_X
+    // @DisplayName: x curve
+    // @Description: x curve
+    // @User: Standard
+    // @Values: 1 2 3
+    AP_GROUPINFO("_CURVE_X",  41, AC_DistanceControl, _curve_x, DISCONTROL_CURVE_X),
+
+    // @Param: _CURVE_Y
+    // @DisplayName: y curve
+    // @Description: y curve
+    // @User: Standard
+    // @Values: 1 2 3
+    AP_GROUPINFO("_CURVE_Y",  42, AC_DistanceControl, _curve_y, DISCONTROL_CURVE_Y),
+
+    // @Param: _CURVE_Z
+    // @DisplayName: z curve
+    // @Description: z curve
+    // @User: Standard
+    // @Values: 1 2 3
+    AP_GROUPINFO("_CURVE_Z",  43, AC_DistanceControl, _curve_z, DISCONTROL_CURVE_Z),
+
     AP_GROUPEND
 };
 
@@ -608,6 +640,12 @@ void AC_DistanceControl::update_distance(void)
 				distance_ned[DISTANCE_TOP] = dist[i].z;
 		}
 	}
+
+	//filter
+	/*for(int i=0; i<DISTANCE_NUM; i++) {
+		if(abs(distance_ned[i]) < 5)
+			distance_ned[i] = 0;
+	}*/
 	
 	if(1) {
 		static uint32_t _startup_ms = 0;
@@ -619,12 +657,12 @@ void AC_DistanceControl::update_distance(void)
 		if(AP_HAL::millis() - _startup_ms > 1000) {
 			_startup_ms = AP_HAL::millis();
 
-			//for(int i=0; i<DISTANCE_NUM; i++) {
-			//	hal.shell->printf("[%.2f %.2f %.2f]\r\n", 
-			//				dist[i].x,
-			//				dist[i].y, 
-			//				dist[i].z);
-			//}
+			/*for(int i=0; i<DISTANCE_NUM; i++) {
+				hal.shell->printf("[%.2f %.2f %.2f]\r\n", 
+							dist[i].x,
+							dist[i].y, 
+							dist[i].z);
+			}*/
 			
 			hal.shell->printf("\r\ndistance_bf: %d %d %d %d %d %d\r\n", 
 						distance_bf[DISTANCE_FRONT],
@@ -642,6 +680,15 @@ void AC_DistanceControl::update_distance(void)
 						distance_ned[DISTANCE_TOP],
 						distance_ned[DISTANCE_BOTTOM]);
 		}
+	}
+}
+
+void AC_DistanceControl::pilot_thrusts_scale(Vector3f &thrusts)
+{
+	if(_distance_face) {
+		thrusts *= _thr_face_p;
+	} else if(_limit_enable) {
+		thrusts *= _thr_limit_p;
 	}
 }
 
@@ -665,7 +712,7 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 		dis_error.x = 0;
 		thrusts.x = 0;
 	}
-	thrusts.x *= constrain_float(powf(dis_error.x/_limit_x_p, 3), 0.0f, 1.0f);
+	thrusts.x *= constrain_float(powf(dis_error.x/_limit_x_p, _curve_x), 0.0f, 1.0f);
 
 	if(thrusts.y > 0.0f) {
 		if(_right_limit_cm != 0 && distance_ned[DISTANCE_RIGHT] != 0 && !right_face_is_active()) {
@@ -683,7 +730,7 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 		dis_error.y = 0;
 		thrusts.y = 0;
 	}
-	thrusts.y *= constrain_float(powf(dis_error.y/_limit_y_p, 3), 0.0f, 1.0f);
+	thrusts.y *= constrain_float(powf(dis_error.y/_limit_y_p, _curve_y), 0.0f, 1.0f);
 
 	if(thrusts.z < -0.0f) {
 		if(_bottom_limit_cm != 0 && distance_ned[DISTANCE_BOTTOM] != 0 && !bottom_face_is_active()) {
@@ -700,7 +747,7 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 		dis_error.z = 0;
 		thrusts.z = 0;
 	}
-	thrusts.z *= constrain_float(powf(dis_error.z/_limit_z_p, 1), 0.0f, 1.0f);
+	thrusts.z *= constrain_float(powf(dis_error.z/_limit_z_p, _curve_z), 0.0f, 1.0f);
 
 	if(1) {
 		static uint32_t _startup_ms = 0;
@@ -722,6 +769,40 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 					thrusts.y,
 					thrusts.z); 
 		}
+	}
+}
+
+void AC_DistanceControl::attitude_filter(Vector3f &thrusts)
+{
+	int32_t roll = _ahrs.roll_sensor/100;
+	int32_t pitch = _ahrs.pitch_sensor/100;
+	//int32_t yaw = _ahrs.yaw_sensor/100;
+	
+	if(_limit_enable) {
+		if(pitch > 5) {
+			distance_ned[DISTANCE_BACK] = 0;
+		} else if(pitch < -5) {
+			distance_ned[DISTANCE_FRONT] = 0;
+		}
+
+		if(roll > 5) {
+			distance_ned[DISTANCE_RIGHT] = 0;
+		} else if(roll < -5) {
+			distance_ned[DISTANCE_LEFT] = 0;
+		}
+	}
+}
+
+void AC_DistanceControl::update_backend(Vector3f &thrusts)
+{
+	update_distance();
+
+	attitude_filter(thrusts);
+
+	pilot_thrusts_scale(thrusts);
+
+	if(_limit_enable) {
+		pilot_thrusts_limit(thrusts);
 	}
 }
 

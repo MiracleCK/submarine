@@ -239,8 +239,6 @@ void Sub::althold_run_rate()
     uint32_t tnow = AP_HAL::millis();
 
     if(is_ned_pilot) {
-    	distance_control.update_distance();
-    	
 		if (tnow - last_face_active_ms > 10000) {
 	    	if(bottom_face_actived != distance_control.bottom_face_is_active() ||
 	    	   top_face_actived != distance_control.top_face_is_active()) {
