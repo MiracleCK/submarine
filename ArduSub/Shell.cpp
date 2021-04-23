@@ -6,6 +6,7 @@
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Common/AP_FWVersion.h>
 #include <AP_Logger/AP_Logger.h>
+#include "Sub.h"
 
 extern const AP_HAL::HAL& hal;
 
@@ -106,6 +107,7 @@ static int cmd_param_set(const char *name, float value);
 static int cmd_param_show(int argc, char *argv[]);
 static void cmd_param(int argc, char *argv[]);
 static int cmd_param_reset(void);
+static int cmd_param_erase(void);
 static void cmd_param_dbg(int argc, char *argv[]);
 
 static void cmd_version(int argc, char *argv[]);
@@ -131,7 +133,7 @@ AP_HAL::Shell::ShellCommand shell_commands[] = {
 void cmd_param(int argc, char *argv[]) 
 {
     if (argc < 1) { // at least should be param show
-        hal.shell->printf("usage: param set|show|dbg [param_short_name value]|dbg_param\r\n");
+        hal.shell->printf("usage: param set|show|dbg|reset|erase [param_short_name value]|dbg_param\r\n");
         return;
     }
 
@@ -144,6 +146,12 @@ void cmd_param(int argc, char *argv[])
     if (!strcmp(argv[0], "reset")) // param reset
     {
         cmd_param_reset();
+        return;
+    }
+
+    if (!strcmp(argv[0], "erase")) // param reset
+    {
+        cmd_param_erase();
         return;
     }
 
@@ -330,6 +338,14 @@ int cmd_param_show(int argc, char *argv[])
 }
 
 int cmd_param_reset(void) {
+    AP_Param::set_and_save_by_name("SYSID_SW_MREV", Parameters::k_format_version + 1);
+	hal.shell->printf("parameters reset...\r\n");
+	hal.scheduler->delay(500);
+    hal.scheduler->reboot(false);
+    return 0;
+}
+
+int cmd_param_erase(void) {
     AP_Param::erase_all();
     hal.shell->printf("All parameters reset, would auto-reboot board now\r\n");
 
