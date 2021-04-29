@@ -172,6 +172,11 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_CURVE_X                    2  // default x curve
 #define DISCONTROL_CURVE_Y                    2  // default y curve
 #define DISCONTROL_CURVE_Z                    2  // default z curve
+
+#define DISCONTROL_MAX_SPEED_X                100.0f  // default x speed in cm/s.
+#define DISCONTROL_MAX_SPEED_Y                100.0f  // default y speed in cm/s.
+#define DISCONTROL_MAX_SPEED_Z                100.0f  // default z speed in cm/s.
+
 #endif
 
 // vibration compensation gains
@@ -514,6 +519,30 @@ const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
     // @Values: 1 2 3
     AP_GROUPINFO("_CURVE_Z",  43, AC_DistanceControl, _curve_z, DISCONTROL_CURVE_Z),
 
+    // @Param: _SPEED_X
+    // @DisplayName: x max speed
+    // @Description: x max speed
+    // @User: Standard
+    // @units: cm/s
+    // @Values: > 0
+    AP_GROUPINFO("_SPEED_X",  44, AC_DistanceControl, _max_speed_x, DISCONTROL_MAX_SPEED_X),
+
+    // @Param: _SPEED_Y
+    // @DisplayName: y max speed
+    // @Description: y max speed
+    // @User: Standard
+    // @units: cm/s
+    // @Values: > 0
+    AP_GROUPINFO("_SPEED_Y",  45, AC_DistanceControl, _max_speed_y, DISCONTROL_MAX_SPEED_Y),
+
+    // @Param: _SPEED_Z
+    // @DisplayName: z max speed
+    // @Description: z max speed
+    // @User: Standard
+    // @units: cm/s
+    // @Values: > 0
+    AP_GROUPINFO("_SPEED_Z",  46, AC_DistanceControl, _max_speed_z, DISCONTROL_MAX_SPEED_Z),
+
     AP_GROUPEND
 };
 
@@ -851,6 +880,14 @@ void AC_DistanceControl::update_z_controller(float distance)
     // calculate _vel_target.z using from _pos_error.z using sqrt controller
     _vel_target.z = AC_AttitudeControl::sqrt_controller(_pos_error.z, _p_pos_z.kP(), _max_accel_z, _dt);
 
+    if (_vel_target.z > _max_speed_z) {
+        _vel_target.z = _max_speed_z;
+    }
+
+    if (_vel_target.z < -_max_speed_z) {
+        _vel_target.z = -_max_speed_z;
+    }
+
     // add feed forward component
     if (_flags.use_desvel_ff_z) {
         _vel_target.z += _vel_desired.z;
@@ -993,6 +1030,14 @@ void AC_DistanceControl::update_x_controller(float distance)
     // calculate _vel_target.x using from _pos_error.x using sqrt controller
     _vel_target.x = AC_AttitudeControl::sqrt_controller(_pos_error.x, _p_pos_x.kP(), _max_accel_x, _dt);
 
+    if (_vel_target.x > _max_speed_x) {
+        _vel_target.x = _max_speed_x;
+    }
+
+    if (_vel_target.x < -_max_speed_x) {
+        _vel_target.x = -_max_speed_x;
+    }
+
     // add feed forward component
     if (_flags.use_desvel_ff_x) {
         _vel_target.x += _vel_desired.x;
@@ -1112,6 +1157,14 @@ void AC_DistanceControl::update_y_controller(float distance)
 
     // calculate _vel_target.y using from _pos_error.y using sqrt controller
     _vel_target.y = AC_AttitudeControl::sqrt_controller(_pos_error.y, _p_pos_y.kP(), _max_accel_y, _dt);
+
+    if (_vel_target.y > _max_speed_y) {
+        _vel_target.y = _max_speed_y;
+    }
+
+    if (_vel_target.y < -_max_speed_y) {
+        _vel_target.y = -_max_speed_y;
+    }
 
     // add feed forward component
     if (_flags.use_desvel_ff_y) {

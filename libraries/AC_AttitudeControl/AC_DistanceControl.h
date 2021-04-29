@@ -182,6 +182,10 @@ private:
 	AP_Int8 	_curve_x;
     AP_Int8 	_curve_y;
     AP_Int8 	_curve_z;
+
+    AP_Float	_max_speed_x;
+    AP_Float	_max_speed_y;
+    AP_Float	_max_speed_z;
 };
 
 namespace AP {
