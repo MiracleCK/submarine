@@ -140,7 +140,7 @@ private:
     // high vibration handling
     bool        _vibe_comp_enabled;     // true when high vibration compensation is on
 
-    enum distance_dir_t : uint8_t {
+    enum distance_dir_e : uint8_t {
         DISTANCE_FRONT    = 0,
         DISTANCE_BACK     = 1,
         DISTANCE_LEFT     = 2,
@@ -149,7 +149,20 @@ private:
         DISTANCE_BOTTOM   = 5,
         DISTANCE_NUM
     };
-    int16_t distance_bf[DISTANCE_NUM];
+
+    enum distance_bf_dir_e : uint8_t {
+        DIS_BF_FRONT    = 0,
+        DIS_BF_BACK     = 1,
+        DIS_BF_LEFT     = 2,
+        DIS_BF_RIGHT    = 3,
+        DIS_BF_TOP   	= 4,
+        DIS_BF_BOTTOM   = 5,
+        DIS_BF_FRONT347 = 6,
+        DIS_BF_FRONT13  = 7,
+        DIS_BF_NUM
+    };
+    
+    int16_t distance_bf[DIS_BF_NUM];
     int16_t distance_ned[DISTANCE_NUM];
 
 	AP_Float	_thr_face_p;
@@ -163,6 +176,8 @@ private:
     AP_Int8 	_back_offset;
     AP_Int8 	_left_offset;
     AP_Int8 	_right_offset;
+    AP_Int8 	_front347_offset;
+    AP_Int8 	_front13_offset;
     
     AP_Int8 	_front_limit_cm;
     AP_Int8 	_back_limit_cm;

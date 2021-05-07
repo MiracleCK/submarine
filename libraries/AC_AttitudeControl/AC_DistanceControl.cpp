@@ -5,8 +5,6 @@
 
 extern const AP_HAL::HAL& hal;
 
-#define USE_DISTANCE_FILTERED 	1
-
 #define DISCONTROL_DT_50HZ                      0.02f   // time difference in seconds for 50hz update rate
 #define DISCONTROL_DT_400HZ                     0.0025f // time difference in seconds for 400hz update rate
 
@@ -147,19 +145,21 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_LIMIT_Z_P                  80.0f    // discontrol limit z P gain default
 
 #define DISCONTROL_THRUSTS_FACE_P             0.3f    // discontrol face thrusts scale P gain default
-#define DISCONTROL_THRUSTS_LIMIT_P            1.0f    // discontrol limit thrusts scale P gain default
+#define DISCONTROL_THRUSTS_LIMIT_P            0.8f    // discontrol limit thrusts scale P gain default
 
 #define DISCONTROL_FRONT_LIMIT_CM             30    // discontrol front limit default
 #define DISCONTROL_BACK_LIMIT_CM             -30    // discontrol back limit default
 #define DISCONTROL_LEFT_LIMIT_CM             -30    // discontrol left limit default
 #define DISCONTROL_RIGHT_LIMIT_CM             30    // discontrol right limit default
-#define DISCONTROL_TOP_LIMIT_CM              -30    // discontrol top limit default
+#define DISCONTROL_TOP_LIMIT_CM              -0    // discontrol top limit default
 #define DISCONTROL_BOTTOM_LIMIT_CM            30    // discontrol bottom limit default
 
 #define DISCONTROL_FRONT_OFT_CM              16    // discontrol front offset default
 #define DISCONTROL_BACK_OFT_CM               24    // discontrol back offset default
 #define DISCONTROL_LEFT_OFT_CM                8    // discontrol left offset default
 #define DISCONTROL_RIGHT_OFT_CM               8    // discontrol right offset default
+#define DISCONTROL_FRONT347_OFT_CM            0    // discontrol front347 offset default
+#define DISCONTROL_FRONT13_OFT_CM             0    // discontrol front13 offset default
 
 #define DISCONTROL_DELAY_MS_X                 1000    // discontrol x delay time
 #define DISCONTROL_DELAY_MS_Y                 1500    // discontrol y delay time
@@ -173,15 +173,22 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_CURVE_Y                    2  // default y curve
 #define DISCONTROL_CURVE_Z                    2  // default z curve
 
-#define DISCONTROL_MAX_SPEED_X                100.0f  // default x speed in cm/s.
-#define DISCONTROL_MAX_SPEED_Y                100.0f  // default y speed in cm/s.
-#define DISCONTROL_MAX_SPEED_Z                100.0f  // default z speed in cm/s.
+#define DISCONTROL_MAX_SPEED_X                150.0f  // default x speed in cm/s.
+#define DISCONTROL_MAX_SPEED_Y                150.0f  // default y speed in cm/s.
+#define DISCONTROL_MAX_SPEED_Z                150.0f  // default z speed in cm/s.
 
 #endif
 
 // vibration compensation gains
 #define DISCONTROL_VIBE_COMP_P_GAIN 0.250f
 #define DISCONTROL_VIBE_COMP_I_GAIN 0.125f
+
+#if !defined(MAX)
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#endif
+#if !defined(MIN)
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#endif
 
 const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
    	// @Param: _POSZ_P
@@ -542,6 +549,21 @@ const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
     // @units: cm/s
     // @Values: > 0
     AP_GROUPINFO("_SPEED_Z",  46, AC_DistanceControl, _max_speed_z, DISCONTROL_MAX_SPEED_Z),
+    
+
+    // @Param: _FRONT347_OFT
+    // @DisplayName: front347 offset
+    // @Description: front347 offset
+    // @Unit: cm
+    // @User: Advanced
+    AP_GROUPINFO("_FRONT347_OFT",  47, AC_DistanceControl, _front347_offset, DISCONTROL_FRONT347_OFT_CM),
+
+	// @Param: _FRONT13_OFT
+    // @DisplayName: front13 offset
+    // @Description: front13 offset
+    // @Unit: cm
+    // @User: Advanced
+    AP_GROUPINFO("_FRONT13_OFT",  48, AC_DistanceControl, _front13_offset, DISCONTROL_FRONT13_OFT_CM),
 
     AP_GROUPEND
 };
@@ -594,51 +616,63 @@ AC_DistanceControl::AC_DistanceControl(const AP_AHRS_View& ahrs, const AP_Inerti
 
 void AC_DistanceControl::update_distance(void)
 {
-#if USE_DISTANCE_FILTERED 
-	distance_bf[DISTANCE_FRONT] = _rangefinder.distance_cm_filtered_orient(ROTATION_NONE);
-    distance_bf[DISTANCE_BACK] = _rangefinder.distance_cm_filtered_orient(ROTATION_PITCH_180);
-    distance_bf[DISTANCE_LEFT] = _rangefinder.distance_cm_filtered_orient(ROTATION_YAW_270);
-    distance_bf[DISTANCE_RIGHT] = _rangefinder.distance_cm_filtered_orient(ROTATION_YAW_90);
-    distance_bf[DISTANCE_TOP] = 0;
-    distance_bf[DISTANCE_BOTTOM] = _rangefinder.distance_cm_filtered_orient(ROTATION_PITCH_270);
-#else
-	distance_bf[DISTANCE_FRONT] = _rangefinder.distance_cm_orient(ROTATION_NONE);
-	distance_bf[DISTANCE_BACK] = _rangefinder.distance_cm_orient(ROTATION_PITCH_180);
-	distance_bf[DISTANCE_LEFT] = _rangefinder.distance_cm_orient(ROTATION_YAW_270);
-	distance_bf[DISTANCE_RIGHT] = _rangefinder.distance_cm_orient(ROTATION_YAW_90);
-	distance_bf[DISTANCE_TOP] = 0;
-	distance_bf[DISTANCE_BOTTOM] = _rangefinder.distance_cm_orient(ROTATION_PITCH_270);
-#endif
+	distance_bf[DIS_BF_FRONT] = _rangefinder.distance_cm_orient(ROTATION_NONE);
+	distance_bf[DIS_BF_BACK] = _rangefinder.distance_cm_orient(ROTATION_PITCH_180);
+	distance_bf[DIS_BF_LEFT] = _rangefinder.distance_cm_orient(ROTATION_YAW_270);
+	distance_bf[DIS_BF_RIGHT] = _rangefinder.distance_cm_orient(ROTATION_YAW_90);
+	distance_bf[DIS_BF_TOP] = _rangefinder.distance_cm_orient(ROTATION_PITCH_90);
+	distance_bf[DIS_BF_BOTTOM] = _rangefinder.distance_cm_orient(ROTATION_PITCH_270);
+	distance_bf[DIS_BF_FRONT347] = _rangefinder.distance_cm_orient(ROTATION_YAW_315);
+    distance_bf[DIS_BF_FRONT13] = _rangefinder.distance_cm_orient(ROTATION_YAW_45);
 
-	if(distance_bf[DISTANCE_FRONT] >=  _front_offset)
-		distance_bf[DISTANCE_FRONT] -= _front_offset;
+	if(distance_bf[DIS_BF_FRONT] >=  _front_offset)
+		distance_bf[DIS_BF_FRONT] -= _front_offset;
 	else 
-		distance_bf[DISTANCE_FRONT] = 0;
+		distance_bf[DIS_BF_FRONT] = 0;
 		
-	if(distance_bf[DISTANCE_BACK] >= _back_offset)
-		distance_bf[DISTANCE_BACK] -= _back_offset;
+	if(distance_bf[DIS_BF_BACK] >= _back_offset)
+		distance_bf[DIS_BF_BACK] -= _back_offset;
 	else 
-		distance_bf[DISTANCE_BACK] = 0;
+		distance_bf[DIS_BF_BACK] = 0;
 		
-	if(distance_bf[DISTANCE_RIGHT] >=  _right_offset)
-		distance_bf[DISTANCE_RIGHT] -= _right_offset;
+	if(distance_bf[DIS_BF_RIGHT] >=  _right_offset)
+		distance_bf[DIS_BF_RIGHT] -= _right_offset;
 	else 
-		distance_bf[DISTANCE_RIGHT] = 0;
+		distance_bf[DIS_BF_RIGHT] = 0;
 		
-	if(distance_bf[DISTANCE_LEFT] >= _left_offset)
-		distance_bf[DISTANCE_LEFT] -= _left_offset;
+	if(distance_bf[DIS_BF_LEFT] >= _left_offset)
+		distance_bf[DIS_BF_LEFT] -= _left_offset;
 	else 
-		distance_bf[DISTANCE_LEFT] = 0;
-		
+		distance_bf[DIS_BF_LEFT] = 0;
+
+	if(distance_bf[DIS_BF_FRONT347] >=  _front347_offset)
+		distance_bf[DIS_BF_FRONT347] -= _front347_offset;
+	else 
+		distance_bf[DIS_BF_FRONT347] = 0;
+
+	if(distance_bf[DIS_BF_FRONT13] >=  _front13_offset)
+		distance_bf[DIS_BF_FRONT13] -= _front13_offset;
+	else 
+		distance_bf[DIS_BF_FRONT13] = 0;
+
+	if(distance_bf[DIS_BF_FRONT347] != 0 || distance_bf[DIS_BF_FRONT13] != 0) {
+		if(distance_bf[DIS_BF_FRONT347]==0)
+			distance_bf[DIS_BF_FRONT] = distance_bf[DIS_BF_FRONT13]*cosf(radians(13));
+		else if(distance_bf[DIS_BF_FRONT13]==0)
+			distance_bf[DIS_BF_FRONT] = distance_bf[DIS_BF_FRONT347]*cosf(radians(13));
+		else
+			distance_bf[DIS_BF_FRONT] = MIN(distance_bf[DIS_BF_FRONT347]*cosf(radians(13)), distance_bf[DIS_BF_FRONT13]*cosf(radians(13)));
+	}
+	
 	Matrix3f m;
 	m.from_euler(_ahrs.roll, _ahrs.pitch, 0);
 
-	Vector3f dist[DISTANCE_NUM] = {{(float)distance_bf[DISTANCE_FRONT], 0, 0},
-						{(float)-distance_bf[DISTANCE_BACK], 0, 0},
-						{0, (float)-distance_bf[DISTANCE_LEFT], 0},
-						{0, (float)distance_bf[DISTANCE_RIGHT], 0},
-						{0, 0, (float)-distance_bf[DISTANCE_TOP]},
-						{0, 0, (float)distance_bf[DISTANCE_BOTTOM]}};
+	Vector3f dist[DISTANCE_NUM] = {{(float)distance_bf[DIS_BF_FRONT], 0, 0},
+						{(float)-distance_bf[DIS_BF_BACK], 0, 0},
+						{0, (float)-distance_bf[DIS_BF_LEFT], 0},
+						{0, (float)distance_bf[DIS_BF_RIGHT], 0},
+						{0, 0, (float)-distance_bf[DIS_BF_TOP]},
+						{0, 0, (float)distance_bf[DIS_BF_BOTTOM]}};
 	for(int i=0; i<DISTANCE_NUM; i++) {
 		dist[i] = m * dist[i];
 		distance_ned[i] = 0;
@@ -693,13 +727,15 @@ void AC_DistanceControl::update_distance(void)
 							dist[i].z);
 			}*/
 			
-			hal.shell->printf("\r\ndistance_bf: %d %d %d %d %d %d\r\n", 
-						distance_bf[DISTANCE_FRONT],
-						distance_bf[DISTANCE_BACK], 
-						distance_bf[DISTANCE_LEFT], 
-						distance_bf[DISTANCE_RIGHT],
-						distance_bf[DISTANCE_TOP],
-						distance_bf[DISTANCE_BOTTOM]);
+			hal.shell->printf("\r\ndistance_bf: %d %d %d %d %d %d %d %d\r\n", 
+						distance_bf[DIS_BF_FRONT],
+						distance_bf[DIS_BF_BACK], 
+						distance_bf[DIS_BF_LEFT], 
+						distance_bf[DIS_BF_RIGHT],
+						distance_bf[DIS_BF_TOP],
+						distance_bf[DIS_BF_BOTTOM],
+						distance_bf[DIS_BF_FRONT347],
+						distance_bf[DIS_BF_FRONT13]);
 
 			hal.shell->printf("distance_ned: %d %d %d %d %d %d\r\n\r\n", 
 						distance_ned[DISTANCE_FRONT],
@@ -880,12 +916,14 @@ void AC_DistanceControl::update_z_controller(float distance)
     // calculate _vel_target.z using from _pos_error.z using sqrt controller
     _vel_target.z = AC_AttitudeControl::sqrt_controller(_pos_error.z, _p_pos_z.kP(), _max_accel_z, _dt);
 
-    if (_vel_target.z > _max_speed_z) {
-        _vel_target.z = _max_speed_z;
-    }
+	if(_max_speed_z > 0) {
+	    if (_vel_target.z > _max_speed_z) {
+	        _vel_target.z = _max_speed_z;
+	    }
 
-    if (_vel_target.z < -_max_speed_z) {
-        _vel_target.z = -_max_speed_z;
+	    if (_vel_target.z < -_max_speed_z) {
+	        _vel_target.z = -_max_speed_z;
+	    }
     }
 
     // add feed forward component
@@ -1030,12 +1068,14 @@ void AC_DistanceControl::update_x_controller(float distance)
     // calculate _vel_target.x using from _pos_error.x using sqrt controller
     _vel_target.x = AC_AttitudeControl::sqrt_controller(_pos_error.x, _p_pos_x.kP(), _max_accel_x, _dt);
 
-    if (_vel_target.x > _max_speed_x) {
-        _vel_target.x = _max_speed_x;
-    }
+	if(_max_speed_x > 0) {
+	    if (_vel_target.x > _max_speed_x) {
+	        _vel_target.x = _max_speed_x;
+	    }
 
-    if (_vel_target.x < -_max_speed_x) {
-        _vel_target.x = -_max_speed_x;
+	    if (_vel_target.x < -_max_speed_x) {
+	        _vel_target.x = -_max_speed_x;
+	    }
     }
 
     // add feed forward component
@@ -1158,12 +1198,14 @@ void AC_DistanceControl::update_y_controller(float distance)
     // calculate _vel_target.y using from _pos_error.y using sqrt controller
     _vel_target.y = AC_AttitudeControl::sqrt_controller(_pos_error.y, _p_pos_y.kP(), _max_accel_y, _dt);
 
-    if (_vel_target.y > _max_speed_y) {
-        _vel_target.y = _max_speed_y;
-    }
+	if(_max_speed_y > 0) {
+	    if (_vel_target.y > _max_speed_y) {
+	        _vel_target.y = _max_speed_y;
+	    }
 
-    if (_vel_target.y < -_max_speed_y) {
-        _vel_target.y = -_max_speed_y;
+	    if (_vel_target.y < -_max_speed_y) {
+	        _vel_target.y = -_max_speed_y;
+	    }
     }
 
     // add feed forward component

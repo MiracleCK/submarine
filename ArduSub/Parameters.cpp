@@ -901,15 +901,20 @@ void Sub::load_parameters()
     AP_Param::set_default_by_name("GND_POS1_Z", 0.0555);
 
     AP_Param::set_default_by_name("RNGFND1_TYPE", 10);
-    AP_Param::set_and_save_by_name("RNGFND1_ORIENT", 25);
+    AP_Param::set_and_save_by_name("RNGFND1_ORIENT", 0);
     AP_Param::set_default_by_name("RNGFND2_TYPE", 10);
-    AP_Param::set_and_save_by_name("RNGFND2_ORIENT", 0);
+    AP_Param::set_and_save_by_name("RNGFND2_ORIENT", 12);
     AP_Param::set_default_by_name("RNGFND3_TYPE", 10);
-    AP_Param::set_and_save_by_name("RNGFND3_ORIENT", 12);
+    AP_Param::set_and_save_by_name("RNGFND3_ORIENT", 6);
     AP_Param::set_default_by_name("RNGFND4_TYPE", 10);
-    AP_Param::set_and_save_by_name("RNGFND4_ORIENT", 6);
-    AP_Param::set_default_by_name("RNGFND5_TYPE", 10);
-    AP_Param::set_and_save_by_name("RNGFND5_ORIENT", 2);
+    AP_Param::set_and_save_by_name("RNGFND4_ORIENT", 2);
+	AP_Param::set_default_by_name("RNGFND5_TYPE", 10);
+    AP_Param::set_and_save_by_name("RNGFND5_ORIENT", 25);
+    
+    AP_Param::set_default_by_name("RNGFND6_TYPE", 10);
+    AP_Param::set_and_save_by_name("RNGFND6_ORIENT", 7);
+    AP_Param::set_default_by_name("RNGFND7_TYPE", 10);
+    AP_Param::set_and_save_by_name("RNGFND7_ORIENT", 1);
 
     AP_Param::set_default_by_name("MOT_SLEW_DN_TIME", 0.25f);
     AP_Param::set_default_by_name("MOT_SLEW_UP_TIME", 0.25f);

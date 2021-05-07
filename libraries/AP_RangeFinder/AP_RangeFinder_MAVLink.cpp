@@ -54,8 +54,7 @@ bool AP_RangeFinder_MAVLink::detect()
 */
 bool AP_RangeFinder_MAVLink::distance_ok(float distance)
 {
-    if (isinf(distance) || isnan(distance) || distance > 500.0f || distance < 5) {
-    //if (isinf(distance) || isnan(distance)) {
+    if (isinf(distance) || isnan(distance)) {
         return false;
     }
 
@@ -112,14 +111,12 @@ void AP_RangeFinder_MAVLink::handle_msg(const mavlink_message_t &msg)
     // only accept distances for downward facing sensors
     //if (packet.orientation == MAV_SENSOR_ROTATION_PITCH_270) {
     if (packet.orientation == (Rotation)params.orientation.get()) {
-    	//if(packet.current_distance > 600 || packet.current_distance < 5) {
-		//	return ;
-    	//}
     	
     	//hal.shell->printf("orientation %d, ms %d\r\n", (int)packet.orientation, AP_HAL::millis() - state.last_reading_ms);
     	state.last_reading_ms = AP_HAL::millis();
         distance_cm = packet.current_distance;
         sensor_type = (MAV_DISTANCE_SENSOR)packet.type;  
+        
         //distance_cm_filtered = _distance_filter.apply(distance_cm);
         //hal.shell->printf("orientation %d, distance_cm %d\r\n", (int)packet.orientation, distance_cm);
 
@@ -137,36 +134,21 @@ void AP_RangeFinder_MAVLink::update(void)
 {
     //Time out on incoming data; if we don't get new
     //data in 500ms, dump it
-#if 0
     if (AP_HAL::millis() - state.last_reading_ms > AP_RANGEFINDER_MAVLINK_TIMEOUT_MS) {
         set_status(RangeFinder::Status::NoData);
         state.distance_cm = 0;
+        state.distance_cm_raw = 0;
     } else {
-        state.distance_cm = distance_cm;
-        //state.distance_cm_filtered = distance_cm_filtered;
-        //state.distance_cm_filtered = _distance_filter.apply(distance_cm);
-        update_status();
-    }
+        state.distance_cm_raw = distance_cm;
+		state.distance_cm = distance_cm_filtered;
+		//state.distance_cm = _distance_filter.apply(distance_cm_filtered);
+		//state.distance_cm = _distance_filter.apply(distance_cm);
 
-    if(distance_ok((float)state.distance_cm)) {
-    	state.distance_cm_filtered = state.distance_cm;
-    }
-#endif
-
-	if (AP_HAL::millis() - state.last_reading_ms > AP_RANGEFINDER_MAVLINK_TIMEOUT_MS) {
-        set_status(RangeFinder::Status::NoData);
-        state.distance_cm = 0;
-    } else {
-        state.distance_cm = distance_cm;
-		state.distance_cm_filtered = distance_cm_filtered;
-		//state.distance_cm_filtered = _distance_filter.apply(distance_cm_filtered);
-		//state.distance_cm_filtered = _distance_filter.apply(distance_cm);
-
-		//if(distance_ok((float)state.distance_cm)) {
-	    //	state.distance_cm_filtered = state.distance_cm;
+		//if(distance_ok((float)distance_cm)) {
+	    //	state.distance_cm = distance_cm;
 	    //}
 	    
-		set_status(RangeFinder::Status::Good);
+        update_status();
     }
 
     if((sample_freq != params.sample_freq.get()) ||

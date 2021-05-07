@@ -574,18 +574,14 @@ uint16_t RangeFinder::distance_cm_orient(enum Rotation orientation) const
     return backend->distance_cm();
 }
 
-uint16_t RangeFinder::distance_cm_filtered_orient(enum Rotation orientation) const
+uint16_t RangeFinder::distance_cm_raw_orient(enum Rotation orientation) const
 {
     AP_RangeFinder_Backend *backend = find_instance(orientation);
     if (backend == nullptr) {
         return 0;
     }
-
-    if (backend->status() != Status::Good) {
-        return 0;
-    }
     
-    return backend->distance_cm_filtered();
+    return backend->distance_cm_raw();
 }
 
 bool RangeFinder::healthy(enum Rotation orientation)

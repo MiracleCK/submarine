@@ -1530,11 +1530,14 @@ void GCS_MAVLINK::send_rc_channels()
     rc().get_radio_in(values, ARRAY_SIZE(values));
 
     RangeFinder *rangefinder = RangeFinder::get_singleton();
-	AP_RangeFinder_Backend *bottom = rangefinder->get_backend(0);
-	AP_RangeFinder_Backend *front = rangefinder->get_backend(1);
-	AP_RangeFinder_Backend *back = rangefinder->get_backend(2);
-	AP_RangeFinder_Backend *left = rangefinder->get_backend(3);
-	AP_RangeFinder_Backend *right = rangefinder->get_backend(4);
+	
+	AP_RangeFinder_Backend *front = rangefinder->find_instance(ROTATION_NONE);
+	AP_RangeFinder_Backend *back = rangefinder->find_instance(ROTATION_PITCH_180);
+	AP_RangeFinder_Backend *left = rangefinder->find_instance(ROTATION_YAW_270);
+	AP_RangeFinder_Backend *right = rangefinder->find_instance(ROTATION_YAW_90);
+	AP_RangeFinder_Backend *bottom = rangefinder->find_instance(ROTATION_PITCH_270);
+	AP_RangeFinder_Backend *front347 = rangefinder->find_instance(ROTATION_YAW_315);
+	AP_RangeFinder_Backend *front13 = rangefinder->find_instance(ROTATION_YAW_45);
 	AC_DistanceControl *distance_control = AC_DistanceControl::get_singleton();
 
 	set_mavlink_message_id_interval(MAVLINK_MSG_ID_RC_CHANNELS, 25);
@@ -1567,21 +1570,21 @@ void GCS_MAVLINK::send_rc_channels()
         chan,
         AP_HAL::millis(),
         RC_Channels::get_valid_channel_count(),
-        bottom->distance_cm(), //1,
-        front->distance_cm(), //2,
-        back->distance_cm(), //3,
-        left->distance_cm(), //4,
-        right->distance_cm(), //5,
-        bottom->distance_cm_filtered(), //6,
-        front->distance_cm_filtered(), //7,
-        back->distance_cm_filtered(), //8,
-        left->distance_cm_filtered(), //9,
-        right->distance_cm_filtered(), //10,
-        (int16_t)distance_control->get_target_x(), //11,
-        (int16_t)distance_control->get_target_y(), //12,
-        (int16_t)distance_control->get_target_z(), //13,
-        0, //14,
-        0, //15,
+        front->distance_cm_raw(), //1,
+        back->distance_cm_raw(), //2,
+        left->distance_cm_raw(), //3,
+        right->distance_cm_raw(), //4,
+        bottom->distance_cm_raw(), //5,
+        front347->distance_cm_raw(), //6,
+        front13->distance_cm_raw(), //7,
+        front->distance_cm(), //8,
+        back->distance_cm(), //9,
+        left->distance_cm(), //10,
+        right->distance_cm(), //11,
+        bottom->distance_cm(), //12,
+        (int16_t)distance_control->get_target_x(), //13,
+        (int16_t)distance_control->get_target_y(), //14,
+        (int16_t)distance_control->get_target_z(), //15,
         0, //16,
         values[16],
         values[17],
