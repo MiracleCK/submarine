@@ -359,14 +359,14 @@ void AP_Motors6DOF::output_min()
     // ToDo find a field to store the minimum pwm instead of hard coding 1500
     for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
         if (motor_enabled[i]) {
-            rc_write(i, 1500);
+            rc_write(i, 0);
         }
     }
 }
 
 int16_t AP_Motors6DOF::calc_thrust_to_pwm(float thrust_in) const
 {
-    return constrain_int16(1500 + thrust_in * 400, _throttle_radio_min, _throttle_radio_max);
+    return constrain_int16(thrust_in * 2200, _throttle_radio_min, _throttle_radio_max);
 }
 
 void AP_Motors6DOF::output_to_motors()
@@ -380,7 +380,7 @@ void AP_Motors6DOF::output_to_motors()
         // set motor output based on thrust requests
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
             if (motor_enabled[i]) {
-                motor_out[i] = 1500;
+                motor_out[i] = 0;
             }
         }
         break;
@@ -388,7 +388,7 @@ void AP_Motors6DOF::output_to_motors()
         // sends output to motors when armed but not flying
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
             if (motor_enabled[i]) {
-                motor_out[i] = 1500;
+                motor_out[i] = 0;
             }
         }
         break;
@@ -410,15 +410,46 @@ void AP_Motors6DOF::output_to_motors()
         	if(_motor_deadzone[i] > 0) {
         		int16_t min, max;
 
-        		min = 1500 - _motor_deadzone[i];
-        		max = 1500 + _motor_deadzone[i];
-	        	if(motor_out[i] > min && motor_out[i] < 1500)
+        		min = 0 - _motor_deadzone[i];
+        		max = 0 + _motor_deadzone[i];
+	        	if(motor_out[i] > min && motor_out[i] < 0)
 	        		motor_out[i] = min;
-	        	if(motor_out[i] > 1500 && motor_out[i] < max)
+	        	if(motor_out[i] > 0 && motor_out[i] < max)
 	        		motor_out[i] = max;
         	}
-        	//printf("motor %d pwm %d\r\n", i, motor_out[i]);
-            rc_write(_motor_mapping[i] - 1, motor_out[i]);
+        	
+			if(i==0) {
+	        	if(motor_out[i] >= 0) {
+	        		palWriteLine(HAL_GPIO_PIN_M1_CTRL, 1);
+	        	} else {
+	        		palWriteLine(HAL_GPIO_PIN_M1_CTRL, 0);
+	        	}
+        	}
+
+        	if(i==1) {
+	        	if(motor_out[i] >= 0) {
+	        		palWriteLine(HAL_GPIO_PIN_M2_CTRL, 1);
+	        	} else {
+	        		palWriteLine(HAL_GPIO_PIN_M2_CTRL, 0);
+	        	}
+        	}
+
+        	//hal.shell->printf("%d:%d\r\n", _motor_mapping[i] - 1, motor_out[i]);
+            rc_write(_motor_mapping[i] - 1, abs(motor_out[i]));
+
+			if(0) {
+		        static uint32_t _startup_ms = 0;
+
+		        if(_startup_ms == 0) {
+					_startup_ms = AP_HAL::millis();
+		        }
+
+		        if(AP_HAL::millis() - _startup_ms > 1000) {
+					_startup_ms = AP_HAL::millis();
+					
+				    hal.shell->printf("_throttle_radio_min %d,_throttle_radio_max %d\r\n", _throttle_radio_min, _throttle_radio_max);
+				}
+			}
         }
     }
 }
@@ -456,7 +487,7 @@ void AP_Motors6DOF::output_armed_stabilizing()
         forward_thrust = _forward_in;
         lateral_thrust = _lateral_in;
 
-		if(1) {
+		if(0) {
 	        static uint32_t _startup_ms = 0;
 
 	        if(_startup_ms == 0) {
@@ -468,9 +499,9 @@ void AP_Motors6DOF::output_armed_stabilizing()
 				
 			    //printf("roll %f\r\n", _roll_in);
 			    //printf("pitch %f\r\n", _pitch_in);
-			    //printf("yaw %f\r\n", _yaw_in);
+			    printf("yaw %.04f\r\n", _yaw_in);
 			    //printf("throttle %f\r\n", _throttle_in);
-			    //printf("forward %f\r\n", _forward_in);
+			    printf("forward %.04f\r\n", _forward_in);
 			    //printf("lateral %f\r\n", _lateral_in);
 			    //printf("\r\n");
 

@@ -291,7 +291,7 @@ void Sub::one_hz_loop()
         ahrs.update_orientation();
 
         // set all throttle channel settings
-        motors.set_throttle_range(channel_throttle->get_radio_min(), channel_throttle->get_radio_max());
+        motors.set_throttle_range(-2200, 2200);
     }
 
     // update assigned functions and enable auxiliary servos

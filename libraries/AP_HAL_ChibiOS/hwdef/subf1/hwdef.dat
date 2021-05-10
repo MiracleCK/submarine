@@ -250,6 +250,9 @@ PA12 OTG_FS_DP OTG1
 # This defines a couple of general purpose outputs, mapped to GPIO
 # numbers 1 and 2 for users.
 PB0 EXTERN_GPIO1 OUTPUT GPIO(1)
+PE9 M1_CTRL OUTPUT GPIO(2)
+PA0 M2_CTRL OUTPUT GPIO(3)
+
 #PB1 EXTERN_GPIO2 OUTPUT GPIO(2)
 
 # This defines some input pins, currently unused.
@@ -328,8 +331,8 @@ PC2 MPU_CS CS
 
 # The telem2 USART, also with RTS/CTS available.
 # USART3 serial3 telem2
-PD8 USART3_TX USART3
-PD9 USART3_RX USART3
+PC10 USART3_TX USART3
+PC11 USART3_RX USART3
 #PD11 USART3_CTS USART3
 #PD12 USART3_RTS USART3
 
@@ -346,16 +349,19 @@ PD10 FRAM_CS CS SPEED_VERYLOW
 # outputs on the primary MCU are setup as PWM and how many as
 # GPIOs. To match HAL_PX4 we number the GPIOs for the PWM outputs
 # starting at 50.
-PE14 TIM1_CH4 TIM1 PWM(1) GPIO(50)
-PE13 TIM1_CH3 TIM1 PWM(2) GPIO(51)
-PE11 TIM1_CH2 TIM1 PWM(3) GPIO(52)
-PE9  TIM1_CH1 TIM1 PWM(4) GPIO(53)
+PA1  TIM2_CH2 TIM2 PWM(1) GPIO(50)
+PA3  TIM2_CH4 TIM2 PWM(2) GPIO(51)
+PA2  TIM2_CH3 TIM2 PWM(3) GPIO(52)
+PE14 TIM1_CH4 TIM1 PWM(4) GPIO(53)
+PE13 TIM1_CH3 TIM1 PWM(5) GPIO(54)
+PE11 TIM1_CH2 TIM1 PWM(6) GPIO(55)
+
 #PD13 TIM4_CH2 TIM4 PWM(5) GPIO(54)
 #PD14 TIM4_CH3 TIM4 PWM(6) GPIO(55)
 #PD12 TIM4_CH1 TIM4 PWM(7) GPIO(56)
 #PD15 TIM4_CH4 TIM4 PWM(8) GPIO(57)
 
-define BOARD_PWM_COUNT_DEFAULT 4
+define BOARD_PWM_COUNT_DEFAULT 6
 
 # Relays default to use GPIO pins 54 and 55.
 #define RELAY1_PIN_DEFAULT 54
@@ -370,7 +376,7 @@ define BOARD_PWM_COUNT_DEFAULT 4
 #PE0 UART8_RX UART8
 #PE1 UART8_TX UART8
 
-# UART1 serial4 GPS2
+# UART1 - MAVLINK - FACTORY
 PB6 USART1_TX USART1
 PB7 USART1_RX USART1
 
@@ -533,6 +539,11 @@ define RC_IN_CHANNEL_YAW 3
 define RC_IN_CHANNEL_FORWARD 2
 define RC_IN_CHANNEL_LATERAL 4
 
+define RC_IN_CHANNEL_LEFT_PUMP 7
+define RC_IN_CHANNEL_RIGHT_PUMP 8
+define RC_IN_CHANNEL_UP_PUMP 9
+define RC_IN_CHANNEL_ARM 10
+
 # ROTATE_CUSTOM_IMU is the same as MAG, no need define
 define ROTATE_CUSTOM_IMU {tmp = y; y = x; x = tmp; z = -z; return;}
 #define ROTATE_CUSTOM_MAG {tmp = y; y = -x; x = tmp; return;}
@@ -541,14 +552,15 @@ define ROTATE_CUSTOM_MAG {tmp = y; y = x; x = tmp; z = -z; return;}
 #define ROTATE_CUSTOM_MAG {x = -x; y = -y; return;}
 
 #      Motor #               Roll   Pitch    Yaw    Throttle   Forward   Lateral
-define CUSTOM_MOTORS_MOT_1      0,      0,  -1.0f,      0,      1.0f,     -1.0f
-define CUSTOM_MOTORS_MOT_2      0,      0,  -1.0f,      0,     -1.0f,     -1.0f
-define CUSTOM_MOTORS_MOT_3      0,      0,   1.0f,      0,      1.0f,     -1.0f
-define CUSTOM_MOTORS_MOT_4      0,      0,   1.0f,      0,     -1.0f,     -1.0f
+define CUSTOM_MOTORS_MOT_1      0,      0,   1.0f,      0,      1.0f,     0.0f
+define CUSTOM_MOTORS_MOT_2      0,      0,   1.0f,      0,     -1.0f,     0.0f
 
-define MOT_1_DEADZONE 35
-define MOT_2_DEADZONE 35
-define MOT_3_DEADZONE 35
-define MOT_4_DEADZONE 35
+#define CUSTOM_MOTORS_MOT_3      0,      0,   1.0f,      0,      1.0f,     -1.0f
+#define CUSTOM_MOTORS_MOT_4      0,      0,   1.0f,      0,     -1.0f,     -1.0f
+
+#define MOT_1_DEADZONE 35
+#define MOT_2_DEADZONE 35
+#define MOT_3_DEADZONE 35
+#define MOT_4_DEADZONE 35
 
 define USERHOOK_SUPERSLOWLOOP

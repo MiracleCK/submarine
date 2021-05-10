@@ -54,7 +54,7 @@ extern const AP_HAL::HAL& hal;
 #endif
 
 #ifndef HAL_SERIAL6_PROTOCOL
-#define SERIAL6_PROTOCOL SerialProtocol_None
+#define SERIAL6_PROTOCOL SerialProtocol_MAVLink
 #define SERIAL6_BAUD AP_SERIALMANAGER_MAVLINK_BAUD/1000
 #else
 #define SERIAL6_PROTOCOL HAL_SERIAL6_PROTOCOL

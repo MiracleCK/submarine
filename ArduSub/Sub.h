@@ -182,6 +182,11 @@ private:
     RC_Channel *channel_forward;
     RC_Channel *channel_lateral;
 
+    RC_Channel *channel_left_pump;
+    RC_Channel *channel_right_pump;
+    RC_Channel *channel_up_pump;
+    RC_Channel *channel_arm;
+
     AP_Logger logger;
 
     AP_LeakDetector leak_detector;
