@@ -733,16 +733,6 @@ void Sub::load_parameters()
             AP_Arming::ARMING_CHECK_RC |
             AP_Arming::ARMING_CHECK_VOLTAGE |
             AP_Arming::ARMING_CHECK_BATTERY);
-    AP_Param::set_default_by_name("CIRCLE_RATE", 2.0f);
-    AP_Param::set_default_by_name("ATC_ACCEL_Y_MAX", 110000.0f);
-    AP_Param::set_default_by_name("RC3_TRIM", 1100);
-    AP_Param::set_default_by_name("COMPASS_OFFS_MAX", 1000);
-    AP_Param::set_default_by_name("INS_GYR_CAL", 0);
-    AP_Param::set_default_by_name("MNT_DEFLT_MODE", MAV_MOUNT_MODE_RC_TARGETING);
-    AP_Param::set_default_by_name("MNT_JSTICK_SPD", 100);
-    AP_Param::set_by_name("MNT_RC_IN_PAN", 7);
-    AP_Param::set_by_name("MNT_RC_IN_TILT", 8);
-    AP_Param::set_default_by_name("RNGFND1_TYPE", (uint8_t)RangeFinder::Type::MAVLink);
 
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
         return;
@@ -779,28 +769,6 @@ void Sub::load_parameters()
 
     AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", WP_YAW_BEHAVIOR_LOOK_AT_NEXT_WP); // look at next wp
     //AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", WP_YAW_BEHAVIOR_CORRECT_XTRACK);
-    
-    char rc_param_name[13]; // len is the max_size of below param name
-    int rc_param_buf_len = sizeof(rc_param_name);
-
-    // exchange throttle channel according to hwdef
-    if (RC_IN_CHANNEL_THROTTLE != 2 && RC_IN_CHANNEL_THROTTLE < 8) {
-        snprintf(rc_param_name, rc_param_buf_len, "RC%d_TRIM", RC_IN_CHANNEL_THROTTLE+1);
-        AP_Param::set_default_by_name(rc_param_name, 1100);
-
-        AP_Param::set_default_by_name("RC3_TRIM", 1500); // default throttle is RC3
-    }
-
-    // to consistent with algorithm output, reverse input channel
-    if (RC_IN_CHANNEL_ROLL < 8) {
-        snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", RC_IN_CHANNEL_ROLL+1);
-        AP_Param::set_default_by_name(rc_param_name, 1);
-    }
-
-    if (RC_IN_CHANNEL_PITCH < 8) {
-        snprintf(rc_param_name, rc_param_buf_len, "RC%d_REVERSED", RC_IN_CHANNEL_PITCH+1);
-        AP_Param::set_default_by_name(rc_param_name, 1);
-    }
 
     // mapping logic motor to physical
     #ifdef MOT_1_MAPPING

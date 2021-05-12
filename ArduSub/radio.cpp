@@ -22,7 +22,7 @@ void Sub::init_rc_in()
     //channel_forward->set_angle(ROLL_PITCH_INPUT_MAX);
     //channel_lateral->set_angle(ROLL_PITCH_INPUT_MAX);
 
-    for (int i = 0; i < 11; i++) {
+    for (int i = 0; i < 16; i++) {
         RC_Channels::set_override(i, 1500);
     }
     
