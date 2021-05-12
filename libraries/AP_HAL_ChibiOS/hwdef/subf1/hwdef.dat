@@ -566,4 +566,4 @@ define CUSTOM_MOTORS_MOT_2      0,      0,   1.0f,      0,     -1.0f,     0.0f
 #define MOT_3_DEADZONE 35
 #define MOT_4_DEADZONE 35
 
-define USERHOOK_SUPERSLOWLOOP
+#define USERHOOK_SUPERSLOWLOOP

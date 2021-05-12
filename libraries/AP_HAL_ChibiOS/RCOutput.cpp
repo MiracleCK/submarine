@@ -64,6 +64,10 @@ void RCOutput::init()
                 num_fmu_channels = MAX(num_fmu_channels, group.chan[j]+1);
                 group.ch_mask |= (1U<<group.chan[j]);
             }
+
+            if (i==1 && j==2) {
+	            group.pwm_cfg.channels[j].mode = PWM_OUTPUT_ACTIVE_LOW;
+	        }
         }
         if (group.ch_mask != 0) {
             pwmStart(group.pwm_drv, &group.pwm_cfg);
@@ -134,6 +138,7 @@ void RCOutput::set_freq_group(pwm_group &group)
     }
 
     bool force_reconfig = false;
+#if 0
     for (uint8_t j=0; j<4; j++) {
         if (group.pwm_cfg.channels[j].mode == PWM_OUTPUT_ACTIVE_LOW) {
             group.pwm_cfg.channels[j].mode = PWM_OUTPUT_ACTIVE_HIGH;
@@ -145,7 +150,7 @@ void RCOutput::set_freq_group(pwm_group &group)
         }
 
     }
-
+#endif
     if (old_clock != group.pwm_cfg.frequency ||
         old_period != group.pwm_cfg.period ||
         !group.pwm_started ||
