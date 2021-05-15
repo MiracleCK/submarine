@@ -434,7 +434,7 @@ void Sub::althold_run_rate()
 		    if(front_face_actived) {
 		    	distance = distance_control.get_front_cm();
 		    	if(distance_control.limit_enable() && 
-		    	   pilot_trans_thrusts.x >= 0.0f && 
+		    	   pilot_trans_thrusts.x > 0.0f && 
 		    	   distance_control.get_front_limit_cm() != 0 && 
 				   distance < distance_control.get_front_limit_cm()) {
 				   	if(!is_equal(distance_control.get_target_x(), (float)distance_control.get_front_limit_cm())) {
@@ -448,7 +448,7 @@ void Sub::althold_run_rate()
 		    } else {
 		    	distance = distance_control.get_back_cm();
 		    	if(distance_control.limit_enable() && 
-		    	   pilot_trans_thrusts.x <= -0.0f && 
+		    	   pilot_trans_thrusts.x < -0.0f && 
 		    	   distance_control.get_back_limit_cm() != 0 && 
 		   		   distance > distance_control.get_back_limit_cm()) {
 		   		   	if(!is_equal(distance_control.get_target_x(), (float)distance_control.get_back_limit_cm())) {
@@ -504,7 +504,7 @@ void Sub::althold_run_rate()
 		    if(distance_control.right_face_is_active()) {
 		    	distance = distance_control.get_right_cm();
 		    	if(distance_control.limit_enable() && 
-		    	   pilot_trans_thrusts.y >= 0.0f && 
+		    	   pilot_trans_thrusts.y > 0.0f && 
 		    	   distance_control.get_right_limit_cm() != 0 && 
 				   distance < distance_control.get_right_limit_cm()) {
 				   	if(!is_equal(distance_control.get_target_y(), (float)distance_control.get_right_limit_cm())) {
@@ -518,7 +518,7 @@ void Sub::althold_run_rate()
 		    } else {
 		    	distance = distance_control.get_left_cm();
 		    	if(distance_control.limit_enable() && 
-		    	   pilot_trans_thrusts.y <= -0.0f && 
+		    	   pilot_trans_thrusts.y < -0.0f && 
 		    	   distance_control.get_left_limit_cm() != 0 && 
 		   		   distance > distance_control.get_left_limit_cm()) {
 		   		   	if(!is_equal(distance_control.get_target_y(), (float)distance_control.get_left_limit_cm())) {

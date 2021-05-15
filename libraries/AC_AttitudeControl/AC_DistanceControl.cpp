@@ -625,33 +625,45 @@ void AC_DistanceControl::update_distance(void)
 	distance_bf[DIS_BF_FRONT347] = _rangefinder.distance_cm_orient(ROTATION_YAW_315);
     distance_bf[DIS_BF_FRONT13] = _rangefinder.distance_cm_orient(ROTATION_YAW_45);
 
-	if(distance_bf[DIS_BF_FRONT] >=  _front_offset)
+	if(distance_bf[DIS_BF_FRONT] >  _front_offset)
 		distance_bf[DIS_BF_FRONT] -= _front_offset;
+	else if(distance_bf[DIS_BF_FRONT] ==  _front_offset)
+		distance_bf[DIS_BF_FRONT] = 0;
 	else 
 		distance_bf[DIS_BF_FRONT] = 0;
 		
-	if(distance_bf[DIS_BF_BACK] >= _back_offset)
+	if(distance_bf[DIS_BF_BACK] > _back_offset)
 		distance_bf[DIS_BF_BACK] -= _back_offset;
+	else if(distance_bf[DIS_BF_BACK] == _back_offset)
+		distance_bf[DIS_BF_BACK] = 0;
 	else 
 		distance_bf[DIS_BF_BACK] = 0;
 		
-	if(distance_bf[DIS_BF_RIGHT] >=  _right_offset)
+	if(distance_bf[DIS_BF_RIGHT] >  _right_offset)
 		distance_bf[DIS_BF_RIGHT] -= _right_offset;
+	else if(distance_bf[DIS_BF_RIGHT] ==  _right_offset)
+		distance_bf[DIS_BF_RIGHT] = 0;
 	else 
 		distance_bf[DIS_BF_RIGHT] = 0;
 		
-	if(distance_bf[DIS_BF_LEFT] >= _left_offset)
+	if(distance_bf[DIS_BF_LEFT] > _left_offset)
 		distance_bf[DIS_BF_LEFT] -= _left_offset;
+	else if(distance_bf[DIS_BF_LEFT] == _left_offset)
+		distance_bf[DIS_BF_LEFT] = 0;
 	else 
 		distance_bf[DIS_BF_LEFT] = 0;
 
-	if(distance_bf[DIS_BF_FRONT347] >=  _front347_offset)
+	if(distance_bf[DIS_BF_FRONT347] >  _front347_offset)
 		distance_bf[DIS_BF_FRONT347] -= _front347_offset;
+	else if(distance_bf[DIS_BF_FRONT347] ==  _front347_offset)
+		distance_bf[DIS_BF_FRONT347] = 0;
 	else 
 		distance_bf[DIS_BF_FRONT347] = 0;
 
-	if(distance_bf[DIS_BF_FRONT13] >=  _front13_offset)
+	if(distance_bf[DIS_BF_FRONT13] >  _front13_offset)
 		distance_bf[DIS_BF_FRONT13] -= _front13_offset;
+	else if(distance_bf[DIS_BF_FRONT13] ==  _front13_offset)
+		distance_bf[DIS_BF_FRONT13] = 0;
 	else 
 		distance_bf[DIS_BF_FRONT13] = 0;
 
@@ -705,10 +717,10 @@ void AC_DistanceControl::update_distance(void)
 	}
 
 	//filter
-	/*for(int i=0; i<DISTANCE_NUM; i++) {
+	for(int i=0; i<DISTANCE_NUM; i++) {
 		if(abs(distance_ned[i]) < 5)
 			distance_ned[i] = 0;
-	}*/
+	}
 	
 	if(1) {
 		static uint32_t _startup_ms = 0;
@@ -762,13 +774,13 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 	Vector3f dis_error;
 	
     if(thrusts.x > 0.0f) {
-    	if(_front_limit_cm != 0 && distance_ned[DISTANCE_FRONT] != 0 && !front_face_is_active()) {
+    	if(_front_limit_cm != 0 && distance_ned[DISTANCE_FRONT] != 0) {
 			dis_error.x = distance_ned[DISTANCE_FRONT] - _front_limit_cm;
 		} else {
 			dis_error.x = _limit_x_p;
 		}
 	} else if(thrusts.x < -0.0f) {
-		if(_back_limit_cm != 0 && distance_ned[DISTANCE_BACK] != 0 && !back_face_is_active()) {
+		if(_back_limit_cm != 0 && distance_ned[DISTANCE_BACK] != 0) {
 			dis_error.x = _back_limit_cm - distance_ned[DISTANCE_BACK];
 		} else {
 			dis_error.x = _limit_x_p;
@@ -780,13 +792,13 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 	thrusts.x *= constrain_float(powf(dis_error.x/_limit_x_p, _curve_x), 0.0f, 1.0f);
 
 	if(thrusts.y > 0.0f) {
-		if(_right_limit_cm != 0 && distance_ned[DISTANCE_RIGHT] != 0 && !right_face_is_active()) {
+		if(_right_limit_cm != 0 && distance_ned[DISTANCE_RIGHT] != 0) {
 			dis_error.y = distance_ned[DISTANCE_RIGHT] - _right_limit_cm;
 		} else {
 			dis_error.y = _limit_y_p;
 		}
 	} else if(thrusts.y < -0.0f) {
-		if(_left_limit_cm != 0 && distance_ned[DISTANCE_LEFT] != 0 && !left_face_is_active()) {
+		if(_left_limit_cm != 0 && distance_ned[DISTANCE_LEFT] != 0) {
 			dis_error.y = _left_limit_cm - distance_ned[DISTANCE_LEFT];
 		} else {
 			dis_error.y = _limit_y_p;
@@ -798,13 +810,13 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 	thrusts.y *= constrain_float(powf(dis_error.y/_limit_y_p, _curve_y), 0.0f, 1.0f);
 
 	if(thrusts.z < -0.0f) {
-		if(_bottom_limit_cm != 0 && distance_ned[DISTANCE_BOTTOM] != 0 && !bottom_face_is_active()) {
+		if(_bottom_limit_cm != 0 && distance_ned[DISTANCE_BOTTOM] != 0) {
 			dis_error.z = distance_ned[DISTANCE_BOTTOM] - _bottom_limit_cm;
 		} else {
 			dis_error.z = _limit_z_p;
 		}
 	} else if(thrusts.z > 0.0f) {
-		if(abs(distance_ned[DISTANCE_TOP]) > 10 && _top_limit_cm != 0 && !top_face_is_active())
+		if(abs(distance_ned[DISTANCE_TOP]) > 10 && _top_limit_cm != 0)
 			dis_error.z = _top_limit_cm - distance_ned[DISTANCE_TOP];
 		else
 			dis_error.z = _limit_z_p;

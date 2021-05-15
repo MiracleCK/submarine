@@ -1531,8 +1531,8 @@ void GCS_MAVLINK::send_rc_channels()
 
     RangeFinder *rangefinder = RangeFinder::get_singleton();
 	
-	AP_RangeFinder_Backend *front = rangefinder->find_instance(ROTATION_NONE);
-	AP_RangeFinder_Backend *back = rangefinder->find_instance(ROTATION_PITCH_180);
+	//AP_RangeFinder_Backend *front = rangefinder->find_instance(ROTATION_NONE);
+	//AP_RangeFinder_Backend *back = rangefinder->find_instance(ROTATION_PITCH_180);
 	AP_RangeFinder_Backend *left = rangefinder->find_instance(ROTATION_YAW_270);
 	AP_RangeFinder_Backend *right = rangefinder->find_instance(ROTATION_YAW_90);
 	AP_RangeFinder_Backend *bottom = rangefinder->find_instance(ROTATION_PITCH_270);
@@ -1566,6 +1566,7 @@ void GCS_MAVLINK::send_rc_channels()
         values[17],
         receiver_rssi); 
 #endif
+#if 0
 	mavlink_msg_rc_channels_send(
         chan,
         AP_HAL::millis(),
@@ -1589,6 +1590,33 @@ void GCS_MAVLINK::send_rc_channels()
         values[16],
         values[17],
         receiver_rssi);  
+#endif	
+	mavlink_msg_rc_channels_send(
+        chan,
+        AP_HAL::millis(),
+        RC_Channels::get_valid_channel_count(),
+        front347->distance_cm_raw(), //1,
+        front13->distance_cm_raw(), //2,
+        bottom->distance_cm_raw(), //3,
+        left->distance_cm_raw(), //4,
+        right->distance_cm_raw(), //5,
+        
+        distance_control->get_front347_cm_bf(), //6,
+        distance_control->get_front13_cm_bf(), //7,
+        distance_control->get_bottom_cm_bf(), //8,
+        distance_control->get_left_cm_bf(), //9,
+        distance_control->get_right_cm_bf(), //10,
+        
+        (int16_t)distance_control->get_target_x(), //11,
+        (int16_t)distance_control->get_target_y(), //12,
+        (int16_t)distance_control->get_target_z(), //13,
+        
+        0, //14,
+        0, //15,
+        0, //16,
+        values[16], //17,
+        values[17], //18,
+        receiver_rssi); 
 }
 
 bool GCS_MAVLINK::sending_mavlink1() const

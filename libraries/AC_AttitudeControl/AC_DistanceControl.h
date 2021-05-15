@@ -51,12 +51,14 @@ public:
     int16_t get_top_cm() const { return distance_ned[DISTANCE_TOP]; }
     int16_t get_bottom_cm() const { return distance_ned[DISTANCE_BOTTOM]; }
 
-    int16_t get_front_cm_bf() const { return distance_bf[DISTANCE_FRONT]; }
-    int16_t get_back_cm_bf() const { return distance_bf[DISTANCE_BACK]; }
-    int16_t get_left_cm_bf() const { return distance_bf[DISTANCE_LEFT]; }
-    int16_t get_right_cm_bf() const { return distance_bf[DISTANCE_RIGHT]; }
-    int16_t get_top_cm_bf() const { return distance_bf[DISTANCE_TOP]; }
-    int16_t get_bottom_cm_bf() const { return distance_bf[DISTANCE_BOTTOM]; }
+    int16_t get_front_cm_bf() const { return distance_bf[DIS_BF_FRONT]; }
+    int16_t get_back_cm_bf() const { return distance_bf[DIS_BF_BACK]; }
+    int16_t get_left_cm_bf() const { return distance_bf[DIS_BF_LEFT]; }
+    int16_t get_right_cm_bf() const { return distance_bf[DIS_BF_RIGHT]; }
+    int16_t get_top_cm_bf() const { return distance_bf[DIS_BF_TOP]; }
+    int16_t get_bottom_cm_bf() const { return distance_bf[DIS_BF_BOTTOM]; }
+    int16_t get_front347_cm_bf() const { return distance_bf[DIS_BF_FRONT347]; }
+    int16_t get_front13_cm_bf() const { return distance_bf[DIS_BF_FRONT13]; }
 
     int16_t get_front_limit_cm() const { return _front_limit_cm.get(); }
     int16_t get_back_limit_cm() const { return _back_limit_cm.get(); }
@@ -68,6 +70,13 @@ public:
     int16_t get_delayms_x() const { return _delay_ms_x.get(); }
     int16_t get_delayms_y() const { return _delay_ms_y.get(); }
     int16_t get_delayms_z() const { return _delay_ms_z.get(); }
+
+    int8_t get_front_pos_offset() const { return _front_offset.get(); }
+    int8_t get_back_pos_offset() const { return _back_offset.get(); }
+    int8_t get_left_pos_offset() const { return _left_offset.get(); }
+    int8_t get_right_pos_offset() const { return _right_offset.get(); }
+    int8_t get_front347_pos_offset() const { return _front347_offset.get(); }
+    int8_t get_front13_pos_offset() const { return _front13_offset.get(); }
     
 	void update_backend(Vector3f &thrusts);
 	static AC_DistanceControl *get_singleton(void) { return _singleton; }
