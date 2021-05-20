@@ -144,8 +144,8 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_LIMIT_Y_P                  80.0f    // discontrol limit y P gain default
 #define DISCONTROL_LIMIT_Z_P                  80.0f    // discontrol limit z P gain default
 
-#define DISCONTROL_THRUSTS_FACE_P             0.3f    // discontrol face thrusts scale P gain default
-#define DISCONTROL_THRUSTS_LIMIT_P            0.8f    // discontrol limit thrusts scale P gain default
+#define DISCONTROL_THRUSTS_FACE_P             1.0f //0.3f    // discontrol face thrusts scale P gain default
+#define DISCONTROL_THRUSTS_LIMIT_P            1.0f //0.8f    // discontrol limit thrusts scale P gain default
 
 #define DISCONTROL_FRONT_LIMIT_CM             30    // discontrol front limit default
 #define DISCONTROL_BACK_LIMIT_CM             -30    // discontrol back limit default
@@ -154,12 +154,12 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_TOP_LIMIT_CM              -0    // discontrol top limit default
 #define DISCONTROL_BOTTOM_LIMIT_CM            30    // discontrol bottom limit default
 
-#define DISCONTROL_FRONT_OFT_CM              16    // discontrol front offset default
-#define DISCONTROL_BACK_OFT_CM               24    // discontrol back offset default
+#define DISCONTROL_FRONT_OFT_CM               0  //16    // discontrol front offset default
+#define DISCONTROL_BACK_OFT_CM                0  //24    // discontrol back offset default
 #define DISCONTROL_LEFT_OFT_CM                8    // discontrol left offset default
 #define DISCONTROL_RIGHT_OFT_CM               8    // discontrol right offset default
-#define DISCONTROL_FRONT347_OFT_CM            0    // discontrol front347 offset default
-#define DISCONTROL_FRONT13_OFT_CM             0    // discontrol front13 offset default
+#define DISCONTROL_FRONT347_OFT_CM            18    // discontrol front347 offset default
+#define DISCONTROL_FRONT13_OFT_CM             18    // discontrol front13 offset default
 
 #define DISCONTROL_DELAY_MS_X                 1000    // discontrol x delay time
 #define DISCONTROL_DELAY_MS_Y                 1500    // discontrol y delay time
@@ -173,9 +173,9 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_CURVE_Y                    2  // default y curve
 #define DISCONTROL_CURVE_Z                    2  // default z curve
 
-#define DISCONTROL_MAX_SPEED_X                150.0f  // default x speed in cm/s.
-#define DISCONTROL_MAX_SPEED_Y                150.0f  // default y speed in cm/s.
-#define DISCONTROL_MAX_SPEED_Z                150.0f  // default z speed in cm/s.
+#define DISCONTROL_MAX_SPEED_X                0 //150.0f  // default x speed in cm/s.
+#define DISCONTROL_MAX_SPEED_Y                0 //150.0f  // default y speed in cm/s.
+#define DISCONTROL_MAX_SPEED_Z                0 //150.0f  // default z speed in cm/s.
 
 #endif
 
