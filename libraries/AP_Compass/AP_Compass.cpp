@@ -12,6 +12,7 @@
 #include "AP_Compass_BMM150.h"
 #include "AP_Compass_HIL.h"
 #include "AP_Compass_HMC5843.h"
+#include "AP_Compass_VCM1193.h"
 #include "AP_Compass_IST8308.h"
 #include "AP_Compass_IST8310.h"
 #include "AP_Compass_LSM303D.h"
@@ -701,6 +702,8 @@ void Compass::_probe_external_i2c_compasses(void)
             ADD_BACKEND(DRIVER_QMC5883L, AP_Compass_QMC5883L::probe(GET_I2C_DEVICE(i, HAL_COMPASS_QMC5883L_I2C_ADDR),
                                                                     all_external, ROTATION_CUSTOM));
                                                                     // all_external?HAL_COMPASS_QMC5883L_ORIENTATION_EXTERNAL:HAL_COMPASS_QMC5883L_ORIENTATION_INTERNAL));
+			ADD_BACKEND(DRIVER_VCM1193, AP_Compass_VCM1193::probe(GET_I2C_DEVICE(i, HAL_COMPASS_VCM1193_I2C_ADDR),
+                                                                    all_external, ROTATION_CUSTOM));
         }
     }
 
