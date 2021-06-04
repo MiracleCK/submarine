@@ -2,6 +2,7 @@
 #include "AC_DistanceControl.h"
 #include <AP_Math/AP_Math.h>
 #include <AP_Logger/AP_Logger.h>
+#include <AP_RangeFinder/AP_RangeFinder_Backend.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -147,14 +148,14 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_THRUSTS_FACE_P             1.0f //0.3f    // discontrol face thrusts scale P gain default
 #define DISCONTROL_THRUSTS_LIMIT_P            1.0f //0.8f    // discontrol limit thrusts scale P gain default
 
-#define DISCONTROL_FRONT_LIMIT_CM             30    // discontrol front limit default
-#define DISCONTROL_BACK_LIMIT_CM             -30    // discontrol back limit default
-#define DISCONTROL_LEFT_LIMIT_CM             -30    // discontrol left limit default
-#define DISCONTROL_RIGHT_LIMIT_CM             30    // discontrol right limit default
-#define DISCONTROL_TOP_LIMIT_CM              -0    // discontrol top limit default
-#define DISCONTROL_BOTTOM_LIMIT_CM            30    // discontrol bottom limit default
+#define DISCONTROL_FRONT_LIMIT_CM             10    // discontrol front limit default
+#define DISCONTROL_BACK_LIMIT_CM               0    // discontrol back limit default
+#define DISCONTROL_LEFT_LIMIT_CM              10    // discontrol left limit default
+#define DISCONTROL_RIGHT_LIMIT_CM             10    // discontrol right limit default
+#define DISCONTROL_TOP_LIMIT_CM                0    // discontrol top limit default
+#define DISCONTROL_BOTTOM_LIMIT_CM             0    // discontrol bottom limit default
 
-#define DISCONTROL_FRONT_OFT_CM               0  //16    // discontrol front offset default
+#define DISCONTROL_FRONT_OFT_CM               16  //16    // discontrol front offset default
 #define DISCONTROL_BACK_OFT_CM                0  //24    // discontrol back offset default
 #define DISCONTROL_LEFT_OFT_CM                8    // discontrol left offset default
 #define DISCONTROL_RIGHT_OFT_CM               8    // discontrol right offset default
@@ -611,11 +612,59 @@ AC_DistanceControl::AC_DistanceControl(const AP_AHRS_View& ahrs, const AP_Inerti
     _flags.freeze_ff_z = true;
     _flags.use_desvel_ff_z = true;
 
+    _limit_enable_in = false;
+    _distance_face_in = false;
+    _sensor_ok = false;
+
     _singleton = this;
+}
+
+void AC_DistanceControl::rangefinder_status(void)
+{
+	uint8_t num_sensors = _rangefinder.num_sensors();
+	uint8_t sensors_ok = 0;
+
+	for (uint8_t i = 0; i < num_sensors; i++) {
+        AP_RangeFinder_Backend *sensor = _rangefinder.get_backend(i);
+        if (sensor == nullptr) {
+            continue;
+        }
+        if (!sensor->has_data()) {
+	        continue;
+	    }
+	    sensors_ok++;
+    }
+
+    if(!sensors_ok) {
+		_limit_enable_in = false;
+		_distance_face_in = 0;
+		_sensor_ok = false;
+		return ;
+    }
+
+	_sensor_ok = true;
+	_limit_enable_in = _limit_enable.get() ? true : false;
+	_distance_face_in = _distance_face.get();
 }
 
 void AC_DistanceControl::update_distance(void)
 {
+	static uint8_t print_flag = 0;
+
+    if(1) {
+		static uint32_t _startup_ms = 0;
+
+		if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+		}
+
+		if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+			
+			print_flag = 1;
+		}
+	}
+	
 	distance_bf[DIS_BF_FRONT] = _rangefinder.distance_cm_orient(ROTATION_NONE);
 	distance_bf[DIS_BF_BACK] = _rangefinder.distance_cm_orient(ROTATION_PITCH_180);
 	distance_bf[DIS_BF_LEFT] = _rangefinder.distance_cm_orient(ROTATION_YAW_270);
@@ -625,59 +674,53 @@ void AC_DistanceControl::update_distance(void)
 	distance_bf[DIS_BF_FRONT347] = _rangefinder.distance_cm_orient(ROTATION_YAW_315);
     distance_bf[DIS_BF_FRONT13] = _rangefinder.distance_cm_orient(ROTATION_YAW_45);
 
-	if(distance_bf[DIS_BF_FRONT] >  _front_offset)
-		distance_bf[DIS_BF_FRONT] -= _front_offset;
-	else if(distance_bf[DIS_BF_FRONT] ==  _front_offset)
-		distance_bf[DIS_BF_FRONT] = 0;
-	else 
-		distance_bf[DIS_BF_FRONT] = 0;
-		
-	if(distance_bf[DIS_BF_BACK] > _back_offset)
-		distance_bf[DIS_BF_BACK] -= _back_offset;
-	else if(distance_bf[DIS_BF_BACK] == _back_offset)
-		distance_bf[DIS_BF_BACK] = 0;
-	else 
-		distance_bf[DIS_BF_BACK] = 0;
-		
-	if(distance_bf[DIS_BF_RIGHT] >  _right_offset)
-		distance_bf[DIS_BF_RIGHT] -= _right_offset;
-	else if(distance_bf[DIS_BF_RIGHT] ==  _right_offset)
-		distance_bf[DIS_BF_RIGHT] = 0;
-	else 
-		distance_bf[DIS_BF_RIGHT] = 0;
-		
-	if(distance_bf[DIS_BF_LEFT] > _left_offset)
-		distance_bf[DIS_BF_LEFT] -= _left_offset;
-	else if(distance_bf[DIS_BF_LEFT] == _left_offset)
-		distance_bf[DIS_BF_LEFT] = 0;
-	else 
-		distance_bf[DIS_BF_LEFT] = 0;
-
-	if(distance_bf[DIS_BF_FRONT347] >  _front347_offset)
-		distance_bf[DIS_BF_FRONT347] -= _front347_offset;
-	else if(distance_bf[DIS_BF_FRONT347] ==  _front347_offset)
-		distance_bf[DIS_BF_FRONT347] = 0;
-	else 
-		distance_bf[DIS_BF_FRONT347] = 0;
-
-	if(distance_bf[DIS_BF_FRONT13] >  _front13_offset)
-		distance_bf[DIS_BF_FRONT13] -= _front13_offset;
-	else if(distance_bf[DIS_BF_FRONT13] ==  _front13_offset)
-		distance_bf[DIS_BF_FRONT13] = 0;
-	else 
-		distance_bf[DIS_BF_FRONT13] = 0;
-
 	if(distance_bf[DIS_BF_FRONT347] != 0 || distance_bf[DIS_BF_FRONT13] != 0) {
 		if(distance_bf[DIS_BF_FRONT347]==0)
 			distance_bf[DIS_BF_FRONT] = distance_bf[DIS_BF_FRONT13]*cosf(radians(13));
 		else if(distance_bf[DIS_BF_FRONT13]==0)
 			distance_bf[DIS_BF_FRONT] = distance_bf[DIS_BF_FRONT347]*cosf(radians(13));
-		else
-			distance_bf[DIS_BF_FRONT] = MIN(distance_bf[DIS_BF_FRONT347]*cosf(radians(13)), distance_bf[DIS_BF_FRONT13]*cosf(radians(13)));
+		else {
+			//distance_bf[DIS_BF_FRONT] = MIN(distance_bf[DIS_BF_FRONT347]*cosf(radians(13)), distance_bf[DIS_BF_FRONT13]*cosf(radians(13)));
+			distance_bf[DIS_BF_FRONT] = (distance_bf[DIS_BF_FRONT13]*distance_bf[DIS_BF_FRONT347]*(1 + cosf(radians(26))))/((distance_bf[DIS_BF_FRONT13] + distance_bf[DIS_BF_FRONT347])*cosf(radians(13)));
+		}
+	}
+
+    blind_area[DIS_BF_FRONT] = _rangefinder.find_instance(ROTATION_NONE)->min_distance_cm();
+	blind_area[DIS_BF_BACK] = _rangefinder.find_instance(ROTATION_PITCH_180)->min_distance_cm();
+	blind_area[DIS_BF_LEFT] = _rangefinder.find_instance(ROTATION_YAW_270)->min_distance_cm();
+	blind_area[DIS_BF_RIGHT] = _rangefinder.find_instance(ROTATION_YAW_90)->min_distance_cm();
+	blind_area[DIS_BF_TOP] = _rangefinder.find_instance(ROTATION_PITCH_90)->min_distance_cm();
+	blind_area[DIS_BF_BOTTOM] = _rangefinder.find_instance(ROTATION_PITCH_270)->min_distance_cm();
+	blind_area[DIS_BF_FRONT347] = _rangefinder.find_instance(ROTATION_YAW_315)->min_distance_cm();
+    blind_area[DIS_BF_FRONT13] = _rangefinder.find_instance(ROTATION_YAW_45)->min_distance_cm();
+	blind_area[DIS_BF_FRONT] = (blind_area[DIS_BF_FRONT13]*blind_area[DIS_BF_FRONT347]*(1 + cosf(radians(26))))/((blind_area[DIS_BF_FRONT13] + blind_area[DIS_BF_FRONT347])*cosf(radians(13)));
+	
+	distance_safe[DISTANCE_FRONT] = MAX(blind_area[DIS_BF_FRONT], _front_offset.get());
+	distance_safe[DISTANCE_BACK] = 0;
+	distance_safe[DISTANCE_LEFT] = MAX(blind_area[DIS_BF_LEFT], _left_offset.get());
+	distance_safe[DISTANCE_RIGHT] = MAX(blind_area[DIS_BF_RIGHT], _right_offset.get());
+	distance_safe[DISTANCE_TOP] = 0;
+	distance_safe[DISTANCE_BOTTOM] = blind_area[DIS_BF_BOTTOM];
+
+	if(0) {
+		hal.shell->printf("distance_safe: %d %d %d %d %d %d\r\n", 
+						distance_safe[DISTANCE_FRONT],
+						distance_safe[DISTANCE_BACK], 
+						distance_safe[DISTANCE_LEFT], 
+						distance_safe[DISTANCE_RIGHT],
+						distance_safe[DISTANCE_TOP],
+						distance_safe[DISTANCE_BOTTOM]);
 	}
 	
 	Matrix3f m;
 	m.from_euler(_ahrs.roll, _ahrs.pitch, 0);
+
+	Vector3f limit[DISTANCE_NUM] = {{(float)distance_safe[DISTANCE_FRONT], 0, 0},
+						{(float)-distance_safe[DISTANCE_BACK], 0, 0},
+						{0, (float)-distance_safe[DISTANCE_LEFT], 0},
+						{0, (float)distance_safe[DISTANCE_RIGHT], 0},
+						{0, 0, (float)-distance_safe[DISTANCE_TOP]},
+						{0, 0, (float)distance_safe[DISTANCE_BOTTOM]}};
 
 	Vector3f dist[DISTANCE_NUM] = {{(float)distance_bf[DIS_BF_FRONT], 0, 0},
 						{(float)-distance_bf[DIS_BF_BACK], 0, 0},
@@ -687,84 +730,172 @@ void AC_DistanceControl::update_distance(void)
 						{0, 0, (float)distance_bf[DIS_BF_BOTTOM]}};
 	for(int i=0; i<DISTANCE_NUM; i++) {
 		dist[i] = m * dist[i];
+		limit[i] = m * limit[i];
 		distance_ned[i] = 0;
+		distance_limit[i] = 0;
 	}
 
 	for(int i=0; i<DISTANCE_NUM; i++) {
 		if(dist[i].x >= 0) {
-			if(dist[i].x > distance_ned[DISTANCE_FRONT])
-				distance_ned[DISTANCE_FRONT] = dist[i].x;
+			if(dist[i].x > (float)distance_ned[DISTANCE_FRONT])
+				distance_ned[DISTANCE_FRONT] = roundf(dist[i].x);
 		} else {
-			if(dist[i].x < distance_ned[DISTANCE_BACK])
-				distance_ned[DISTANCE_BACK] = dist[i].x;
+			if(dist[i].x < (float)distance_ned[DISTANCE_BACK])
+				distance_ned[DISTANCE_BACK] = roundf(dist[i].x);
 		}
 
 		if(dist[i].y >= 0) {
-			if(dist[i].y > distance_ned[DISTANCE_RIGHT])
-				distance_ned[DISTANCE_RIGHT] = dist[i].y;
+			if(dist[i].y > (float)distance_ned[DISTANCE_RIGHT])
+				distance_ned[DISTANCE_RIGHT] = roundf(dist[i].y);
 		} else {
-			if(dist[i].y < distance_ned[DISTANCE_LEFT])
-				distance_ned[DISTANCE_LEFT] = dist[i].y;
+			if(dist[i].y < (float)distance_ned[DISTANCE_LEFT])
+				distance_ned[DISTANCE_LEFT] = roundf(dist[i].y);
 		}
 
 		if(dist[i].z >= 0) {
-			if(dist[i].z > distance_ned[DISTANCE_BOTTOM])
-				distance_ned[DISTANCE_BOTTOM] = dist[i].z;
+			if(dist[i].z > (float)distance_ned[DISTANCE_BOTTOM])
+				distance_ned[DISTANCE_BOTTOM] = roundf(dist[i].z);
 		} else {
-			if(dist[i].z < distance_ned[DISTANCE_TOP])
-				distance_ned[DISTANCE_TOP] = dist[i].z;
+			if(dist[i].z < (float)distance_ned[DISTANCE_TOP])
+				distance_ned[DISTANCE_TOP] = roundf(dist[i].z);
 		}
+
+		if(limit[i].x >= 0) {
+			if(limit[i].x > (float)distance_limit[DISTANCE_FRONT])
+				distance_limit[DISTANCE_FRONT] = roundf(limit[i].x);
+		} else {
+			if(limit[i].x < (float)distance_limit[DISTANCE_BACK])
+				distance_limit[DISTANCE_BACK] = roundf(limit[i].x);
+		}
+
+		if(limit[i].y >= 0) {
+			if(limit[i].y > (float)distance_limit[DISTANCE_RIGHT])
+				distance_limit[DISTANCE_RIGHT] = roundf(limit[i].y);
+		} else {
+			if(limit[i].y < (float)distance_limit[DISTANCE_LEFT])
+				distance_limit[DISTANCE_LEFT] = roundf(limit[i].y);
+		}
+
+		if(limit[i].z >= 0) {
+			if(limit[i].z > (float)distance_limit[DISTANCE_BOTTOM])
+				distance_limit[DISTANCE_BOTTOM] = roundf(limit[i].z);
+		} else {
+			if(limit[i].z < (float)distance_limit[DISTANCE_TOP])
+				distance_limit[DISTANCE_TOP] = roundf(limit[i].z);
+		}
+	}
+
+	if(0) {
+		for(int i=0; i<DISTANCE_NUM; i++) {
+			hal.shell->printf("[%.2f %.2f %.2f]\r\n", 
+						limit[i].x,
+						limit[i].y, 
+						limit[i].z);
+		}
+		
+		hal.shell->printf("distance_limit1: %d %d %d %d %d %d\r\n", 
+						distance_limit[DISTANCE_FRONT],
+						distance_limit[DISTANCE_BACK], 
+						distance_limit[DISTANCE_LEFT], 
+						distance_limit[DISTANCE_RIGHT],
+						distance_limit[DISTANCE_TOP],
+						distance_limit[DISTANCE_BOTTOM]);
 	}
 
 	//filter
 	for(int i=0; i<DISTANCE_NUM; i++) {
 		if(abs(distance_ned[i]) < 5)
 			distance_ned[i] = 0;
+		if(abs(distance_limit[i]) < 5)
+			distance_limit[i] = 0;
+	}
+
+	if(distance_limit[DISTANCE_FRONT] != 0 && _front_limit_cm.get() > 0) {
+		distance_limit[DISTANCE_FRONT] += _front_limit_cm.get();
+	} else {
+		distance_limit[DISTANCE_FRONT] = 0;
+	}
+
+	if(distance_limit[DISTANCE_BACK] != 0 && _back_limit_cm.get() > 0) {
+		distance_limit[DISTANCE_BACK] -= _back_limit_cm.get();
+	} else {
+		distance_limit[DISTANCE_BACK] = 0;
+	}
+
+	if(distance_limit[DISTANCE_LEFT] != 0 && _left_limit_cm.get() > 0) {
+		distance_limit[DISTANCE_LEFT] -= _left_limit_cm.get();
+	} else {
+		distance_limit[DISTANCE_LEFT] = 0;
+	}
+
+	if(distance_limit[DISTANCE_RIGHT] != 0 && _right_limit_cm.get() > 0) {
+		distance_limit[DISTANCE_RIGHT] += _right_limit_cm.get();
+	} else {
+		distance_limit[DISTANCE_RIGHT] = 0;
+	}
+
+	if(distance_limit[DISTANCE_TOP] != 0 && _top_limit_cm.get() > 0) {
+		distance_limit[DISTANCE_TOP] -= _top_limit_cm.get();
+	} else {
+		distance_limit[DISTANCE_TOP] = 0;
+	}
+
+	if(distance_limit[DISTANCE_BOTTOM] != 0 && _bottom_limit_cm.get() > 0) {
+		distance_limit[DISTANCE_BOTTOM] += _bottom_limit_cm.get();
+	} else {
+		distance_limit[DISTANCE_BOTTOM] = 0;
 	}
 	
-	if(1) {
-		static uint32_t _startup_ms = 0;
+	if(print_flag) {
+		/*for(int i=0; i<DISTANCE_NUM; i++) {
+			hal.shell->printf("[%.2f %.2f %.2f]\r\n", 
+						limit[i].x,
+						limit[i].y, 
+						limit[i].z);
+		}*/
 
-		if(_startup_ms == 0) {
-			_startup_ms = AP_HAL::millis();
-		}
+		/*for(int i=0; i<DISTANCE_NUM; i++) {
+			hal.shell->printf("[%.2f %.2f %.2f]\r\n", 
+						dist[i].x,
+						dist[i].y, 
+						dist[i].z);
+		}*/
 
-		if(AP_HAL::millis() - _startup_ms > 1000) {
-			_startup_ms = AP_HAL::millis();
+		hal.shell->printf("distance_limit: %d %d %d %d %d %d\r\n", 
+					distance_limit[DISTANCE_FRONT],
+					distance_limit[DISTANCE_BACK], 
+					distance_limit[DISTANCE_LEFT], 
+					distance_limit[DISTANCE_RIGHT],
+					distance_limit[DISTANCE_TOP],
+					distance_limit[DISTANCE_BOTTOM]);
+		
+		hal.shell->printf("\r\ndistance_bf: %d %d %d %d %d %d %d %d\r\n", 
+					distance_bf[DIS_BF_FRONT],
+					distance_bf[DIS_BF_BACK], 
+					distance_bf[DIS_BF_LEFT], 
+					distance_bf[DIS_BF_RIGHT],
+					distance_bf[DIS_BF_TOP],
+					distance_bf[DIS_BF_BOTTOM],
+					distance_bf[DIS_BF_FRONT347],
+					distance_bf[DIS_BF_FRONT13]);
 
-			/*for(int i=0; i<DISTANCE_NUM; i++) {
-				hal.shell->printf("[%.2f %.2f %.2f]\r\n", 
-							dist[i].x,
-							dist[i].y, 
-							dist[i].z);
-			}*/
-			
-			hal.shell->printf("\r\ndistance_bf: %d %d %d %d %d %d %d %d\r\n", 
-						distance_bf[DIS_BF_FRONT],
-						distance_bf[DIS_BF_BACK], 
-						distance_bf[DIS_BF_LEFT], 
-						distance_bf[DIS_BF_RIGHT],
-						distance_bf[DIS_BF_TOP],
-						distance_bf[DIS_BF_BOTTOM],
-						distance_bf[DIS_BF_FRONT347],
-						distance_bf[DIS_BF_FRONT13]);
-
-			hal.shell->printf("distance_ned: %d %d %d %d %d %d\r\n\r\n", 
-						distance_ned[DISTANCE_FRONT],
-						distance_ned[DISTANCE_BACK], 
-						distance_ned[DISTANCE_LEFT], 
-						distance_ned[DISTANCE_RIGHT],
-						distance_ned[DISTANCE_TOP],
-						distance_ned[DISTANCE_BOTTOM]);
-		}
+		hal.shell->printf("distance_ned: %d %d %d %d %d %d\r\n\r\n", 
+					distance_ned[DISTANCE_FRONT],
+					distance_ned[DISTANCE_BACK], 
+					distance_ned[DISTANCE_LEFT], 
+					distance_ned[DISTANCE_RIGHT],
+					distance_ned[DISTANCE_TOP],
+					distance_ned[DISTANCE_BOTTOM]);
 	}
+
+	print_flag = 0;
 }
 
 void AC_DistanceControl::pilot_thrusts_scale(Vector3f &thrusts)
 {
-	if(_distance_face) {
+	if(_distance_face_in) {
 		thrusts *= _thr_face_p;
-	} else if(_limit_enable) {
+	} else if(_limit_enable_in) {
 		thrusts *= _thr_limit_p;
 	}
 }
@@ -774,14 +905,14 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 	Vector3f dis_error;
 	
     if(thrusts.x > 0.0f) {
-    	if(_front_limit_cm != 0 && distance_ned[DISTANCE_FRONT] != 0) {
-			dis_error.x = distance_ned[DISTANCE_FRONT] - _front_limit_cm;
+    	if(distance_limit[DISTANCE_FRONT] != 0 && distance_ned[DISTANCE_FRONT] != 0) {
+			dis_error.x = distance_ned[DISTANCE_FRONT] - distance_limit[DISTANCE_FRONT];
 		} else {
 			dis_error.x = _limit_x_p;
 		}
 	} else if(thrusts.x < -0.0f) {
-		if(_back_limit_cm != 0 && distance_ned[DISTANCE_BACK] != 0) {
-			dis_error.x = _back_limit_cm - distance_ned[DISTANCE_BACK];
+		if(distance_limit[DISTANCE_BACK] != 0 && distance_ned[DISTANCE_BACK] != 0) {
+			dis_error.x = distance_limit[DISTANCE_BACK] - distance_ned[DISTANCE_BACK];
 		} else {
 			dis_error.x = _limit_x_p;
 		}
@@ -792,14 +923,14 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 	thrusts.x *= constrain_float(powf(dis_error.x/_limit_x_p, _curve_x), 0.0f, 1.0f);
 
 	if(thrusts.y > 0.0f) {
-		if(_right_limit_cm != 0 && distance_ned[DISTANCE_RIGHT] != 0) {
-			dis_error.y = distance_ned[DISTANCE_RIGHT] - _right_limit_cm;
+		if(distance_limit[DISTANCE_RIGHT] != 0 && distance_ned[DISTANCE_RIGHT] != 0) {
+			dis_error.y = distance_ned[DISTANCE_RIGHT] - distance_limit[DISTANCE_RIGHT];
 		} else {
 			dis_error.y = _limit_y_p;
 		}
 	} else if(thrusts.y < -0.0f) {
-		if(_left_limit_cm != 0 && distance_ned[DISTANCE_LEFT] != 0) {
-			dis_error.y = _left_limit_cm - distance_ned[DISTANCE_LEFT];
+		if(distance_limit[DISTANCE_LEFT] != 0 && distance_ned[DISTANCE_LEFT] != 0) {
+			dis_error.y = distance_limit[DISTANCE_LEFT] - distance_ned[DISTANCE_LEFT];
 		} else {
 			dis_error.y = _limit_y_p;
 		}
@@ -810,14 +941,14 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 	thrusts.y *= constrain_float(powf(dis_error.y/_limit_y_p, _curve_y), 0.0f, 1.0f);
 
 	if(thrusts.z < -0.0f) {
-		if(_bottom_limit_cm != 0 && distance_ned[DISTANCE_BOTTOM] != 0) {
-			dis_error.z = distance_ned[DISTANCE_BOTTOM] - _bottom_limit_cm;
+		if(distance_limit[DISTANCE_BOTTOM] != 0 && distance_ned[DISTANCE_BOTTOM] != 0) {
+			dis_error.z = distance_ned[DISTANCE_BOTTOM] - distance_limit[DISTANCE_BOTTOM];
 		} else {
 			dis_error.z = _limit_z_p;
 		}
 	} else if(thrusts.z > 0.0f) {
-		if(abs(distance_ned[DISTANCE_TOP]) > 10 && _top_limit_cm != 0)
-			dis_error.z = _top_limit_cm - distance_ned[DISTANCE_TOP];
+		if(abs(distance_ned[DISTANCE_TOP]) > 10 && distance_limit[DISTANCE_TOP] != 0)
+			dis_error.z = distance_limit[DISTANCE_TOP] - distance_ned[DISTANCE_TOP];
 		else
 			dis_error.z = _limit_z_p;
 	} else {
@@ -855,7 +986,7 @@ void AC_DistanceControl::attitude_filter(Vector3f &thrusts)
 	int32_t pitch = _ahrs.pitch_sensor/100;
 	//int32_t yaw = _ahrs.yaw_sensor/100;
 	
-	if(_limit_enable) {
+	if(_limit_enable_in) {
 		if(pitch > 5) {
 			distance_ned[DISTANCE_BACK] = 0;
 		} else if(pitch < -5) {
@@ -872,13 +1003,15 @@ void AC_DistanceControl::attitude_filter(Vector3f &thrusts)
 
 void AC_DistanceControl::update_backend(Vector3f &thrusts)
 {
+	rangefinder_status();
+	
 	update_distance();
 
-	attitude_filter(thrusts);
+	//attitude_filter(thrusts);
 
 	pilot_thrusts_scale(thrusts);
 
-	if(_limit_enable) {
+	if(_limit_enable_in) {
 		pilot_thrusts_limit(thrusts);
 	}
 }

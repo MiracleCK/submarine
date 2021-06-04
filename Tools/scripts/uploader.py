@@ -855,7 +855,7 @@ def main():
                         default=None)
     parser.add_argument('--baud-bootloader', action="store", type=int, default=115200, help="Baud rate of the serial port (default is 115200) when communicating with bootloader, only required for true serial ports.")
     parser.add_argument('--baud-bootloader-flash', action="store", type=int, default=None, help="Attempt to negotiate this baudrate with bootloader for flashing.")
-    parser.add_argument('--baud-flightstack', action="store", default="57600", help="Comma-separated list of baud rate of the serial port (default is 57600) when communicating with flight stack (Mavlink or NSH), only required for true serial ports.")
+    parser.add_argument('--baud-flightstack', action="store", default="115200", help="Comma-separated list of baud rate of the serial port (default is 115200) when communicating with flight stack (Mavlink or NSH), only required for true serial ports.")
     parser.add_argument('--force', action='store_true', default=False, help='Override board type check and continue loading')
     parser.add_argument('--boot-delay', type=int, default=None, help='minimum boot delay to store in flash')
     parser.add_argument('--target-system', type=int, action="store", help="System ID to update")

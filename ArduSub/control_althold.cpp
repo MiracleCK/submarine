@@ -211,6 +211,19 @@ bool Sub::attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int1
         target_roll_rate = 0.0f;
     }
 
+#if 0
+    if(is_ned_pilot && (distance_control.get_distance_face() || distance_control.limit_enable())) {
+		is_reseting = true;
+        target_pitch_rate = 0.0f;
+        target_roll_rate = 0.0f;
+        channel_roll->disable_channel();
+		channel_pitch->disable_channel();
+    } else {
+		channel_roll->enable_channel();
+		channel_pitch->enable_channel();
+    }
+#endif
+
     if (!is_zero(target_roll_rate) || !is_zero(target_pitch_rate)) {
         is_reseting = false;
     }

@@ -130,6 +130,7 @@ void Sub::update_flight_mode()
         pilot_trans_thrusts(0, 0, 0);
     }
 
+	//distance_control.update_backend(pilot_trans_thrusts);
     switch (control_mode) {
     case ACRO:
         acro_run();

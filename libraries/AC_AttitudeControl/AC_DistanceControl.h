@@ -34,15 +34,18 @@ public:
 	float get_target_z() const { return _pos_target.z; }
     float get_target_x() const { return _pos_target.x; }
 	float get_target_y() const { return _pos_target.y; }
+
+	bool sensor_ok() const { return _sensor_ok; }
+	uint8_t get_distance_num() const { return DISTANCE_NUM; }
+	bool limit_enable() const { return _limit_enable_in; }
 	
-	bool limit_enable() const { return _limit_enable.get(); }
-	
-    bool front_face_is_active() const { return (_distance_face.get() & 0x01); }
-    bool back_face_is_active() const { return (_distance_face.get() & 0x02); }
-    bool left_face_is_active() const { return (_distance_face.get() & 0x04); }
-    bool right_face_is_active() const { return (_distance_face.get() & 0x08); }
-    bool top_face_is_active() const { return (_distance_face.get() & 0x10); }
-    bool bottom_face_is_active() const { return (_distance_face.get() & 0x20); }
+    bool front_face_is_active() const { return (_distance_face_in & 0x01); }
+    bool back_face_is_active() const { return (_distance_face_in & 0x02); }
+    bool left_face_is_active() const { return (_distance_face_in & 0x04); }
+    bool right_face_is_active() const { return (_distance_face_in & 0x08); }
+    bool top_face_is_active() const { return (_distance_face_in & 0x10); }
+    bool bottom_face_is_active() const { return (_distance_face_in & 0x20); }
+    uint8_t get_distance_face() const { return _distance_face_in; }
 
     int16_t get_front_cm() const { return distance_ned[DISTANCE_FRONT]; }
     int16_t get_back_cm() const { return distance_ned[DISTANCE_BACK]; }
@@ -50,6 +53,7 @@ public:
     int16_t get_right_cm() const { return distance_ned[DISTANCE_RIGHT]; }
     int16_t get_top_cm() const { return distance_ned[DISTANCE_TOP]; }
     int16_t get_bottom_cm() const { return distance_ned[DISTANCE_BOTTOM]; }
+    int16_t get_distance_ned(uint8_t i) const { return distance_ned[i]; }
 
     int16_t get_front_cm_bf() const { return distance_bf[DIS_BF_FRONT]; }
     int16_t get_back_cm_bf() const { return distance_bf[DIS_BF_BACK]; }
@@ -60,12 +64,13 @@ public:
     int16_t get_front347_cm_bf() const { return distance_bf[DIS_BF_FRONT347]; }
     int16_t get_front13_cm_bf() const { return distance_bf[DIS_BF_FRONT13]; }
 
-    int16_t get_front_limit_cm() const { return _front_limit_cm.get(); }
-    int16_t get_back_limit_cm() const { return _back_limit_cm.get(); }
-    int16_t get_left_limit_cm() const { return _left_limit_cm.get(); }
-    int16_t get_right_limit_cm() const { return _right_limit_cm.get(); }
-    int16_t get_top_limit_cm() const { return _top_limit_cm.get(); }
-    int16_t get_bottom_limit_cm() const { return _bottom_limit_cm.get(); }
+    int16_t get_front_limit_cm() const { return distance_limit[DISTANCE_FRONT]; }
+    int16_t get_back_limit_cm() const { return distance_limit[DISTANCE_BACK]; }
+    int16_t get_left_limit_cm() const { return distance_limit[DISTANCE_LEFT]; }
+    int16_t get_right_limit_cm() const { return distance_limit[DISTANCE_RIGHT]; }
+    int16_t get_top_limit_cm() const { return distance_limit[DISTANCE_TOP]; }
+    int16_t get_bottom_limit_cm() const { return distance_limit[DISTANCE_BOTTOM]; }
+    int16_t get_distance_limit(uint8_t i) const { return distance_limit[i]; }
 
     int16_t get_delayms_x() const { return _delay_ms_x.get(); }
     int16_t get_delayms_y() const { return _delay_ms_y.get(); }
@@ -107,6 +112,7 @@ private:
 	void pilot_thrusts_scale(Vector3f &thrusts);
 	void pilot_thrusts_limit(Vector3f &thrusts);
 	void attitude_filter(Vector3f &thrusts);
+	void rangefinder_status(void);
 
     // references to inertial nav and ahrs libraries
     const AP_AHRS_View &        _ahrs;
@@ -173,6 +179,12 @@ private:
     
     int16_t distance_bf[DIS_BF_NUM];
     int16_t distance_ned[DISTANCE_NUM];
+    int16_t distance_limit[DISTANCE_NUM];
+    int16_t distance_safe[DISTANCE_NUM];
+    int16_t blind_area[DIS_BF_NUM];
+    bool _limit_enable_in;
+    uint8_t _distance_face_in;
+    bool _sensor_ok;
 
 	AP_Float	_thr_face_p;
 	AP_Float	_thr_limit_p;
@@ -188,12 +200,12 @@ private:
     AP_Int8 	_front347_offset;
     AP_Int8 	_front13_offset;
     
-    AP_Int8 	_front_limit_cm;
-    AP_Int8 	_back_limit_cm;
-    AP_Int8 	_left_limit_cm;
-    AP_Int8 	_right_limit_cm;
-    AP_Int8 	_top_limit_cm;
-    AP_Int8 	_bottom_limit_cm;
+    AP_Int16 	_front_limit_cm;
+    AP_Int16 	_back_limit_cm;
+    AP_Int16 	_left_limit_cm;
+    AP_Int16 	_right_limit_cm;
+    AP_Int16 	_top_limit_cm;
+    AP_Int16 	_bottom_limit_cm;
 
     AP_Int16 	_delay_ms_x;
     AP_Int16 	_delay_ms_y;
