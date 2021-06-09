@@ -17,6 +17,9 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_OUT_X_CUTOFF_FREQ         2.0f    // low-pass filter on output error (unit: hz)
 #define DISCONTROL_OUT_Y_CUTOFF_FREQ         2.0f    // low-pass filter on output error (unit: hz)
 
+#define DISCONTROL_ROLL_CUTOFF_FREQ          0.2f    // low-pass filter on output error (unit: hz)
+#define DISCONTROL_PITCH_CUTOFF_FREQ         0.2f    // low-pass filter on output error (unit: hz)
+
 #if 0 // default
 // default gains for Sub
 #define DISCONTROL_POS_Z_P                    3.0f    // vertical position controller P gain default
@@ -155,12 +158,12 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_TOP_LIMIT_CM                0    // discontrol top limit default
 #define DISCONTROL_BOTTOM_LIMIT_CM             0    // discontrol bottom limit default
 
-#define DISCONTROL_FRONT_OFT_CM               16  //16    // discontrol front offset default
+#define DISCONTROL_FRONT_OFT_CM               18  //16    // discontrol front offset default
 #define DISCONTROL_BACK_OFT_CM                0  //24    // discontrol back offset default
 #define DISCONTROL_LEFT_OFT_CM                8    // discontrol left offset default
 #define DISCONTROL_RIGHT_OFT_CM               8    // discontrol right offset default
-#define DISCONTROL_FRONT347_OFT_CM            18    // discontrol front347 offset default
-#define DISCONTROL_FRONT13_OFT_CM             18    // discontrol front13 offset default
+#define DISCONTROL_FRONT347_OFT_CM            19    // discontrol front347 offset default
+#define DISCONTROL_FRONT13_OFT_CM             19    // discontrol front13 offset default
 
 #define DISCONTROL_DELAY_MS_X                 1000    // discontrol x delay time
 #define DISCONTROL_DELAY_MS_Y                 1500    // discontrol y delay time
@@ -595,7 +598,9 @@ AC_DistanceControl::AC_DistanceControl(const AP_AHRS_View& ahrs, const AP_Inerti
     _vel_y_error_filter(DISCONTROL_VEL_Y_ERROR_CUTOFF_FREQ),
     _vel_z_error_filter(DISCONTROL_VEL_Z_ERROR_CUTOFF_FREQ),
     _out_x_filter(DISCONTROL_OUT_X_CUTOFF_FREQ),
-    _out_y_filter(DISCONTROL_OUT_Y_CUTOFF_FREQ)
+    _out_y_filter(DISCONTROL_OUT_Y_CUTOFF_FREQ),
+    _roll_filter(DISCONTROL_ROLL_CUTOFF_FREQ),
+    _pitch_filter(DISCONTROL_PITCH_CUTOFF_FREQ)
 {
     AP_Param::setup_object_defaults(this, var_info);
 
@@ -619,7 +624,7 @@ AC_DistanceControl::AC_DistanceControl(const AP_AHRS_View& ahrs, const AP_Inerti
     _singleton = this;
 }
 
-void AC_DistanceControl::rangefinder_status(void)
+void AC_DistanceControl::rangefinder_check(void)
 {
 	uint8_t num_sensors = _rangefinder.num_sensors();
 	uint8_t sensors_ok = 0;
@@ -664,28 +669,8 @@ void AC_DistanceControl::update_distance(void)
 			print_flag = 1;
 		}
 	}
-	
-	distance_bf[DIS_BF_FRONT] = _rangefinder.distance_cm_orient(ROTATION_NONE);
-	distance_bf[DIS_BF_BACK] = _rangefinder.distance_cm_orient(ROTATION_PITCH_180);
-	distance_bf[DIS_BF_LEFT] = _rangefinder.distance_cm_orient(ROTATION_YAW_270);
-	distance_bf[DIS_BF_RIGHT] = _rangefinder.distance_cm_orient(ROTATION_YAW_90);
-	distance_bf[DIS_BF_TOP] = _rangefinder.distance_cm_orient(ROTATION_PITCH_90);
-	distance_bf[DIS_BF_BOTTOM] = _rangefinder.distance_cm_orient(ROTATION_PITCH_270);
-	distance_bf[DIS_BF_FRONT347] = _rangefinder.distance_cm_orient(ROTATION_YAW_315);
-    distance_bf[DIS_BF_FRONT13] = _rangefinder.distance_cm_orient(ROTATION_YAW_45);
 
-	if(distance_bf[DIS_BF_FRONT347] != 0 || distance_bf[DIS_BF_FRONT13] != 0) {
-		if(distance_bf[DIS_BF_FRONT347]==0)
-			distance_bf[DIS_BF_FRONT] = distance_bf[DIS_BF_FRONT13]*cosf(radians(13));
-		else if(distance_bf[DIS_BF_FRONT13]==0)
-			distance_bf[DIS_BF_FRONT] = distance_bf[DIS_BF_FRONT347]*cosf(radians(13));
-		else {
-			//distance_bf[DIS_BF_FRONT] = MIN(distance_bf[DIS_BF_FRONT347]*cosf(radians(13)), distance_bf[DIS_BF_FRONT13]*cosf(radians(13)));
-			distance_bf[DIS_BF_FRONT] = (distance_bf[DIS_BF_FRONT13]*distance_bf[DIS_BF_FRONT347]*(1 + cosf(radians(26))))/((distance_bf[DIS_BF_FRONT13] + distance_bf[DIS_BF_FRONT347])*cosf(radians(13)));
-		}
-	}
-
-    blind_area[DIS_BF_FRONT] = _rangefinder.find_instance(ROTATION_NONE)->min_distance_cm();
+	blind_area[DIS_BF_FRONT] = _rangefinder.find_instance(ROTATION_NONE)->min_distance_cm();
 	blind_area[DIS_BF_BACK] = _rangefinder.find_instance(ROTATION_PITCH_180)->min_distance_cm();
 	blind_area[DIS_BF_LEFT] = _rangefinder.find_instance(ROTATION_YAW_270)->min_distance_cm();
 	blind_area[DIS_BF_RIGHT] = _rangefinder.find_instance(ROTATION_YAW_90)->min_distance_cm();
@@ -694,13 +679,36 @@ void AC_DistanceControl::update_distance(void)
 	blind_area[DIS_BF_FRONT347] = _rangefinder.find_instance(ROTATION_YAW_315)->min_distance_cm();
     blind_area[DIS_BF_FRONT13] = _rangefinder.find_instance(ROTATION_YAW_45)->min_distance_cm();
 	blind_area[DIS_BF_FRONT] = (blind_area[DIS_BF_FRONT13]*blind_area[DIS_BF_FRONT347]*(1 + cosf(radians(26))))/((blind_area[DIS_BF_FRONT13] + blind_area[DIS_BF_FRONT347])*cosf(radians(13)));
+
+	if(blind_area[DIS_BF_FRONT] >= _front_offset.get() + 5)
+		distance_safe[DIS_BF_FRONT] = blind_area[DIS_BF_FRONT];
+	else 
+		distance_safe[DIS_BF_FRONT] = _front_offset.get() + 5;	
+		
+	distance_safe[DIS_BF_BACK] = 0;
 	
-	distance_safe[DISTANCE_FRONT] = MAX(blind_area[DIS_BF_FRONT], _front_offset.get());
-	distance_safe[DISTANCE_BACK] = 0;
-	distance_safe[DISTANCE_LEFT] = MAX(blind_area[DIS_BF_LEFT], _left_offset.get());
-	distance_safe[DISTANCE_RIGHT] = MAX(blind_area[DIS_BF_RIGHT], _right_offset.get());
-	distance_safe[DISTANCE_TOP] = 0;
-	distance_safe[DISTANCE_BOTTOM] = blind_area[DIS_BF_BOTTOM];
+	if(blind_area[DIS_BF_LEFT] >= _left_offset.get() + 5)
+		distance_safe[DIS_BF_LEFT] = blind_area[DIS_BF_LEFT];
+	else 
+		distance_safe[DIS_BF_LEFT] = _left_offset.get() + 5;
+		
+	if(blind_area[DIS_BF_RIGHT] >= _right_offset.get() + 5)
+		distance_safe[DIS_BF_RIGHT] = blind_area[DIS_BF_RIGHT];
+	else 
+		distance_safe[DIS_BF_RIGHT] = _right_offset.get() + 5;
+		
+	distance_safe[DIS_BF_TOP] = 0;
+	distance_safe[DIS_BF_BOTTOM] = blind_area[DIS_BF_BOTTOM];
+
+	if(blind_area[DIS_BF_FRONT347] >= _front347_offset.get() + 5)
+		distance_safe[DIS_BF_FRONT347] = blind_area[DIS_BF_FRONT347];
+	else 
+		distance_safe[DIS_BF_FRONT347] = _front347_offset.get() + 5;
+		
+	if(blind_area[DIS_BF_FRONT13] >= _front13_offset.get() + 5)
+		distance_safe[DIS_BF_FRONT13] = blind_area[DIS_BF_FRONT13];
+	else 
+		distance_safe[DIS_BF_FRONT13] = _front13_offset.get() + 5;
 
 	if(0) {
 		hal.shell->printf("distance_safe: %d %d %d %d %d %d\r\n", 
@@ -711,16 +719,70 @@ void AC_DistanceControl::update_distance(void)
 						distance_safe[DISTANCE_TOP],
 						distance_safe[DISTANCE_BOTTOM]);
 	}
-	
-	Matrix3f m;
-	m.from_euler(_ahrs.roll, _ahrs.pitch, 0);
 
-	Vector3f limit[DISTANCE_NUM] = {{(float)distance_safe[DISTANCE_FRONT], 0, 0},
-						{(float)-distance_safe[DISTANCE_BACK], 0, 0},
-						{0, (float)-distance_safe[DISTANCE_LEFT], 0},
-						{0, (float)distance_safe[DISTANCE_RIGHT], 0},
-						{0, 0, (float)-distance_safe[DISTANCE_TOP]},
-						{0, 0, (float)distance_safe[DISTANCE_BOTTOM]}};
+	if(distance_safe[DIS_BF_FRONT] != 0 && _front_limit_cm.get() > 0) {
+		distance_safe[DIS_BF_FRONT] += _front_limit_cm.get();
+	} else {
+		distance_safe[DIS_BF_FRONT] = 0;
+	}
+
+	if(distance_safe[DIS_BF_BACK] != 0 && _back_limit_cm.get() > 0) {
+		distance_safe[DIS_BF_BACK] -= _back_limit_cm.get();
+	} else {
+		distance_safe[DIS_BF_BACK] = 0;
+	}
+
+	if(distance_safe[DIS_BF_LEFT] != 0 && _left_limit_cm.get() > 0) {
+		distance_safe[DIS_BF_LEFT] -= _left_limit_cm.get();
+	} else {
+		distance_safe[DIS_BF_LEFT] = 0;
+	}
+
+	if(distance_safe[DIS_BF_RIGHT] != 0 && _right_limit_cm.get() > 0) {
+		distance_safe[DIS_BF_RIGHT] += _right_limit_cm.get();
+	} else {
+		distance_safe[DIS_BF_RIGHT] = 0;
+	}
+
+	if(distance_safe[DIS_BF_TOP] != 0 && _top_limit_cm.get() > 0) {
+		distance_safe[DIS_BF_TOP] -= _top_limit_cm.get();
+	} else {
+		distance_safe[DIS_BF_TOP] = 0;
+	}
+
+	if(distance_safe[DIS_BF_BOTTOM] != 0 && _bottom_limit_cm.get() > 0) {
+		distance_safe[DIS_BF_BOTTOM] += _bottom_limit_cm.get();
+	} else {
+		distance_safe[DIS_BF_BOTTOM] = 0;
+	}
+
+	distance_bf[DIS_BF_FRONT] = _rangefinder.distance_cm_orient(ROTATION_NONE);
+	distance_bf[DIS_BF_BACK] = _rangefinder.distance_cm_orient(ROTATION_PITCH_180);
+	distance_bf[DIS_BF_LEFT] = _rangefinder.distance_cm_orient(ROTATION_YAW_270);
+	distance_bf[DIS_BF_RIGHT] = _rangefinder.distance_cm_orient(ROTATION_YAW_90);
+	distance_bf[DIS_BF_TOP] = _rangefinder.distance_cm_orient(ROTATION_PITCH_90);
+	distance_bf[DIS_BF_BOTTOM] = _rangefinder.distance_cm_orient(ROTATION_PITCH_270);
+	distance_bf[DIS_BF_FRONT347] = _rangefinder.distance_cm_orient(ROTATION_YAW_315);
+    distance_bf[DIS_BF_FRONT13] = _rangefinder.distance_cm_orient(ROTATION_YAW_45);
+
+	if(distance_bf[DIS_BF_FRONT347] != 0 || distance_bf[DIS_BF_FRONT13] != 0) {
+		if(distance_bf[DIS_BF_FRONT347]==0 || distance_bf[DIS_BF_FRONT13] < distance_safe[DIS_BF_FRONT13])
+			distance_bf[DIS_BF_FRONT] = distance_bf[DIS_BF_FRONT13]*cosf(radians(13));
+		else if(distance_bf[DIS_BF_FRONT13]==0 || distance_bf[DIS_BF_FRONT347] < distance_safe[DIS_BF_FRONT347])
+			distance_bf[DIS_BF_FRONT] = distance_bf[DIS_BF_FRONT347]*cosf(radians(13));
+		else {
+			distance_bf[DIS_BF_FRONT] = (distance_bf[DIS_BF_FRONT13]*distance_bf[DIS_BF_FRONT347]*(1 + cosf(radians(26))))/((distance_bf[DIS_BF_FRONT13] + distance_bf[DIS_BF_FRONT347])*cosf(radians(13)));
+		}
+	}
+	 
+	Matrix3f m;
+	m.from_euler(_roll, _pitch, 0);
+	Vector3f limit[DISTANCE_NUM] = {{(float)distance_safe[DIS_BF_FRONT], 0, 0},
+						{(float)-distance_safe[DIS_BF_BACK], 0, 0},
+						{0, (float)-distance_safe[DIS_BF_LEFT], 0},
+						{0, (float)distance_safe[DIS_BF_RIGHT], 0},
+						{0, 0, (float)-distance_safe[DIS_BF_TOP]},
+						{0, 0, (float)distance_safe[DIS_BF_BOTTOM]}};
 
 	Vector3f dist[DISTANCE_NUM] = {{(float)distance_bf[DIS_BF_FRONT], 0, 0},
 						{(float)-distance_bf[DIS_BF_BACK], 0, 0},
@@ -804,46 +866,10 @@ void AC_DistanceControl::update_distance(void)
 
 	//filter
 	for(int i=0; i<DISTANCE_NUM; i++) {
-		if(abs(distance_ned[i]) < 5)
+		if(abs(distance_ned[i]) < 10)
 			distance_ned[i] = 0;
 		if(abs(distance_limit[i]) < 5)
 			distance_limit[i] = 0;
-	}
-
-	if(distance_limit[DISTANCE_FRONT] != 0 && _front_limit_cm.get() > 0) {
-		distance_limit[DISTANCE_FRONT] += _front_limit_cm.get();
-	} else {
-		distance_limit[DISTANCE_FRONT] = 0;
-	}
-
-	if(distance_limit[DISTANCE_BACK] != 0 && _back_limit_cm.get() > 0) {
-		distance_limit[DISTANCE_BACK] -= _back_limit_cm.get();
-	} else {
-		distance_limit[DISTANCE_BACK] = 0;
-	}
-
-	if(distance_limit[DISTANCE_LEFT] != 0 && _left_limit_cm.get() > 0) {
-		distance_limit[DISTANCE_LEFT] -= _left_limit_cm.get();
-	} else {
-		distance_limit[DISTANCE_LEFT] = 0;
-	}
-
-	if(distance_limit[DISTANCE_RIGHT] != 0 && _right_limit_cm.get() > 0) {
-		distance_limit[DISTANCE_RIGHT] += _right_limit_cm.get();
-	} else {
-		distance_limit[DISTANCE_RIGHT] = 0;
-	}
-
-	if(distance_limit[DISTANCE_TOP] != 0 && _top_limit_cm.get() > 0) {
-		distance_limit[DISTANCE_TOP] -= _top_limit_cm.get();
-	} else {
-		distance_limit[DISTANCE_TOP] = 0;
-	}
-
-	if(distance_limit[DISTANCE_BOTTOM] != 0 && _bottom_limit_cm.get() > 0) {
-		distance_limit[DISTANCE_BOTTOM] += _bottom_limit_cm.get();
-	} else {
-		distance_limit[DISTANCE_BOTTOM] = 0;
 	}
 	
 	if(print_flag) {
@@ -921,6 +947,11 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 		thrusts.x = 0;
 	}
 	thrusts.x *= constrain_float(powf(dis_error.x/_limit_x_p, _curve_x), 0.0f, 1.0f);
+	if(thrusts.x > 0.0f && thrusts.x < 0.1f) {
+		thrusts.x = 0.05f;
+	} else if(thrusts.x < -0.0f && thrusts.x > -0.1f) {
+		thrusts.x = -0.05f;
+	}
 
 	if(thrusts.y > 0.0f) {
 		if(distance_limit[DISTANCE_RIGHT] != 0 && distance_ned[DISTANCE_RIGHT] != 0) {
@@ -939,7 +970,12 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 		thrusts.y = 0;
 	}
 	thrusts.y *= constrain_float(powf(dis_error.y/_limit_y_p, _curve_y), 0.0f, 1.0f);
-
+	if(thrusts.y > 0.0f && thrusts.y < 0.1f) {
+		thrusts.y = 0.08f;
+	} else if(thrusts.y < -0.0f && thrusts.y > -0.1f) {
+		thrusts.y = -0.08f;
+	}
+	
 	if(thrusts.z < -0.0f) {
 		if(distance_limit[DISTANCE_BOTTOM] != 0 && distance_ned[DISTANCE_BOTTOM] != 0) {
 			dis_error.z = distance_ned[DISTANCE_BOTTOM] - distance_limit[DISTANCE_BOTTOM];
@@ -956,6 +992,9 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 		thrusts.z = 0;
 	}
 	thrusts.z *= constrain_float(powf(dis_error.z/_limit_z_p, _curve_z), 0.0f, 1.0f);
+	if(!is_zero(thrusts.z)) {
+	    thrusts.z -= 0.1f;
+	}
 
 	if(1) {
 		static uint32_t _startup_ms = 0;
@@ -977,6 +1016,25 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 					thrusts.y,
 					thrusts.z); 
 		}
+	}
+}
+
+void AC_DistanceControl::attitude_check(Vector3f &thrusts)
+{
+	static bool running = false;
+
+	_roll = _roll_filter.apply(_ahrs.roll, _dt);
+	_pitch = _pitch_filter.apply(_ahrs.pitch, _dt);
+	if(!is_zero(thrusts.length())) {
+		if(!running) {
+			_roll_lock = _roll;
+			_pitch_lock = _pitch;
+			running = true;
+		}
+	} else {
+		_roll_lock = _roll;
+		_pitch_lock = _roll;
+		running = false;
 	}
 }
 
@@ -1003,7 +1061,9 @@ void AC_DistanceControl::attitude_filter(Vector3f &thrusts)
 
 void AC_DistanceControl::update_backend(Vector3f &thrusts)
 {
-	rangefinder_status();
+	rangefinder_check();
+
+	attitude_check(thrusts);
 	
 	update_distance();
 

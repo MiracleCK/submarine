@@ -243,6 +243,7 @@ bool Sub::attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int1
     return !is_zero(target_yaw_rate) || !is_zero(target_roll_rate) || !is_zero(target_pitch_rate);
 }
 
+#if 0
 void Sub::althold_run_rate()
 {
     // initialize vertical speeds and acceleration
@@ -588,3 +589,297 @@ void Sub::althold_run_rate()
 		motors.set_lateral(pilot_trans_thrusts.y);
 	}
 }
+#else 
+void Sub::althold_run_rate()
+{
+    // initialize vertical speeds and acceleration
+    pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
+    pos_control.set_max_accel_z(g.pilot_accel_z);
+
+    uint32_t tnow = AP_HAL::millis();
+
+    if(is_ned_pilot) {
+		if (tnow - last_face_active_ms > 10000) {
+	    	if(bottom_face_actived != distance_control.bottom_face_is_active() ||
+	    	   top_face_actived != distance_control.top_face_is_active()) {
+				bottom_face_actived = distance_control.bottom_face_is_active();
+				top_face_actived = distance_control.top_face_is_active();
+				last_pilot_z_input_ms = tnow;
+		    	is_z_ctrl_relaxed = true;
+	    	}
+
+	    	if(front_face_actived != distance_control.front_face_is_active() ||
+	    	   back_face_actived != distance_control.back_face_is_active()) {
+				front_face_actived = distance_control.front_face_is_active();
+				back_face_actived = distance_control.back_face_is_active();
+				last_pilot_x_input_ms = tnow;
+		    	is_x_ctrl_relaxed = true;
+	    	}
+
+	    	if(right_face_actived != distance_control.right_face_is_active() ||
+	    	   left_face_actived != distance_control.left_face_is_active()) {
+				right_face_actived = distance_control.right_face_is_active();
+				left_face_actived = distance_control.left_face_is_active();
+				last_pilot_y_input_ms = tnow;
+			    is_y_ctrl_relaxed = true;
+	    	}
+    	}
+    }
+
+    if (!motors.armed()) {
+        motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::GROUND_IDLE);
+        // Sub vehicles do not stabilize roll/pitch/yaw when not auto-armed (i.e. on the ground, pilot has never raised throttle)
+        attitude_control.set_throttle_out(0,true,g.throttle_filt);
+        attitude_control.relax_attitude_controllers();
+        pos_control.relax_alt_hold_controllers(motors.get_throttle_hover());
+        is_z_ctrl_relaxed = false;
+        engageStopZ = false;
+        lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
+        is_request_reset_rp = true; // to reset rp when arm
+
+        bottom_face_actived = false;
+        top_face_actived = false;
+        front_face_actived = false;
+        back_face_actived = false;
+        right_face_actived = false;
+        left_face_actived = false;
+        last_face_active_ms = tnow;
+        return;
+    }
+
+    motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
+
+    attitude_control_rate(is_request_reset_rp, 
+        channel_roll->get_control_in(), channel_pitch->get_control_in(), channel_yaw->get_control_in());
+    if (is_request_reset_rp) {
+        is_request_reset_rp = false;
+    }
+	
+	if(is_ned_pilot && 
+	  ((bottom_face_actived && distance_control.get_bottom_cm() != 0) ||
+	  (top_face_actived && distance_control.get_top_cm() != 0))) {
+		if(pilot_trans_thrusts.z <= -0.0f && distance_control.get_bottom_limit_cm() != 0 && 
+		   distance_control.get_bottom_cm() != 0 && distance_control.get_bottom_cm() < distance_control.get_bottom_limit_cm()) {
+			if(!is_equal(distance_control.get_target_z(), (float)distance_control.get_bottom_limit_cm())) {
+	        	distance_control.relax_z_controller((float)distance_control.get_bottom_limit_cm());
+        	}
+	    	distance_control.update_z_controller((float)distance_control.get_bottom_cm());
+	    	last_pilot_z_input_ms = tnow;
+		    is_z_ctrl_relaxed = true;
+        } else if(pilot_trans_thrusts.z >= 0.0f && distance_control.get_top_limit_cm() != 0 && 
+	   		distance_control.get_top_cm() != 0 && distance_control.get_top_cm() > distance_control.get_top_limit_cm()) {
+			if(!is_equal(distance_control.get_target_z(), (float)distance_control.get_top_limit_cm())) {
+	        	distance_control.relax_z_controller((float)distance_control.get_top_limit_cm());
+        	}
+	    	distance_control.update_z_controller((float)distance_control.get_top_cm());
+	    	last_pilot_z_input_ms = tnow;
+		    is_z_ctrl_relaxed = true;
+        } else {
+		    int16_t distance;
+		    if(bottom_face_actived) {
+		    	distance = distance_control.get_bottom_cm();
+		    } else {
+		    	distance = distance_control.get_top_cm();
+		    }
+		    	
+			if (fabsf(pilot_trans_thrusts.z) > 0.0f) {
+		        // output pilot's throttle
+		        motors.set_throttle_pilot(pilot_trans_thrusts.z);
+		        attitude_control.set_throttle_out(motors.get_throttle_hover(), false, g.throttle_filt);
+		        distance_control.relax_z_controller((float)distance);
+		        pos_control.relax_alt_hold_controllers();
+		        last_pilot_z_input_ms = tnow;
+		        is_z_ctrl_relaxed = true;
+		    } else { // hold z
+		        if (tnow - last_pilot_z_input_ms >= distance_control.get_delayms_z()) {
+		        	if(is_z_ctrl_relaxed) {
+			        	distance_control.relax_z_controller((float)distance);
+			        	is_z_ctrl_relaxed = false;
+		        	}
+			    	distance_control.update_z_controller((float)distance);
+		        } else {
+					motors.set_throttle_pilot(0);
+					attitude_control.set_throttle_out(motors.get_throttle_hover(), false, g.throttle_filt); 
+		        }
+		    }
+	    }
+	} else {
+		if(is_ned_pilot && distance_control.limit_enable()) {
+			static uint8_t state1 = 0, state2 = 0;
+			int16_t distance;
+			
+			if(pilot_trans_thrusts.z <= -0.0f && distance_control.get_bottom_limit_cm() != 0 && 
+				distance_control.get_bottom_cm() != 0 && distance_control.get_bottom_cm() < distance_control.get_bottom_limit_cm()) {
+				is_affect_z = false;
+				if(state1 == 0) {
+					distance = distance_control.get_bottom_limit_cm() - distance_control.get_bottom_cm();
+					pos_control.relax_alt_hold_controllers(); 
+	            	pos_control.set_alt_target(inertial_nav.get_altitude() + distance + 2); 
+	            	state1 = 1;
+				} else {
+					if(fabsf(inertial_nav.get_altitude() - pos_control.get_alt_target()) <= 1.0f) {
+						state1 = 0;
+					}
+				}
+			} else if(pilot_trans_thrusts.z >= 0.0f && distance_control.get_top_limit_cm() != 0 && 
+		   		distance_control.get_top_cm() != 0 && distance_control.get_top_cm() > distance_control.get_top_limit_cm()) {
+		   		is_affect_z = false;
+		   		if(state2 == 0) {
+					distance = distance_control.get_top_limit_cm() - distance_control.get_top_cm();
+					pos_control.relax_alt_hold_controllers(); 
+	            	pos_control.set_alt_target(inertial_nav.get_altitude() + distance - 2); 
+	            	state2 = 1;
+				} else {
+					if(fabsf(inertial_nav.get_altitude() - pos_control.get_alt_target()) <= 1.0f) {
+						state2 = 0;
+					}
+				}
+		   	} else {
+				state1 = 0;
+				state2 = 0;
+		   	}
+        }
+
+        if (is_affect_z) {
+	        // output pilot's throttle
+	        motors.set_throttle_pilot(pilot_trans_thrusts.z);
+	        attitude_control.set_throttle_out(motors.get_throttle_hover(), false, g.throttle_filt); // throttle should be zero
+	        
+	        // reset z targets to current values
+	        pos_control.relax_alt_hold_controllers();
+	        is_z_ctrl_relaxed = true;
+	        engageStopZ = true;
+	        lastVelocityZWasNegative = is_negative(inertial_nav.get_velocity_z());
+	    } else { // hold z
+	        
+	        if (is_z_ctrl_relaxed) {
+	            is_z_ctrl_relaxed = false;
+	            pos_control.relax_alt_hold_controllers();
+	        }
+
+	        if (!is_ned_pilot && !depth_limit) {
+	            motors.set_throttle_pilot(pilot_trans_thrusts.z); // here means throttle not affect z pos
+	        } else {
+	            motors.set_throttle_pilot(0.0f);
+	        }
+
+	        if (ap.at_bottom) {
+	            pos_control.relax_alt_hold_controllers(); // clear velocity and position targets
+	            pos_control.set_alt_target(inertial_nav.get_altitude() + 10.0f); // set target to 10 cm above bottom
+	        }
+
+	        // Detects a zero derivative
+	        // When detected, move the altitude set point to the actual position
+	        // This will avoid any problem related to joystick delays
+	        // or smaller input signals
+	        if(engageStopZ && (lastVelocityZWasNegative ^ is_negative(inertial_nav.get_velocity_z()))) {
+	            engageStopZ = false;
+	            pos_control.relax_alt_hold_controllers();
+	        }
+
+	        pos_control.update_z_controller();
+	    }
+	}
+
+	if(is_ned_pilot) {
+		if(pilot_trans_thrusts.x >= 0.0f && distance_control.get_front_limit_cm() != 0 && 
+		   distance_control.get_front_cm() != 0 && distance_control.get_front_cm() < distance_control.get_front_limit_cm()) {
+			if(!is_equal(distance_control.get_target_x(), (float)distance_control.get_front_limit_cm())) {
+	        	distance_control.relax_x_controller((float)distance_control.get_front_limit_cm());
+        	}
+	    	distance_control.update_x_controller((float)distance_control.get_front_cm());
+	    	last_pilot_x_input_ms = tnow;
+		    is_x_ctrl_relaxed = true;
+        } else if(pilot_trans_thrusts.x <= -0.0f && distance_control.get_back_limit_cm() != 0 && 
+	   		distance_control.get_back_cm() != 0 && distance_control.get_back_cm() > distance_control.get_back_limit_cm()) {
+			if(!is_equal(distance_control.get_target_x(), (float)distance_control.get_back_limit_cm())) {
+	        	distance_control.relax_x_controller((float)distance_control.get_back_limit_cm());
+        	}
+	    	distance_control.update_x_controller((float)distance_control.get_back_cm());
+	    	last_pilot_x_input_ms = tnow;
+		    is_x_ctrl_relaxed = true;
+        } else if((front_face_actived && distance_control.get_front_cm() != 0) ||
+                   (back_face_actived && distance_control.get_back_cm() != 0)) {
+		    int16_t distance;
+		    if(front_face_actived) {
+		    	distance = distance_control.get_front_cm();
+		    } else {
+		    	distance = distance_control.get_back_cm();
+		    }
+		    
+			if (fabsf(pilot_trans_thrusts.x) > 0.0f || channel_yaw->get_control_in()) {
+		        // output pilot's throttle
+		        motors.set_forward(pilot_trans_thrusts.x);
+		        distance_control.relax_x_controller((float)distance);
+		        last_pilot_x_input_ms = tnow;
+		        is_x_ctrl_relaxed = true;
+		    } else { // hold x
+		        if (tnow - last_pilot_x_input_ms >= distance_control.get_delayms_x()) {
+		        	if(is_x_ctrl_relaxed) {
+			        	distance_control.relax_x_controller((float)distance);
+			        	is_x_ctrl_relaxed = false;
+		        	}
+			    	distance_control.update_x_controller((float)distance);
+		        } else {
+					motors.set_forward(0);
+		        }  
+		    }
+		} else {
+			motors.set_forward(pilot_trans_thrusts.x);	
+		}
+
+		if(pilot_trans_thrusts.y >= 0.0f && distance_control.get_right_limit_cm() != 0 && 
+		   distance_control.get_right_cm() != 0 && distance_control.get_right_cm() < distance_control.get_right_limit_cm()) {
+			if(!is_equal(distance_control.get_target_y(), (float)distance_control.get_right_limit_cm())) {
+	        	distance_control.relax_y_controller((float)distance_control.get_right_limit_cm());
+	        	//hal.shell->printf("right relax\r\n");
+        	}
+	    	distance_control.update_y_controller((float)distance_control.get_right_cm());
+	    	last_pilot_y_input_ms = tnow;
+		    is_y_ctrl_relaxed = true;
+        } else if(pilot_trans_thrusts.y <= -0.0f && distance_control.get_left_limit_cm() != 0 && 
+	   		distance_control.get_left_cm() != 0 && distance_control.get_left_cm() > distance_control.get_left_limit_cm()) {
+	   		//hal.shell->printf("left\r\n");
+			if(!is_equal(distance_control.get_target_y(), (float)distance_control.get_left_limit_cm())) {
+	        	distance_control.relax_y_controller((float)distance_control.get_left_limit_cm());
+	        	//hal.shell->printf("left relax\r\n");
+        	}
+	    	distance_control.update_y_controller((float)distance_control.get_left_cm());
+	    	last_pilot_y_input_ms = tnow;
+		    is_y_ctrl_relaxed = true;
+        } else if((right_face_actived && distance_control.get_right_cm() != 0) ||
+                   (left_face_actived && distance_control.get_left_cm() != 0)) {
+		    int16_t distance;
+		    if(distance_control.right_face_is_active()) {
+		    	distance = distance_control.get_right_cm();
+		    } else {
+		    	distance = distance_control.get_left_cm();
+		    }
+		    
+			if (fabsf(pilot_trans_thrusts.y) > 0.0f) {
+		        // output pilot's throttle
+		        motors.set_lateral(pilot_trans_thrusts.y);
+		        distance_control.relax_y_controller((float)distance);
+		        last_pilot_y_input_ms = tnow;
+		        is_y_ctrl_relaxed = true;
+		    } else { // hold y
+		        if (tnow - last_pilot_y_input_ms >= distance_control.get_delayms_y()) {
+		        	if(is_y_ctrl_relaxed) {
+			        	distance_control.relax_y_controller((float)distance);
+			        	is_y_ctrl_relaxed = false;
+		        	}
+			    	distance_control.update_y_controller((float)distance);
+		        } else {
+					motors.set_lateral(0);
+		        }  
+		    }
+		} else {
+			motors.set_lateral(pilot_trans_thrusts.y);	
+		}
+	} else {
+		motors.set_forward(pilot_trans_thrusts.x);
+		motors.set_lateral(pilot_trans_thrusts.y);
+	}
+}
+
+#endif

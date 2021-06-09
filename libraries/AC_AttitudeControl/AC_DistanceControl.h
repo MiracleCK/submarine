@@ -112,7 +112,8 @@ private:
 	void pilot_thrusts_scale(Vector3f &thrusts);
 	void pilot_thrusts_limit(Vector3f &thrusts);
 	void attitude_filter(Vector3f &thrusts);
-	void rangefinder_status(void);
+	void rangefinder_check(void);
+	void attitude_check(Vector3f &thrusts);
 
     // references to inertial nav and ahrs libraries
     const AP_AHRS_View &        _ahrs;
@@ -151,6 +152,13 @@ private:
     LowPassFilterFloat _vel_z_error_filter;   // low-pass-filter on z-axis velocity error
 	LowPassFilterFloat  _out_x_filter; 
 	LowPassFilterFloat  _out_y_filter; 
+
+	float _roll;
+    float _pitch;
+    float _roll_lock;
+    float _pitch_lock;
+	LowPassFilterFloat  _roll_filter; 
+	LowPassFilterFloat  _pitch_filter;
 	
     // high vibration handling
     bool        _vibe_comp_enabled;     // true when high vibration compensation is on
@@ -180,7 +188,7 @@ private:
     int16_t distance_bf[DIS_BF_NUM];
     int16_t distance_ned[DISTANCE_NUM];
     int16_t distance_limit[DISTANCE_NUM];
-    int16_t distance_safe[DISTANCE_NUM];
+    int16_t distance_safe[DIS_BF_NUM];
     int16_t blind_area[DIS_BF_NUM];
     bool _limit_enable_in;
     uint8_t _distance_face_in;

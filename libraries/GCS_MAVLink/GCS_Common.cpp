@@ -321,7 +321,7 @@ void GCS_MAVLINK::send_distance_sensor() const
     send_proximity();
 }
 
-#if 0
+#if 1
 void GCS_MAVLINK::send_rangefinder() const
 {
     RangeFinder *rangefinder = RangeFinder::get_singleton();
@@ -337,7 +337,8 @@ void GCS_MAVLINK::send_rangefinder() const
             s->distance_cm() * 0.01f,
             s->voltage_mv() * 0.001f);
 }
-#else 
+#endif
+#if 0
 void GCS_MAVLINK::send_rangefinder() const
 {
     AC_DistanceControl *distance_control = AC_DistanceControl::get_singleton();
@@ -1528,7 +1529,6 @@ void GCS_MAVLINK::send_system_time()
         AP_HAL::millis());
 }
 
-
 /*
   send RC_CHANNELS messages
  */
@@ -1636,7 +1636,9 @@ void GCS_MAVLINK::send_rc_channels()
         values[17], //18,
         receiver_rssi); 
 }
-#else 
+#endif
+
+#if 1
 void GCS_MAVLINK::send_rc_channels()
 {
     AP_RSSI *rssi = AP::rssi();
@@ -1672,6 +1674,37 @@ void GCS_MAVLINK::send_rc_channels()
         receiver_rssi); 
 }
 #endif
+
+#if 0
+void GCS_MAVLINK::send_rc_channels()
+{
+	mavlink_msg_rc_channels_send(
+        chan,
+        AP_HAL::millis(),
+        RC_Channels::get_valid_channel_count(),
+        0, //1,
+        0, //2,
+        0, //3,
+        0, //4,
+        0, //5,
+        0, //6,
+        
+        0, //7,
+        0, //8,
+        0, //9,
+        0, //10,
+        0, //11,
+        0, //12,
+        0, //13,
+        0, //14,
+        0, //15,
+        0, //16,
+        0, //17,
+        0, //18,
+        0); 
+}
+#endif
+
 
 bool GCS_MAVLINK::sending_mavlink1() const
 {
@@ -2306,6 +2339,7 @@ void GCS_MAVLINK::send_local_position() const
 /*
   send VIBRATION message
  */
+#if 1
 //extern Vector3f vel_cm, accl_cm;
 void GCS_MAVLINK::send_vibration() const
 {
@@ -2323,6 +2357,28 @@ void GCS_MAVLINK::send_vibration() const
         ins.get_accel_clip_count(1),
         ins.get_accel_clip_count(2));
 }
+#endif
+#if 0
+extern float troll_raw, tpitch_raw;
+extern float troll, tpitch;
+
+void GCS_MAVLINK::send_vibration() const
+{
+    const AP_InertialSensor &ins = AP::ins();
+
+    Vector3f vibration = ins.get_vibration_levels();
+
+    mavlink_msg_vibration_send(
+        chan,
+        AP_HAL::micros64(),
+        troll_raw,
+        troll,
+        vibration.z,
+        ins.get_accel_clip_count(0),
+        ins.get_accel_clip_count(1),
+        ins.get_accel_clip_count(2));
+}
+#endif
 
 void GCS_MAVLINK::send_named_float(const char *name, float value) const
 {
