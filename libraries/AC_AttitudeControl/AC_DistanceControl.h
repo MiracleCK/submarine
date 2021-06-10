@@ -64,6 +64,14 @@ public:
     int16_t get_front347_cm_bf() const { return distance_bf[DIS_BF_FRONT347]; }
     int16_t get_front13_cm_bf() const { return distance_bf[DIS_BF_FRONT13]; }
 
+    int16_t get_front_safe_cm() const { return distance_safe[DISTANCE_FRONT]; }
+    int16_t get_back_safe_cm() const { return distance_safe[DISTANCE_BACK]; }
+    int16_t get_left_safe_cm() const { return distance_safe[DISTANCE_LEFT]; }
+    int16_t get_right_safe_cm() const { return distance_safe[DISTANCE_RIGHT]; }
+    int16_t get_top_safe_cm() const { return distance_safe[DISTANCE_TOP]; }
+    int16_t get_bottom_safe_cm() const { return distance_safe[DISTANCE_BOTTOM]; }
+    int16_t get_distance_safe(uint8_t i) const { return distance_safe[i]; }
+
     int16_t get_front_limit_cm() const { return distance_limit[DISTANCE_FRONT]; }
     int16_t get_back_limit_cm() const { return distance_limit[DISTANCE_BACK]; }
     int16_t get_left_limit_cm() const { return distance_limit[DISTANCE_LEFT]; }
@@ -188,6 +196,8 @@ private:
     int16_t distance_bf[DIS_BF_NUM];
     int16_t distance_ned[DISTANCE_NUM];
     int16_t distance_limit[DISTANCE_NUM];
+    int8_t distance_face_bf[DISTANCE_NUM];
+    int8_t distance_face[DISTANCE_NUM];
     int16_t distance_safe[DIS_BF_NUM];
     int16_t blind_area[DIS_BF_NUM];
     bool _limit_enable_in;

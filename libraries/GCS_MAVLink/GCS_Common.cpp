@@ -1641,37 +1641,35 @@ void GCS_MAVLINK::send_rc_channels()
 #if 1
 void GCS_MAVLINK::send_rc_channels()
 {
-    AP_RSSI *rssi = AP::rssi();
-    uint8_t receiver_rssi = 0;
-    if (rssi != nullptr) {
-        receiver_rssi = rssi->read_receiver_rssi_uint8();
-    }
 
 	AC_DistanceControl *distance_control = AC_DistanceControl::get_singleton();
+	if(!distance_control->sensor_ok())
+		return ;
+	
 	mavlink_msg_rc_channels_send(
         chan,
         AP_HAL::millis(),
         RC_Channels::get_valid_channel_count(),
-        abs(distance_control->get_front_cm()), //1,
-        abs(distance_control->get_back_cm()), //2,
-        abs(distance_control->get_left_cm()), //3,
-        abs(distance_control->get_right_cm()), //4,
-        abs(distance_control->get_top_cm()), //5,
-        abs(distance_control->get_bottom_cm()), //6,
+        abs(distance_control->get_front_cm_bf()), //1,
+        abs(distance_control->get_back_cm_bf()), //2,
+        abs(distance_control->get_left_cm_bf()), //3,
+        abs(distance_control->get_right_cm_bf()), //4,
+        abs(distance_control->get_top_cm_bf()), //5,
+        abs(distance_control->get_bottom_cm_bf()), //6,
         
-        abs(distance_control->get_front_limit_cm()), //7,
-        abs(distance_control->get_back_limit_cm()), //8,
-        abs(distance_control->get_left_limit_cm()), //9,
-        abs(distance_control->get_right_limit_cm()), //10,
-        abs(distance_control->get_top_limit_cm()), //11,
-        abs(distance_control->get_bottom_limit_cm()), //12,
+        abs(distance_control->get_front_safe_cm()), //7,
+        abs(distance_control->get_back_safe_cm()), //8,
+        abs(distance_control->get_left_safe_cm()), //9,
+        abs(distance_control->get_right_safe_cm()), //10,
+        abs(distance_control->get_top_safe_cm()), //11,
+        abs(distance_control->get_bottom_safe_cm()), //12,
         0, //13,
         0, //14,
         0, //15,
         0, //16,
         0, //17,
         0, //18,
-        receiver_rssi); 
+        0);  //rssi
 }
 #endif
 
