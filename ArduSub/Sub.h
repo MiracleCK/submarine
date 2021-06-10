@@ -716,7 +716,6 @@ public:
     bool right_face_actived;
     bool front_face_actived;
     bool back_face_actived;
-    uint32_t last_face_active_ms;
     // Hold actual position until zero derivative is detected
     bool engageStopZ = false;
     // Get last user velocity direction to check for zero derivative points

@@ -648,8 +648,18 @@ void AC_DistanceControl::rangefinder_check(void)
     }
 
 	_sensor_ok = true;
-	_limit_enable_in = _limit_enable.get() ? true : false;
-	_distance_face_in = _distance_face.get();
+	uint32_t tnow = AP_HAL::millis();
+    if (!_motors.armed()) {
+    	_limit_enable_in = false;
+		_distance_face_in = 0;
+		_invalid_ms = tnow;
+		return ;
+    }
+
+	if (tnow - _invalid_ms > 5000) {
+		_limit_enable_in = _limit_enable.get() ? true : false;
+		_distance_face_in = _distance_face.get();
+	}
 }
 
 void AC_DistanceControl::update_distance(void)
@@ -773,7 +783,7 @@ void AC_DistanceControl::update_distance(void)
 	distance_face_bf[DISTANCE_TOP] = (int8_t)top_face_is_active()*100;
 	distance_face_bf[DISTANCE_BOTTOM] = (int8_t)bottom_face_is_active()*100;
 
-	if(print_flag) {
+	if(0) {
 		hal.shell->printf("distance_safe: %d %d %d %d %d %d\r\n", 
 						distance_safe[DISTANCE_FRONT],
 						distance_safe[DISTANCE_BACK], 
@@ -894,7 +904,7 @@ void AC_DistanceControl::update_distance(void)
 		}
 	}
 
-	if(print_flag) {
+	if(0) {
 		for(int i=0; i<DISTANCE_NUM; i++) {
 			//hal.shell->printf("[%.2f %.2f %.2f]\r\n", 
 			//			limit[i].x,

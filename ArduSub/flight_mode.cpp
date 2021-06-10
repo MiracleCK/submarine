@@ -115,22 +115,17 @@ bool Sub::set_mode(const uint8_t new_mode, const ModeReason reason)
 // called at 100hz or more
 void Sub::update_flight_mode()
 {
-    if (motors.armed()) {
-		pilot_trans_thrusts.x = channel_forward->slew_norm_input_bidirectional();
-        pilot_trans_thrusts.y = channel_lateral->slew_norm_input_bidirectional();
-        pilot_trans_thrusts.z = channel_throttle->slew_norm_input_bidirectional();
-        
-        if(is_ned_pilot) {
-        	distance_control.update_backend(pilot_trans_thrusts);
-        }
-
-        is_affect_z = is_affect_z_pos(is_ned_pilot, pilot_trans_thrusts.x, pilot_trans_thrusts.y, pilot_trans_thrusts.z);
-        thrust_decomposition_select(is_ned_pilot, control_mode, is_affect_z);
-    } else {
-        pilot_trans_thrusts(0, 0, 0);
+	pilot_trans_thrusts.x = channel_forward->slew_norm_input_bidirectional();
+    pilot_trans_thrusts.y = channel_lateral->slew_norm_input_bidirectional();
+    pilot_trans_thrusts.z = channel_throttle->slew_norm_input_bidirectional();
+    
+    if(is_ned_pilot) {
+    	distance_control.update_backend(pilot_trans_thrusts);
     }
 
-	//distance_control.update_backend(pilot_trans_thrusts);
+    is_affect_z = is_affect_z_pos(is_ned_pilot, pilot_trans_thrusts.x, pilot_trans_thrusts.y, pilot_trans_thrusts.z);
+    thrust_decomposition_select(is_ned_pilot, control_mode, is_affect_z);
+
     switch (control_mode) {
     case ACRO:
         acro_run();

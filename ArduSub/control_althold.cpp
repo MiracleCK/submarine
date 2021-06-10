@@ -252,30 +252,28 @@ void Sub::althold_run_rate()
     uint32_t tnow = AP_HAL::millis();
 
     if(is_ned_pilot) {
-		if (tnow - last_face_active_ms > 10000) {
-	    	if(bottom_face_actived != distance_control.bottom_face_is_active() ||
-	    	   top_face_actived != distance_control.top_face_is_active()) {
-				bottom_face_actived = distance_control.bottom_face_is_active();
-				top_face_actived = distance_control.top_face_is_active();
-				last_pilot_z_input_ms = tnow;
-		    	is_z_ctrl_relaxed = true;
-	    	}
+    	if(bottom_face_actived != distance_control.bottom_face_is_active() ||
+    	   top_face_actived != distance_control.top_face_is_active()) {
+			bottom_face_actived = distance_control.bottom_face_is_active();
+			top_face_actived = distance_control.top_face_is_active();
+			last_pilot_z_input_ms = tnow;
+	    	is_z_ctrl_relaxed = true;
+    	}
 
-	    	if(front_face_actived != distance_control.front_face_is_active() ||
-	    	   back_face_actived != distance_control.back_face_is_active()) {
-				front_face_actived = distance_control.front_face_is_active();
-				back_face_actived = distance_control.back_face_is_active();
-				last_pilot_x_input_ms = tnow;
-		    	is_x_ctrl_relaxed = true;
-	    	}
+    	if(front_face_actived != distance_control.front_face_is_active() ||
+    	   back_face_actived != distance_control.back_face_is_active()) {
+			front_face_actived = distance_control.front_face_is_active();
+			back_face_actived = distance_control.back_face_is_active();
+			last_pilot_x_input_ms = tnow;
+	    	is_x_ctrl_relaxed = true;
+    	}
 
-	    	if(right_face_actived != distance_control.right_face_is_active() ||
-	    	   left_face_actived != distance_control.left_face_is_active()) {
-				right_face_actived = distance_control.right_face_is_active();
-				left_face_actived = distance_control.left_face_is_active();
-				last_pilot_y_input_ms = tnow;
-			    is_y_ctrl_relaxed = true;
-	    	}
+    	if(right_face_actived != distance_control.right_face_is_active() ||
+    	   left_face_actived != distance_control.left_face_is_active()) {
+			right_face_actived = distance_control.right_face_is_active();
+			left_face_actived = distance_control.left_face_is_active();
+			last_pilot_y_input_ms = tnow;
+		    is_y_ctrl_relaxed = true;
     	}
     }
 
@@ -296,7 +294,6 @@ void Sub::althold_run_rate()
         back_face_actived = false;
         right_face_actived = false;
         left_face_actived = false;
-        last_face_active_ms = tnow;
         return;
     }
 

@@ -72,13 +72,13 @@ public:
     int16_t get_bottom_safe_cm() const { return distance_safe[DISTANCE_BOTTOM]; }
     int16_t get_distance_safe(uint8_t i) const { return distance_safe[i]; }
 
-    int16_t get_front_limit_cm() const { return distance_limit[DISTANCE_FRONT]; }
-    int16_t get_back_limit_cm() const { return distance_limit[DISTANCE_BACK]; }
-    int16_t get_left_limit_cm() const { return distance_limit[DISTANCE_LEFT]; }
-    int16_t get_right_limit_cm() const { return distance_limit[DISTANCE_RIGHT]; }
-    int16_t get_top_limit_cm() const { return distance_limit[DISTANCE_TOP]; }
-    int16_t get_bottom_limit_cm() const { return distance_limit[DISTANCE_BOTTOM]; }
-    int16_t get_distance_limit(uint8_t i) const { return distance_limit[i]; }
+    int16_t get_front_limit_cm() const { return (_limit_enable_in ? distance_limit[DISTANCE_FRONT] : 0); }
+    int16_t get_back_limit_cm() const { return (_limit_enable_in ? distance_limit[DISTANCE_BACK] : 0); }
+    int16_t get_left_limit_cm() const { return (_limit_enable_in ? distance_limit[DISTANCE_LEFT] : 0); }
+    int16_t get_right_limit_cm() const { return (_limit_enable_in ? distance_limit[DISTANCE_RIGHT] : 0); }
+    int16_t get_top_limit_cm() const { return (_limit_enable_in ? distance_limit[DISTANCE_TOP] : 0); }
+    int16_t get_bottom_limit_cm() const { return (_limit_enable_in ? distance_limit[DISTANCE_BOTTOM] : 0); }
+    int16_t get_distance_limit(uint8_t i) const { return (_limit_enable_in ? distance_limit[i] : 0); }
 
     int16_t get_delayms_x() const { return _delay_ms_x.get(); }
     int16_t get_delayms_y() const { return _delay_ms_y.get(); }
@@ -203,6 +203,7 @@ private:
     bool _limit_enable_in;
     uint8_t _distance_face_in;
     bool _sensor_ok;
+    uint32_t _invalid_ms;
 
 	AP_Float	_thr_face_p;
 	AP_Float	_thr_limit_p;

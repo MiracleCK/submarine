@@ -56,6 +56,7 @@ bool Sub::manual_control_reset_rp(uint16_t buttons) {
         is_request_reset_rp = true;
     } else if ((buttons & 0x02) == 0x02) {
         is_ned_pilot = !is_ned_pilot;
+	    is_z_ctrl_relaxed = true;
     } else {
         return false;
     }
