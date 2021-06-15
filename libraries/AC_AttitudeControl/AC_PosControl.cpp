@@ -467,7 +467,7 @@ bool AC_PosControl::is_active_z() const
 }
 
 /// update_z_controller - fly to altitude in cm above home
-void AC_PosControl::update_z_controller()
+void AC_PosControl::update_z_controller(float alt_feed)
 {
     // check time since last cast
     const uint64_t now_us = AP_HAL::micros64();
@@ -486,7 +486,12 @@ void AC_PosControl::update_z_controller()
     calc_leash_length_z();
 
     // call z-axis position controller
-    run_z_controller();
+    run_z_controller(alt_feed);
+}
+
+void AC_PosControl::update_z_controller()
+{
+	update_z_controller(0);
 }
 
 /// calc_leash_length - calculates the vertical leash lengths from maximum speed, acceleration
@@ -504,9 +509,9 @@ void AC_PosControl::calc_leash_length_z()
 // target altitude should be set with one of these functions: set_alt_target, set_target_to_stopping_point_z, init_takeoff
 // calculates desired rate in earth-frame z axis and passes to rate controller
 // vel_up_max, vel_down_max should have already been set before calling this method
-void AC_PosControl::run_z_controller()
+void AC_PosControl::run_z_controller(float alt_feed)
 {
-    float curr_alt = _inav.get_altitude();
+    float curr_alt = _inav.get_altitude() + alt_feed;
 
     // clear position limit flags
     _limit.pos_up = false;
@@ -641,6 +646,12 @@ void AC_PosControl::run_z_controller()
     _vel_z_control_ratio += _dt*0.1f*(0.5-error_ratio);
     _vel_z_control_ratio = constrain_float(_vel_z_control_ratio, 0.0f, 2.0f);
 }
+
+void AC_PosControl::run_z_controller()
+{
+	run_z_controller(0);
+}
+
 
 ///
 /// lateral position controller

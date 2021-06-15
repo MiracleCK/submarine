@@ -6,6 +6,7 @@
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Common/AP_FWVersion.h>
 #include <AP_Logger/AP_Logger.h>
+#include "Sub.h"
 
 extern const AP_HAL::HAL& hal;
 
@@ -91,10 +92,13 @@ static int params_cnt = sizeof(params) / sizeof(params[0]);
 
 bool is_dbg_motor;
 bool is_dbg_batt;
+bool is_dbg_distance = false;
 
 uint32_t dbg_print_cnt = 20;
 uint32_t dbg_print_timeinterval = 1000;
 bool is_dbg_bprintf;
+
+int32_t dbg_alt = 0;
 
 void param_debug_tick(void);
 bool is_param_print(void);
@@ -104,6 +108,7 @@ static int cmd_param_set(const char *name, float value);
 static int cmd_param_show(int argc, char *argv[]);
 static void cmd_param(int argc, char *argv[]);
 static int cmd_param_reset(void);
+static int cmd_param_erase(void);
 static void cmd_param_dbg(int argc, char *argv[]);
 
 static void cmd_version(int argc, char *argv[]);
@@ -129,7 +134,7 @@ AP_HAL::Shell::ShellCommand shell_commands[] = {
 void cmd_param(int argc, char *argv[]) 
 {
     if (argc < 1) { // at least should be param show
-        hal.shell->printf("usage: param set|show|dbg [param_short_name value]|dbg_param\r\n");
+        hal.shell->printf("usage: param set|show|dbg|reset|erase [param_short_name value]|dbg_param\r\n");
         return;
     }
 
@@ -142,6 +147,12 @@ void cmd_param(int argc, char *argv[])
     if (!strcmp(argv[0], "reset")) // param reset
     {
         cmd_param_reset();
+        return;
+    }
+
+    if (!strcmp(argv[0], "erase")) // param reset
+    {
+        cmd_param_erase();
         return;
     }
 
@@ -208,7 +219,7 @@ void cmd_log(int argc, char *argv[]) {
 // param dbg motor|atti|ctrl on|[off] [print_cnt]
 void cmd_param_dbg(int argc, char *argv[]) {
     if (argc <= 0) {
-        hal.shell->printf("usage: param dbg motor|atti|ctrl on|[off] [print_cnt]\r\n");
+        hal.shell->printf("usage: param dbg motor|dis|atti|ctrl on|[off] [print_cnt]\r\n");
         return;
     }
 
@@ -224,8 +235,20 @@ void cmd_param_dbg(int argc, char *argv[]) {
         } else {
             is_dbg_batt = false;
         }
+    } else if (!strcmp(argv[0], "dis")) {
+        if (argc >= 2 && !strcmp(argv[1], "on")) {
+            is_dbg_distance = true;
+        } else {
+            is_dbg_distance = false;
+        }
+    } else if (!strcmp(argv[0], "alt")) {
+        if (argc >= 2) {
+            dbg_alt = strtol(argv[1], NULL, 10);
+        } else {
+			dbg_alt = 0;
+        }
     } else {
-        hal.shell->printf("usage: param dbg motor|batt on|[off] [print_cnt]\r\n");
+        hal.shell->printf("usage: param dbg motor|batt|dis on|[off] [print_cnt]\r\n");
         return;
     }
 
@@ -235,8 +258,8 @@ void cmd_param_dbg(int argc, char *argv[]) {
         dbg_print_cnt = 20;
     }
 
-    hal.shell->printf("set is_dbg_motor %d is_dbg_batt %d dbg_print_cnt %d.\r\n", 
-                is_dbg_motor, is_dbg_batt, dbg_print_cnt);
+    hal.shell->printf("set is_dbg_motor %d is_dbg_batt %d is_dbg_distance %d dbg_print_cnt %d.\r\n", 
+                is_dbg_motor, is_dbg_batt, is_dbg_distance, dbg_print_cnt);
 }
 
 int cmd_param_set(const char *name, float value)
@@ -322,6 +345,14 @@ int cmd_param_show(int argc, char *argv[])
 }
 
 int cmd_param_reset(void) {
+    AP_Param::set_and_save_by_name("SYSID_SW_MREV", Parameters::k_format_version + 1);
+	hal.shell->printf("parameters reset...\r\n");
+	hal.scheduler->delay(500);
+    hal.scheduler->reboot(false);
+    return 0;
+}
+
+int cmd_param_erase(void) {
     AP_Param::erase_all();
     hal.shell->printf("All parameters reset, would auto-reboot board now\r\n");
 

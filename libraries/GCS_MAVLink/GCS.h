@@ -196,7 +196,8 @@ public:
     void send_ahrs2();
     void send_ahrs3();
     void send_system_time();
-    void send_rc_channels() const;
+    //void send_rc_channels() const;
+    void send_rc_channels();
     void send_rc_channels_raw() const;
     void send_raw_imu();
 

@@ -69,6 +69,7 @@
 #include <AP_LeakDetector/AP_LeakDetector.h> // Leak detector
 #include <AP_TemperatureSensor/TSYS01.h>
 #include <AP_Common/AP_FWVersion.h>
+#include <AC_AttitudeControl/AC_DistanceControl.h> 
 
 // Local modules
 #include "defines.h"
@@ -365,6 +366,7 @@ private:
     AC_AttitudeControl_Sub attitude_control;
 
     AC_PosControl_Sub pos_control;
+    AC_DistanceControl distance_control;
 
     AC_WPNav wp_nav;
     AC_Loiter loiter_nav;
@@ -643,6 +645,8 @@ private:
     uint16_t get_pilot_speed_dn();
 
     void convert_old_parameters(void);
+    void backup_parameters(void);
+    void recover_parameters(void);
     bool handle_do_motor_test(mavlink_command_long_t command);
     bool init_motor_test();
     bool verify_motor_test();
@@ -701,6 +705,17 @@ public:
     pilot_axis_t pilot_axis;
     bool is_ned_pilot = true;
     bool is_z_ctrl_relaxed = false;
+    bool is_x_ctrl_relaxed = false;
+    bool is_y_ctrl_relaxed = false;
+    uint32_t last_pilot_x_input_ms;
+    uint32_t last_pilot_y_input_ms;
+    uint32_t last_pilot_z_input_ms;
+    bool bottom_face_actived;
+    bool top_face_actived;
+    bool left_face_actived;
+    bool right_face_actived;
+    bool front_face_actived;
+    bool back_face_actived;
     // Hold actual position until zero derivative is detected
     bool engageStopZ = false;
     // Get last user velocity direction to check for zero derivative points

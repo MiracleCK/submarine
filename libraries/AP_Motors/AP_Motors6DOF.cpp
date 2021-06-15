@@ -375,7 +375,8 @@ void AP_Motors6DOF::output_to_motors()
         // set motor output based on thrust requests
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
             if (motor_enabled[i]) {
-                motor_out[i] = calc_thrust_to_pwm(_thrust_rpyt_out[i]);
+                set_actuator_with_slew(_actuator[i], (_thrust_rpyt_out[i]+1)/2);
+                motor_out[i] = calc_thrust_to_pwm(2*_actuator[i] - 1);
             }
         }
         break;

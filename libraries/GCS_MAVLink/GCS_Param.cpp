@@ -299,6 +299,7 @@ void GCS_MAVLINK::handle_param_set(const mavlink_message_t &msg)
     // save the change
     vp->save(force_save);
 
+	//hal.shell->printf("%s: %f\r\n", key, packet.param_value);
     AP_Logger *logger = AP_Logger::get_singleton();
     if (logger != nullptr) {
         logger->Write_Parameter(key, vp->cast_to_float(var_type));

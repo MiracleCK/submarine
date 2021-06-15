@@ -473,7 +473,7 @@ void AC_AttitudeControl::input_euler_rate_roll_limited_pitch_yaw(float euler_rol
     float euler_pitch_rate = radians(euler_pitch_rate_cds * 0.01f);
     float euler_yaw_rate = radians(euler_yaw_rate_cds * 0.01f);
 
-    float euler_roll_angle = constrain_float(_attitude_target_euler_angle.x + euler_roll_rate * _dt, radians(-80.0f), radians(80.0f));
+    float euler_roll_angle = constrain_float(_attitude_target_euler_angle.x + euler_roll_rate * _dt, radians(-90.0f), radians(90.0f));
     float euler_pitch_angle = constrain_float(_attitude_target_euler_angle.y + euler_pitch_rate * _dt, radians(-80.0f), radians(80.0f));
 
     // translate the roll pitch and yaw acceleration limits to the euler axis

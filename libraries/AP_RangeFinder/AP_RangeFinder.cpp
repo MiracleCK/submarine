@@ -533,7 +533,8 @@ void RangeFinder::handle_msg(const mavlink_message_t &msg)
 {
     uint8_t i;
     for (i=0; i<num_instances; i++) {
-        if ((drivers[i] != nullptr) && ((Type)params[i].type.get() != Type::NONE)) {
+        if ((drivers[i] != nullptr) && 
+        	((Type)params[i].type.get() == Type::MAVLink)) {
           drivers[i]->handle_msg(msg);
         }
     }
@@ -552,15 +553,6 @@ AP_RangeFinder_Backend *RangeFinder::find_instance(enum Rotation orientation) co
     for (uint8_t i=0; i<num_instances; i++) {
         AP_RangeFinder_Backend *backend = get_backend(i);
         if (backend != nullptr &&
-            backend->orientation() == orientation &&
-            backend->status() == Status::Good) {
-            return backend;
-        }
-    }
-    // if none in range then return first with correct orientation
-    for (uint8_t i=0; i<num_instances; i++) {
-        AP_RangeFinder_Backend *backend = get_backend(i);
-        if (backend != nullptr &&
             backend->orientation() == orientation) {
             return backend;
         }
@@ -574,7 +566,32 @@ uint16_t RangeFinder::distance_cm_orient(enum Rotation orientation) const
     if (backend == nullptr) {
         return 0;
     }
+
+    if (backend->status() != Status::Good) {
+        return 0;
+    }
+    
     return backend->distance_cm();
+}
+
+uint16_t RangeFinder::distance_cm_raw_orient(enum Rotation orientation) const
+{
+    AP_RangeFinder_Backend *backend = find_instance(orientation);
+    if (backend == nullptr) {
+        return 0;
+    }
+    
+    return backend->distance_cm_raw();
+}
+
+bool RangeFinder::healthy(enum Rotation orientation)
+{
+	AP_RangeFinder_Backend *backend = find_instance(orientation);
+    if (backend == nullptr) {
+        return false;
+    }
+
+    return (backend->status() == Status::Good);
 }
 
 uint16_t RangeFinder::voltage_mv_orient(enum Rotation orientation) const

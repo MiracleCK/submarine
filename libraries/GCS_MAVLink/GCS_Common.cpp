@@ -41,6 +41,7 @@
 #include <AP_Baro/AP_Baro.h>
 #include <AP_EFI/AP_EFI.h>
 #include <AP_Proximity/AP_Proximity.h>
+#include <AC_AttitudeControl/AC_DistanceControl.h>
 
 #include <stdio.h>
 
@@ -309,9 +310,10 @@ void GCS_MAVLINK::send_distance_sensor() const
         if (sensor == nullptr) {
             continue;
         }
-        enum Rotation orient = sensor->orientation();
-        if (!filter_possible_proximity_sensors ||
-            (orient > ROTATION_YAW_315 && orient != ROTATION_PITCH_90)) {
+        //enum Rotation orient = sensor->orientation();
+        //if (!filter_possible_proximity_sensors ||
+        //    (orient > ROTATION_YAW_315 && orient != ROTATION_PITCH_90)) {
+        if (!filter_possible_proximity_sensors) {
             send_distance_sensor(sensor, i);
         }
     }
@@ -319,6 +321,7 @@ void GCS_MAVLINK::send_distance_sensor() const
     send_proximity();
 }
 
+#if 1
 void GCS_MAVLINK::send_rangefinder() const
 {
     RangeFinder *rangefinder = RangeFinder::get_singleton();
@@ -334,6 +337,23 @@ void GCS_MAVLINK::send_rangefinder() const
             s->distance_cm() * 0.01f,
             s->voltage_mv() * 0.001f);
 }
+#endif
+#if 0
+void GCS_MAVLINK::send_rangefinder() const
+{
+    AC_DistanceControl *distance_control = AC_DistanceControl::get_singleton();
+
+	if(!distance_control->sensor_ok())
+		return ;
+
+	for(int i=0; i<distance_control->get_distance_num(); i++) {
+	    mavlink_msg_rangefinder_send(
+	            chan,
+	            (float)distance_control->get_distance_ned(i),
+	            (float)distance_control->get_distance_limit(i));
+    }
+}
+#endif
 
 void GCS_MAVLINK::send_proximity() const
 {
@@ -1509,11 +1529,14 @@ void GCS_MAVLINK::send_system_time()
         AP_HAL::millis());
 }
 
-
 /*
   send RC_CHANNELS messages
  */
-void GCS_MAVLINK::send_rc_channels() const
+//extern int16_t set_distance;
+//extern int16_t set_bora;
+//void GCS_MAVLINK::send_rc_channels() const
+#if 0
+void GCS_MAVLINK::send_rc_channels()
 {
     AP_RSSI *rssi = AP::rssi();
     uint8_t receiver_rssi = 0;
@@ -1524,6 +1547,19 @@ void GCS_MAVLINK::send_rc_channels() const
     uint16_t values[18] = {};
     rc().get_radio_in(values, ARRAY_SIZE(values));
 
+    RangeFinder *rangefinder = RangeFinder::get_singleton();
+	
+	//AP_RangeFinder_Backend *front = rangefinder->find_instance(ROTATION_NONE);
+	//AP_RangeFinder_Backend *back = rangefinder->find_instance(ROTATION_PITCH_180);
+	AP_RangeFinder_Backend *left = rangefinder->find_instance(ROTATION_YAW_270);
+	AP_RangeFinder_Backend *right = rangefinder->find_instance(ROTATION_YAW_90);
+	AP_RangeFinder_Backend *bottom = rangefinder->find_instance(ROTATION_PITCH_270);
+	AP_RangeFinder_Backend *front347 = rangefinder->find_instance(ROTATION_YAW_315);
+	AP_RangeFinder_Backend *front13 = rangefinder->find_instance(ROTATION_YAW_45);
+	AC_DistanceControl *distance_control = AC_DistanceControl::get_singleton();
+
+	set_mavlink_message_id_interval(MAVLINK_MSG_ID_RC_CHANNELS, 25);
+#if 0
     mavlink_msg_rc_channels_send(
         chan,
         AP_HAL::millis(),
@@ -1540,14 +1576,133 @@ void GCS_MAVLINK::send_rc_channels() const
         values[9],
         values[10],
         values[11],
-        values[12],
-        values[13],
-        values[14],
-        values[15],
+        (int16_t)distance_control->get_target_x(),//values[12],
+        distance_control->get_front_cm_bf(),//values[13],
+        sensor->distance_cm(), //values[14],
+        sensor->distance_cm_filtered(), //values[15],
         values[16],
         values[17],
-        receiver_rssi);        
+        receiver_rssi); 
+#endif
+#if 0
+	mavlink_msg_rc_channels_send(
+        chan,
+        AP_HAL::millis(),
+        RC_Channels::get_valid_channel_count(),
+        front->distance_cm_raw(), //1,
+        back->distance_cm_raw(), //2,
+        left->distance_cm_raw(), //3,
+        right->distance_cm_raw(), //4,
+        bottom->distance_cm_raw(), //5,
+        front347->distance_cm_raw(), //6,
+        front13->distance_cm_raw(), //7,
+        front->distance_cm(), //8,
+        back->distance_cm(), //9,
+        left->distance_cm(), //10,
+        right->distance_cm(), //11,
+        bottom->distance_cm(), //12,
+        (int16_t)distance_control->get_target_x(), //13,
+        (int16_t)distance_control->get_target_y(), //14,
+        (int16_t)distance_control->get_target_z(), //15,
+        0, //16,
+        values[16],
+        values[17],
+        receiver_rssi);  
+#endif	
+	mavlink_msg_rc_channels_send(
+        chan,
+        AP_HAL::millis(),
+        RC_Channels::get_valid_channel_count(),
+        front347->distance_cm_raw(), //1,
+        front13->distance_cm_raw(), //2,
+        bottom->distance_cm_raw(), //3,
+        left->distance_cm_raw(), //4,
+        right->distance_cm_raw(), //5,
+        
+        distance_control->get_front347_cm_bf(), //6,
+        distance_control->get_front13_cm_bf(), //7,
+        distance_control->get_bottom_cm_bf(), //8,
+        distance_control->get_left_cm_bf(), //9,
+        distance_control->get_right_cm_bf(), //10,
+        
+        (int16_t)distance_control->get_target_x(), //11,
+        (int16_t)distance_control->get_target_y(), //12,
+        (int16_t)distance_control->get_target_z(), //13,
+        
+        0, //14,
+        0, //15,
+        0, //16,
+        values[16], //17,
+        values[17], //18,
+        receiver_rssi); 
 }
+#endif
+
+#if 1
+void GCS_MAVLINK::send_rc_channels()
+{
+
+	AC_DistanceControl *distance_control = AC_DistanceControl::get_singleton();
+	if(!distance_control->sensor_ok())
+		return ;
+	
+	mavlink_msg_rc_channels_send(
+        chan,
+        AP_HAL::millis(),
+        RC_Channels::get_valid_channel_count(),
+        abs(distance_control->get_front_cm_bf()), //1,
+        abs(distance_control->get_back_cm_bf()), //2,
+        abs(distance_control->get_left_cm_bf()), //3,
+        abs(distance_control->get_right_cm_bf()), //4,
+        abs(distance_control->get_top_cm_bf()), //5,
+        abs(distance_control->get_bottom_cm_bf()), //6,
+        
+        abs(distance_control->get_front_safe_cm()), //7,
+        abs(distance_control->get_back_safe_cm()), //8,
+        abs(distance_control->get_left_safe_cm()), //9,
+        abs(distance_control->get_right_safe_cm()), //10,
+        abs(distance_control->get_top_safe_cm()), //11,
+        abs(distance_control->get_bottom_safe_cm()), //12,
+        0, //13,
+        0, //14,
+        0, //15,
+        0, //16,
+        0, //17,
+        0, //18,
+        0);  //rssi
+}
+#endif
+
+#if 0
+void GCS_MAVLINK::send_rc_channels()
+{
+	mavlink_msg_rc_channels_send(
+        chan,
+        AP_HAL::millis(),
+        RC_Channels::get_valid_channel_count(),
+        0, //1,
+        0, //2,
+        0, //3,
+        0, //4,
+        0, //5,
+        0, //6,
+        
+        0, //7,
+        0, //8,
+        0, //9,
+        0, //10,
+        0, //11,
+        0, //12,
+        0, //13,
+        0, //14,
+        0, //15,
+        0, //16,
+        0, //17,
+        0, //18,
+        0); 
+}
+#endif
+
 
 bool GCS_MAVLINK::sending_mavlink1() const
 {
@@ -2182,6 +2337,8 @@ void GCS_MAVLINK::send_local_position() const
 /*
   send VIBRATION message
  */
+#if 1
+//extern Vector3f vel_cm, accl_cm;
 void GCS_MAVLINK::send_vibration() const
 {
     const AP_InertialSensor &ins = AP::ins();
@@ -2198,6 +2355,28 @@ void GCS_MAVLINK::send_vibration() const
         ins.get_accel_clip_count(1),
         ins.get_accel_clip_count(2));
 }
+#endif
+#if 0
+extern float troll_raw, tpitch_raw;
+extern float troll, tpitch;
+
+void GCS_MAVLINK::send_vibration() const
+{
+    const AP_InertialSensor &ins = AP::ins();
+
+    Vector3f vibration = ins.get_vibration_levels();
+
+    mavlink_msg_vibration_send(
+        chan,
+        AP_HAL::micros64(),
+        troll_raw,
+        troll,
+        vibration.z,
+        ins.get_accel_clip_count(0),
+        ins.get_accel_clip_count(1),
+        ins.get_accel_clip_count(2));
+}
+#endif
 
 void GCS_MAVLINK::send_named_float(const char *name, float value) const
 {
@@ -4175,7 +4354,7 @@ int32_t GCS_MAVLINK::global_position_int_alt() const {
 int32_t GCS_MAVLINK::global_position_int_relative_alt() const {
     float posD;
     AP::ahrs().get_relative_position_D_home(posD);
-    posD *= -1000.0f; // change from down to up and metres to millimeters
+    posD *= 100000.0f; // change from down to up and metres to millimeters
     return posD;
 }
 void GCS_MAVLINK::send_global_position_int()

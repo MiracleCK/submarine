@@ -100,4 +100,7 @@ protected:
     setup_custom_motors_fn_t  _setup_custom_motors_callback;
 
     void output_armed_stabilizing_custom();
+
+    // array of motor output values
+    float _actuator[AP_MOTORS_MAX_NUM_MOTORS];
 };

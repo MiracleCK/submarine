@@ -457,6 +457,10 @@ const AP_Param::Info Sub::var_info[] = {
     // @Path: ../libraries/AC_AttitudeControl/AC_PosControl.cpp
     GOBJECT(pos_control, "PSC", AC_PosControl),
 
+    // @Group: DIS
+    // @Path: AC_DistanceControl.cpp
+    GOBJECT(distance_control, "DIS", AC_DistanceControl),
+
     // @Group: SR0_
     // @Path: GCS_Mavlink.cpp
     GOBJECTN(_gcs.chan_parameters[0],  gcs0,       "SR0_",     GCS_MAVLINK_Parameters),
@@ -660,6 +664,48 @@ const AP_Param::ConversionInfo conversion_table[] = {
     { Parameters::k_param_arming,            2,     AP_PARAM_INT16,  "ARMING_CHECK" },
 };
 
+const char *backup_table[] = {
+   "INS_GYROFFS",
+   "INS_GYR_ID",
+   "INS_GYR2OFFS",
+   "INS_GYR2_ID",
+   "INS_GYR3OFFS",
+   "INS_GYR3_ID",
+   "AHRS_TRIM",
+
+   "INS_ACCOFFS",
+   "INS_ACCSCAL",
+   "INS_ACC_ID",
+   "INS_ACC2OFFS",
+   "INS_ACC2SCAL",
+   "INS_ACC2_ID",
+   "INS_ACC3OFFS",
+   "INS_ACC3SCAL",
+   "INS_ACC3_ID",
+
+   "COMPASS_OFS",
+   "COMPASS_DEV_ID",
+   "COMPASS_DIA",
+   "COMPASS_ODI",
+   "COMPASS_SCALE",
+   "COMPASS_OFS2",
+   "COMPASS_DEV_ID2",
+   "COMPASS_DIA2",
+   "COMPASS_ODI2",
+   "COMPASS_SCALE2",
+   "COMPASS_OFS3",
+   "COMPASS_DEV_ID3",
+   "COMPASS_DIA3",
+   "COMPASS_ODI3",
+   "COMPASS_SCALE3",
+
+   "GND_ABS_PRESS",
+   "GND_ABS_PRESS2",
+   "GND_ABS_PRESS3",
+   "GND_TEMP",
+   "GND_ALT_OFFSET",
+};
+
 void Sub::load_parameters()
 {
     if (!AP_Param::check_var_info()) {
@@ -676,12 +722,23 @@ void Sub::load_parameters()
 
         // erase all parameters
         hal.console->printf("Firmware change: erasing EEPROM...\n");
-        StorageManager::erase();
-        AP_Param::erase_all();
+        printf("Param version change(%d->%d): erasing EEPROM...\r\n", g.format_version.get(), Parameters::k_format_version);
 
-        // save the current format version
-        g.format_version.set_and_save(Parameters::k_format_version);
-        hal.console->println("done.");
+		if(g.format_version != 0) {
+			backup_parameters();
+		}
+
+		StorageManager::erase();
+		AP_Param::erase_all();
+
+		if(g.format_version != 0) {
+			recover_parameters();
+		}
+
+		// save the current format version
+		g.format_version.set_and_save(Parameters::k_format_version);
+		hal.console->println("done.");
+		printf("done.\r\n");
     }
 
     uint32_t before = AP_HAL::micros();
@@ -842,6 +899,25 @@ void Sub::load_parameters()
     AP_Param::set_default_by_name("GND_POS1_X", 0.02525);
     AP_Param::set_default_by_name("GND_POS1_Y", 0);
     AP_Param::set_default_by_name("GND_POS1_Z", 0.0555);
+
+    AP_Param::set_default_by_name("RNGFND1_TYPE", 10);
+    AP_Param::set_and_save_by_name("RNGFND1_ORIENT", 0);
+    AP_Param::set_default_by_name("RNGFND2_TYPE", 10);
+    AP_Param::set_and_save_by_name("RNGFND2_ORIENT", 12);
+    AP_Param::set_default_by_name("RNGFND3_TYPE", 10);
+    AP_Param::set_and_save_by_name("RNGFND3_ORIENT", 6);
+    AP_Param::set_default_by_name("RNGFND4_TYPE", 10);
+    AP_Param::set_and_save_by_name("RNGFND4_ORIENT", 2);
+	AP_Param::set_default_by_name("RNGFND5_TYPE", 10);
+    AP_Param::set_and_save_by_name("RNGFND5_ORIENT", 25);
+    
+    AP_Param::set_default_by_name("RNGFND6_TYPE", 10);
+    AP_Param::set_and_save_by_name("RNGFND6_ORIENT", 7);
+    AP_Param::set_default_by_name("RNGFND7_TYPE", 10);
+    AP_Param::set_and_save_by_name("RNGFND7_ORIENT", 1);
+
+    AP_Param::set_default_by_name("MOT_SLEW_DN_TIME", 0.25f);
+    AP_Param::set_default_by_name("MOT_SLEW_UP_TIME", 0.25f);
 }
 
 void Sub::convert_old_parameters()
@@ -870,3 +946,32 @@ void Sub::convert_old_parameters()
     // note that we don't pass in rcmap as we don't want output channel functions changed based on rcmap
     SRV_Channels::upgrade_parameters(old_rc_keys, old_aux_chan_mask, nullptr);
 }
+
+void Sub::backup_parameters()
+{
+       uint16_t i;
+
+       for(i=0; i<ARRAY_SIZE(backup_table); i++) {
+               enum ap_var_type var_type;
+               AP_Param *param = AP_Param::find(backup_table[i], &var_type);
+               if (param != nullptr) {
+                       hal.shell->printf("backup %s\r\n", backup_table[i]);
+                       param->load();
+               }
+       }
+}
+
+void Sub::recover_parameters()
+{
+       uint16_t i;
+
+       for(i=0; i<ARRAY_SIZE(backup_table); i++) {
+               enum ap_var_type var_type;
+               AP_Param *param = AP_Param::find(backup_table[i], &var_type);
+               if (param != nullptr) {
+                       hal.shell->printf("recover %s\r\n", backup_table[i]);
+                       param->save_sync(true);
+               }
+       }
+}
+

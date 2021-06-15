@@ -27,4 +27,8 @@ public:
     AP_Int8  address;
     AP_Vector3f pos_offset; // position offset in body frame
     AP_Int8  orientation;
+    AP_Int16 sample_freq;
+    AP_Int16 cutoff_freq;
+    AP_Float range;
+    AP_Float koef;
 };
