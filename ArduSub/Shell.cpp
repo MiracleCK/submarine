@@ -92,6 +92,7 @@ static int params_cnt = sizeof(params) / sizeof(params[0]);
 
 bool is_dbg_motor;
 bool is_dbg_batt;
+bool is_dbg_distance = false;
 
 uint32_t dbg_print_cnt = 20;
 uint32_t dbg_print_timeinterval = 1000;
@@ -218,7 +219,7 @@ void cmd_log(int argc, char *argv[]) {
 // param dbg motor|atti|ctrl on|[off] [print_cnt]
 void cmd_param_dbg(int argc, char *argv[]) {
     if (argc <= 0) {
-        hal.shell->printf("usage: param dbg motor|atti|ctrl on|[off] [print_cnt]\r\n");
+        hal.shell->printf("usage: param dbg motor|dis|atti|ctrl on|[off] [print_cnt]\r\n");
         return;
     }
 
@@ -234,6 +235,12 @@ void cmd_param_dbg(int argc, char *argv[]) {
         } else {
             is_dbg_batt = false;
         }
+    } else if (!strcmp(argv[0], "dis")) {
+        if (argc >= 2 && !strcmp(argv[1], "on")) {
+            is_dbg_distance = true;
+        } else {
+            is_dbg_distance = false;
+        }
     } else if (!strcmp(argv[0], "alt")) {
         if (argc >= 2) {
             dbg_alt = strtol(argv[1], NULL, 10);
@@ -241,7 +248,7 @@ void cmd_param_dbg(int argc, char *argv[]) {
 			dbg_alt = 0;
         }
     } else {
-        hal.shell->printf("usage: param dbg motor|batt on|[off] [print_cnt]\r\n");
+        hal.shell->printf("usage: param dbg motor|batt|dis on|[off] [print_cnt]\r\n");
         return;
     }
 
@@ -251,8 +258,8 @@ void cmd_param_dbg(int argc, char *argv[]) {
         dbg_print_cnt = 20;
     }
 
-    hal.shell->printf("set is_dbg_motor %d is_dbg_batt %d dbg_print_cnt %d.\r\n", 
-                is_dbg_motor, is_dbg_batt, dbg_print_cnt);
+    hal.shell->printf("set is_dbg_motor %d is_dbg_batt %d is_dbg_distance %d dbg_print_cnt %d.\r\n", 
+                is_dbg_motor, is_dbg_batt, is_dbg_distance, dbg_print_cnt);
 }
 
 int cmd_param_set(const char *name, float value)

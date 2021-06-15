@@ -135,8 +135,8 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_ACC_X_FILT_HZ              20.0f   // vertical acceleration controller input filter default
 #define DISCONTROL_ACC_X_DT                   0.0025f // vertical acceleration controller dt default
 
-#define DISCONTROL_POS_Y_P                    10.0f    // vertical position controller P gain default
-#define DISCONTROL_VEL_Y_P                    3.0f    // vertical velocity controller P gain default
+#define DISCONTROL_POS_Y_P                    8.0f    // vertical position controller P gain default
+#define DISCONTROL_VEL_Y_P                    5.0f    // vertical velocity controller P gain default
 #define DISCONTROL_ACC_Y_P                    0.5f    // vertical acceleration controller P gain default
 #define DISCONTROL_ACC_Y_I                    0.1f    // vertical acceleration controller I gain default
 #define DISCONTROL_ACC_Y_D                    0.0f    // vertical acceleration controller D gain default
@@ -148,25 +148,25 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_LIMIT_Y_P                  80.0f    // discontrol limit y P gain default
 #define DISCONTROL_LIMIT_Z_P                  80.0f    // discontrol limit z P gain default
 
-#define DISCONTROL_THRUSTS_FACE_P             1.0f //0.3f    // discontrol face thrusts scale P gain default
-#define DISCONTROL_THRUSTS_LIMIT_P            1.0f //0.8f    // discontrol limit thrusts scale P gain default
+#define DISCONTROL_THRUSTS_FACE_P             0.5f //0.3f    // discontrol face thrusts scale P gain default
+#define DISCONTROL_THRUSTS_LIMIT_P            0.8f //0.8f    // discontrol limit thrusts scale P gain default
 
-#define DISCONTROL_FRONT_LIMIT_CM             10    // discontrol front limit default
+#define DISCONTROL_FRONT_LIMIT_CM              0    // discontrol front limit default
 #define DISCONTROL_BACK_LIMIT_CM               0    // discontrol back limit default
-#define DISCONTROL_LEFT_LIMIT_CM              10    // discontrol left limit default
-#define DISCONTROL_RIGHT_LIMIT_CM             10    // discontrol right limit default
+#define DISCONTROL_LEFT_LIMIT_CM               0    // discontrol left limit default
+#define DISCONTROL_RIGHT_LIMIT_CM              0    // discontrol right limit default
 #define DISCONTROL_TOP_LIMIT_CM                0    // discontrol top limit default
 #define DISCONTROL_BOTTOM_LIMIT_CM             0    // discontrol bottom limit default
 
-#define DISCONTROL_FRONT_OFT_CM               18  //16    // discontrol front offset default
+#define DISCONTROL_FRONT_OFT_CM               20  //16    // discontrol front offset default
 #define DISCONTROL_BACK_OFT_CM                0  //24    // discontrol back offset default
-#define DISCONTROL_LEFT_OFT_CM                8    // discontrol left offset default
-#define DISCONTROL_RIGHT_OFT_CM               8    // discontrol right offset default
-#define DISCONTROL_FRONT347_OFT_CM            19    // discontrol front347 offset default
-#define DISCONTROL_FRONT13_OFT_CM             19    // discontrol front13 offset default
+#define DISCONTROL_LEFT_OFT_CM                10    // discontrol left offset default
+#define DISCONTROL_RIGHT_OFT_CM               10    // discontrol right offset default
+#define DISCONTROL_FRONT347_OFT_CM            21    // discontrol front347 offset default
+#define DISCONTROL_FRONT13_OFT_CM             21    // discontrol front13 offset default
 
 #define DISCONTROL_DELAY_MS_X                 1000    // discontrol x delay time
-#define DISCONTROL_DELAY_MS_Y                 1500    // discontrol y delay time
+#define DISCONTROL_DELAY_MS_Y                 1000    // discontrol y delay time
 #define DISCONTROL_DELAY_MS_Z                 1000    // discontrol z delay time
 
 #define DISCONTROL_MAX_ACCEL_X                500.0f  // default x acceleration in cm/s/s.
@@ -572,6 +572,8 @@ const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
     AP_GROUPEND
 };
 
+extern bool is_dbg_distance;
+
 // Default constructor.
 // Note that the Vector/Matrix constructors already implicitly zero
 // their values.
@@ -666,7 +668,7 @@ void AC_DistanceControl::update_distance(void)
 {
 	static uint8_t print_flag = 0;
 
-    if(1) {
+    if(is_dbg_distance) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {
@@ -728,13 +730,13 @@ void AC_DistanceControl::update_distance(void)
 	}
 
 	if(distance_safe[DIS_BF_BACK] != 0 && _back_limit_cm.get() > 0) {
-		distance_safe[DIS_BF_BACK] -= _back_limit_cm.get();
+		distance_safe[DIS_BF_BACK] += _back_limit_cm.get();
 	} else {
 		distance_safe[DIS_BF_BACK] = 0;
 	}
 
 	if(distance_safe[DIS_BF_LEFT] != 0 && _left_limit_cm.get() > 0) {
-		distance_safe[DIS_BF_LEFT] -= _left_limit_cm.get();
+		distance_safe[DIS_BF_LEFT] += _left_limit_cm.get();
 	} else {
 		distance_safe[DIS_BF_LEFT] = 0;
 	}
@@ -746,7 +748,7 @@ void AC_DistanceControl::update_distance(void)
 	}
 
 	if(distance_safe[DIS_BF_TOP] != 0 && _top_limit_cm.get() > 0) {
-		distance_safe[DIS_BF_TOP] -= _top_limit_cm.get();
+		distance_safe[DIS_BF_TOP] += _top_limit_cm.get();
 	} else {
 		distance_safe[DIS_BF_TOP] = 0;
 	}
@@ -1072,7 +1074,7 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 		thrusts.z = -0.15f;
 	}
 
-	if(1) {
+	if(is_dbg_distance) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {
@@ -1136,6 +1138,8 @@ void AC_DistanceControl::attitude_check(Vector3f &thrusts)
 void AC_DistanceControl::update_backend(Vector3f &thrusts)
 {
 	rangefinder_check();
+	if(!_sensor_ok)
+		return ;
 
 	attitude_filter(thrusts);
 	
@@ -1168,7 +1172,7 @@ void AC_DistanceControl::update_z_controller(float distance)
     float curr_alt = distance;
     static uint8_t print_flag = 0;
 
-    if(1) {
+    if(is_dbg_distance) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {
@@ -1320,7 +1324,7 @@ void AC_DistanceControl::update_x_controller(float distance)
     float curr_dis = distance;
     static uint8_t print_flag = 0;
 
-    if(1) {
+    if(is_dbg_distance) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {
@@ -1450,7 +1454,7 @@ void AC_DistanceControl::update_y_controller(float distance)
     float curr_dis = distance;
     static uint8_t print_flag = 0;
 
-    if(1) {
+    if(is_dbg_distance) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {

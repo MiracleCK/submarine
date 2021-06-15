@@ -204,6 +204,7 @@ private:
     uint8_t _distance_face_in;
     bool _sensor_ok;
     uint32_t _invalid_ms;
+    bool _debug_enable;
 
 	AP_Float	_thr_face_p;
 	AP_Float	_thr_limit_p;
