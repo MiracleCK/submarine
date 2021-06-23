@@ -65,6 +65,18 @@ enum control_mode_t : uint8_t {
 #define WP_YAW_BEHAVIOR_LOOK_AHEAD                    3   // auto pilot will look ahead during missions and rtl (primarily meant for traditional helicotpers)
 #define WP_YAW_BEHAVIOR_CORRECT_XTRACK                4   // point towards intermediate position target during line following
 
+//Pool cleaning robot (CR500) parameter enums
+#define CR_PARAM_SHAPE "cr_shape"
+#define CR_SHAPE_SQUARE 0
+#define CR_SHAPE_CIRCLE 1
+#define CR_SHAPE_TRIANGLE 2
+#define CR_SHAPE_OTHERS 3
+#define CR_PARAM_REGION "cr_region"
+#define CR_REGION_FLOOR 0
+#define CR_REGION_WALL 1
+#define CR_REGION_WATERLINE 2
+#define CR_PARAM_TIME "cr_time"
+
 // Auto modes
 enum AutoMode {
     Auto_WP,

@@ -770,6 +770,11 @@ void Sub::load_parameters()
     AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", WP_YAW_BEHAVIOR_LOOK_AT_NEXT_WP); // look at next wp
     //AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", WP_YAW_BEHAVIOR_CORRECT_XTRACK);
 
+    //For CR500 SMART mode parameters
+    AP_Param::set_default_by_name(CR_PARAM_SHAPE, CR_SHAPE_SQUARE);
+    AP_Param::set_default_by_name(CR_PARAM_REGION, CR_REGION_FLOOR);
+    AP_Param::set_default_by_name(CR_PARAM_TIME, 120);
+
     // mapping logic motor to physical
     #ifdef MOT_1_MAPPING
         AP_Param::set_default_by_name("MOT_1_MAPPING", MOT_1_MAPPING);
