@@ -42,7 +42,15 @@ enum control_mode_t : uint8_t {
     POSHOLD =      16,  // automatic position hold with manual override, with automatic throttle
     MANUAL =       19,  // Pass-through input with no stabilization
     MOTOR_DETECT = 20,   // Automatically detect motors orientation
-    WIRING =       50
+    WIRING =       50,
+    ULTRA =        60,  // Ultra clean mode
+    FAST =         61,  // Fast clean mode
+    REGULAR =      62,  // Regular clean mode
+    FLOOR =        63,  // Clean only floor
+    WATERLINE =    64,  // Clean only waterline
+    SMART =        65,  // Custom clean by parameters
+    RC_MANUAL =    66,  // Manaul control with mavlink
+    PULLUP =       67,  // Go to waterline to be retrieved
 };
 
 // Acro Trainer types
