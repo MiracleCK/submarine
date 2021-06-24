@@ -26,6 +26,10 @@
 #include "ap_message.h"
 
 #define GCS_DEBUG_SEND_MESSAGE_TIMINGS 0
+//CR500 Override timesync message to send remain and total time.
+//Therefore we don't handle receiving timesync, just send this
+//message periodically
+#define OVERRIDE_TIMESYNC_FOR_CR500 0
 
 // check if a message will fit in the payload space available
 #define PAYLOAD_SIZE(chan, id) (unsigned(GCS_MAVLINK::packet_overhead_chan(chan)+MAVLINK_MSG_ID_ ## id ## _LEN))

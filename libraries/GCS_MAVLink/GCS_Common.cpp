@@ -2683,12 +2683,21 @@ void GCS_MAVLINK::handle_timesync(const mavlink_message_t &msg)
  */
 void GCS_MAVLINK::send_timesync()
 {
+#if OVERRIDE_TIMESYNC_FOR_CR500
+    mavlink_msg_timesync_send(
+            chan,
+            // TODO put the real value when modes dev are completed
+            0,  //Remained Time
+            120 //Total time
+    );
+#else
     _timesync_request.sent_ts1 = timesync_timestamp_ns();
     mavlink_msg_timesync_send(
         chan,
         0,
         _timesync_request.sent_ts1
         );
+#endif
 }
 
 void GCS_MAVLINK::handle_statustext(const mavlink_message_t &msg)
@@ -3100,7 +3109,11 @@ void GCS_MAVLINK::handle_common_message(const mavlink_message_t &msg)
         handle_device_op_write(msg);
         break;
     case MAVLINK_MSG_ID_TIMESYNC:
+//TIMESYNC MESSAGE is used to send task time for CR500.
+//So we don't reply the receiving message
+#if (OVERRIDE_TIMESYNC_FOR_CR500 == 0)
         handle_timesync(msg);
+#endif
         break;
     case MAVLINK_MSG_ID_LOG_REQUEST_LIST:
     case MAVLINK_MSG_ID_LOG_REQUEST_DATA:
