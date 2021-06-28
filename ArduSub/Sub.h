@@ -710,6 +710,7 @@ public:
     uint32_t last_pilot_x_input_ms;
     uint32_t last_pilot_y_input_ms;
     uint32_t last_pilot_z_input_ms;
+    Vector3i distance_target;
     bool bottom_face_actived;
     bool top_face_actived;
     bool left_face_actived;

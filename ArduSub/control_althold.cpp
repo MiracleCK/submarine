@@ -314,16 +314,12 @@ void Sub::althold_run_rate()
 	        	distance_control.relax_z_controller((float)distance_control.get_bottom_limit_cm());
         	}
 	    	distance_control.update_z_controller((float)distance_control.get_bottom_cm());
-	    	last_pilot_z_input_ms = tnow;
-		    is_z_ctrl_relaxed = true;
         } else if(pilot_trans_thrusts.z >= 0.0f && distance_control.get_top_limit_cm() != 0 && 
 	   		distance_control.get_top_cm() != 0 && distance_control.get_top_cm() > distance_control.get_top_limit_cm()) {
 			if(!is_equal(distance_control.get_target_z(), (float)distance_control.get_top_limit_cm())) {
 	        	distance_control.relax_z_controller((float)distance_control.get_top_limit_cm());
         	}
 	    	distance_control.update_z_controller((float)distance_control.get_top_cm());
-	    	last_pilot_z_input_ms = tnow;
-		    is_z_ctrl_relaxed = true;
         } else {
 		    int16_t distance;
 		    if(bottom_face_actived) {
@@ -336,15 +332,18 @@ void Sub::althold_run_rate()
 		        // output pilot's throttle
 		        motors.set_throttle_pilot(pilot_trans_thrusts.z);
 		        attitude_control.set_throttle_out(motors.get_throttle_hover(), false, g.throttle_filt);
-		        distance_control.relax_z_controller((float)distance);
+		        //distance_control.relax_z_controller((float)distance);
 		        pos_control.relax_alt_hold_controllers();
 		        last_pilot_z_input_ms = tnow;
 		        is_z_ctrl_relaxed = true;
 		    } else { // hold z
 		        if (tnow - last_pilot_z_input_ms >= distance_control.get_delayms_z()) {
 		        	if(is_z_ctrl_relaxed) {
-			        	distance_control.relax_z_controller((float)distance);
+			        	distance_target.z = distance;
 			        	is_z_ctrl_relaxed = false;
+		        	}
+					if(!is_equal(distance_control.get_target_z(), (float)distance_target.z)) {
+			        	distance_control.relax_z_controller((float)distance_target.z);
 		        	}
 			    	distance_control.update_z_controller((float)distance);
 		        } else {
@@ -438,16 +437,12 @@ void Sub::althold_run_rate()
 	        	distance_control.relax_x_controller((float)distance_control.get_front_limit_cm());
         	}
 	    	distance_control.update_x_controller((float)distance_control.get_front_cm());
-	    	last_pilot_x_input_ms = tnow;
-		    is_x_ctrl_relaxed = true;
         } else if(pilot_trans_thrusts.x <= -0.0f && distance_control.get_back_limit_cm() != 0 && 
 	   		distance_control.get_back_cm() != 0 && distance_control.get_back_cm() > distance_control.get_back_limit_cm()) {
 			if(!is_equal(distance_control.get_target_x(), (float)distance_control.get_back_limit_cm())) {
 	        	distance_control.relax_x_controller((float)distance_control.get_back_limit_cm());
         	}
 	    	distance_control.update_x_controller((float)distance_control.get_back_cm());
-	    	last_pilot_x_input_ms = tnow;
-		    is_x_ctrl_relaxed = true;
         } else if((front_face_actived && distance_control.get_front_cm() != 0) ||
                    (back_face_actived && distance_control.get_back_cm() != 0)) {
 		    int16_t distance;
@@ -460,14 +455,17 @@ void Sub::althold_run_rate()
 			if (fabsf(pilot_trans_thrusts.x) > 0.0f || channel_yaw->get_control_in() || channel_pitch->get_control_in()) {
 		        // output pilot's throttle
 		        motors.set_forward(pilot_trans_thrusts.x);
-		        distance_control.relax_x_controller((float)distance);
+		        //distance_control.relax_x_controller((float)distance);
 		        last_pilot_x_input_ms = tnow;
 		        is_x_ctrl_relaxed = true;
 		    } else { // hold x
 		        if (tnow - last_pilot_x_input_ms >= distance_control.get_delayms_x()) {
 		        	if(is_x_ctrl_relaxed) {
-			        	distance_control.relax_x_controller((float)distance);
+		        		distance_target.x = distance;
 			        	is_x_ctrl_relaxed = false;
+		        	}
+					if(!is_equal(distance_control.get_target_x(), (float)distance_target.x)) {
+			        	distance_control.relax_x_controller((float)distance_target.x);
 		        	}
 			    	distance_control.update_x_controller((float)distance);
 		        } else {
@@ -485,8 +483,6 @@ void Sub::althold_run_rate()
 	        	//hal.shell->printf("right relax\r\n");
         	}
 	    	distance_control.update_y_controller((float)distance_control.get_right_cm());
-	    	last_pilot_y_input_ms = tnow;
-		    is_y_ctrl_relaxed = true;
         } else if(pilot_trans_thrusts.y <= -0.0f && distance_control.get_left_limit_cm() != 0 && 
 	   		distance_control.get_left_cm() != 0 && distance_control.get_left_cm() > distance_control.get_left_limit_cm()) {
 	   		//hal.shell->printf("left\r\n");
@@ -495,8 +491,6 @@ void Sub::althold_run_rate()
 	        	//hal.shell->printf("left relax\r\n");
         	}
 	    	distance_control.update_y_controller((float)distance_control.get_left_cm());
-	    	last_pilot_y_input_ms = tnow;
-		    is_y_ctrl_relaxed = true;
         } else if((right_face_actived && distance_control.get_right_cm() != 0) ||
                    (left_face_actived && distance_control.get_left_cm() != 0)) {
 		    int16_t distance;
@@ -509,14 +503,17 @@ void Sub::althold_run_rate()
 			if (fabsf(pilot_trans_thrusts.y) > 0.0f || channel_yaw->get_control_in() || channel_roll->get_control_in()) {
 		        // output pilot's throttle
 		        motors.set_lateral(pilot_trans_thrusts.y);
-		        distance_control.relax_y_controller((float)distance);
+		        //distance_control.relax_y_controller((float)distance);
 		        last_pilot_y_input_ms = tnow;
 		        is_y_ctrl_relaxed = true;
 		    } else { // hold y
 		        if (tnow - last_pilot_y_input_ms >= distance_control.get_delayms_y()) {
 		        	if(is_y_ctrl_relaxed) {
-			        	distance_control.relax_y_controller((float)distance);
+			        	distance_target.y = distance;
 			        	is_y_ctrl_relaxed = false;
+		        	}
+					if(!is_equal(distance_control.get_target_y(), (float)distance_target.y)) {
+			        	distance_control.relax_y_controller((float)distance_target.y);
 		        	}
 			    	distance_control.update_y_controller((float)distance);
 		        } else {
