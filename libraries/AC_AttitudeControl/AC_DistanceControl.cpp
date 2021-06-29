@@ -769,11 +769,13 @@ void AC_DistanceControl::update_distance(void)
     distance_bf[DIS_BF_FRONT13] = _rangefinder.distance_cm_orient(ROTATION_YAW_45);
 
 	if(distance_bf[DIS_BF_FRONT347] != 0 || distance_bf[DIS_BF_FRONT13] != 0) {
-		if(distance_bf[DIS_BF_FRONT347]==0 || distance_bf[DIS_BF_FRONT13] < distance_safe[DIS_BF_FRONT13])
+		if(distance_bf[DIS_BF_FRONT347] == 0 || 
+		  (distance_bf[DIS_BF_FRONT13] > 0 && distance_bf[DIS_BF_FRONT13] < distance_safe[DIS_BF_FRONT13])) {
 			distance_bf[DIS_BF_FRONT] = distance_bf[DIS_BF_FRONT13]*cosf(radians(13));
-		else if(distance_bf[DIS_BF_FRONT13]==0 || distance_bf[DIS_BF_FRONT347] < distance_safe[DIS_BF_FRONT347])
+		} else if(distance_bf[DIS_BF_FRONT13] == 0 || 
+		         (distance_bf[DIS_BF_FRONT347] > 0 && distance_bf[DIS_BF_FRONT347] < distance_safe[DIS_BF_FRONT347])) {
 			distance_bf[DIS_BF_FRONT] = distance_bf[DIS_BF_FRONT347]*cosf(radians(13));
-		else {
+		} else {
 			distance_bf[DIS_BF_FRONT] = (distance_bf[DIS_BF_FRONT13]*distance_bf[DIS_BF_FRONT347]*(1 + cosf(radians(26))))/((distance_bf[DIS_BF_FRONT13] + distance_bf[DIS_BF_FRONT347])*cosf(radians(13)));
 		}
 	}
