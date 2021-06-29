@@ -252,6 +252,7 @@ void Sub::twentyfive_hz_logging()
 void Sub::three_hz_loop()
 {
     leak_detector.update();
+    water_detector.update();
 
     failsafe_leak_check();
 

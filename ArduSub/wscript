@@ -21,6 +21,7 @@ def build(bld):
             'AP_KDECAN',
             'AP_RCMapper',
             'AP_OSD',
+            'CH_Drivers',
         ],
     )
 

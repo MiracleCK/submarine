@@ -69,6 +69,7 @@
 #include <AP_LeakDetector/AP_LeakDetector.h> // Leak detector
 #include <AP_TemperatureSensor/TSYS01.h>
 #include <AP_Common/AP_FWVersion.h>
+#include <CH_Drivers/CH_WaterDetector.h>
 
 // Local modules
 #include "defines.h"
@@ -190,6 +191,7 @@ private:
     AP_Logger logger;
 
     AP_LeakDetector leak_detector;
+    CH_WaterDetector water_detector;
 
     TSYS01 celsius;
 

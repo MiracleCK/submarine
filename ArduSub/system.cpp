@@ -176,6 +176,7 @@ void Sub::init_ardupilot()
     }
 
     leak_detector.init();
+    water_detector.init();
 
     last_pilot_heading = ahrs.yaw_sensor;
 
