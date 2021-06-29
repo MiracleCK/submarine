@@ -49,8 +49,7 @@ enum control_mode_t : uint8_t {
     FLOOR =        63,  // Clean only floor
     WATERLINE =    64,  // Clean only waterline
     SMART =        65,  // Custom clean by parameters
-    RC_MANUAL =    66,  // Manaul control with mavlink
-    PULLUP =       67,  // Go to waterline to be retrieved
+    PULLUP =       66,  // Go to waterline to be retrieved
 };
 
 // Acro Trainer types
@@ -66,16 +65,16 @@ enum control_mode_t : uint8_t {
 #define WP_YAW_BEHAVIOR_CORRECT_XTRACK                4   // point towards intermediate position target during line following
 
 //Pool cleaning robot (CR500) parameter enums
-#define CR_PARAM_SHAPE "cr_shape"
+#define CR_PARAM_SHAPE "CR_SHAPE"
 #define CR_SHAPE_SQUARE 0
 #define CR_SHAPE_CIRCLE 1
 #define CR_SHAPE_TRIANGLE 2
 #define CR_SHAPE_OTHERS 3
-#define CR_PARAM_REGION "cr_region"
-#define CR_REGION_FLOOR 0
-#define CR_REGION_WALL 1
-#define CR_REGION_WATERLINE 2
-#define CR_PARAM_TIME "cr_time"
+#define CR_PARAM_REGION "CR_REGION"
+#define CR_REGION_FLOOR 1
+#define CR_REGION_WALL 2
+#define CR_REGION_WATERLINE 4
+#define CR_PARAM_TIME "CR_TIME"
 
 // Auto modes
 enum AutoMode {
