@@ -303,6 +303,7 @@ void Sub::althold_run_rate()
         channel_roll->get_control_in(), channel_pitch->get_control_in(), channel_yaw->get_control_in());
     if (is_request_reset_rp) {
         is_request_reset_rp = false;
+        distance_control.distance_reset();
     }
 	
 	if(is_ned_pilot && 

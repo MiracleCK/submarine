@@ -56,13 +56,21 @@ bool AP_RangeFinder_Backend::has_data() const {
 void AP_RangeFinder_Backend::update_status()
 {
     // check distance
-    //if ((int16_t)state.distance_cm > params.max_distance_cm) {
-    //    set_status(RangeFinder::Status::OutOfRangeHigh);
-    //} else if ((int16_t)state.distance_cm < params.min_distance_cm) {
-    //    set_status(RangeFinder::Status::OutOfRangeLow);
-    //} else {
+#if 0
+    if ((int16_t)state.distance_cm > params.max_distance_cm) {
+        set_status(RangeFinder::Status::OutOfRangeHigh);
+    } else if ((int16_t)state.distance_cm < params.min_distance_cm) {
+        set_status(RangeFinder::Status::OutOfRangeLow);
+    } else {
         set_status(RangeFinder::Status::Good);
-    //}
+    }
+#else 
+	if ((int16_t)state.distance_cm > params.max_distance_cm) {
+        set_status(RangeFinder::Status::OutOfRangeHigh);
+    } else {
+        set_status(RangeFinder::Status::Good);
+    }
+#endif
 }
 
 // set status and update valid count

@@ -54,7 +54,7 @@ const AP_Param::GroupInfo AP_RangeFinder_Params::var_info[] = {
     // @Units: cm
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("MAX_CM",  7, AP_RangeFinder_Params, max_distance_cm, 500),
+    AP_GROUPINFO("MAX_CM",  7, AP_RangeFinder_Params, max_distance_cm, 200),
 
     // @Param: STOP_PIN
     // @DisplayName: Rangefinder stop pin
@@ -123,13 +123,11 @@ const AP_Param::GroupInfo AP_RangeFinder_Params::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("ORIENT", 53, AP_RangeFinder_Params, orientation, ROTATION_PITCH_270),
 
-    AP_GROUPINFO("RATE", 54, AP_RangeFinder_Params, sample_freq, 200),
+    AP_GROUPINFO("RATE", 60, AP_RangeFinder_Params, sample_freq, 200),
+    AP_GROUPINFO("CUTOFF", 61, AP_RangeFinder_Params, cutoff_freq, 20),
 
-    AP_GROUPINFO("CUTOFF", 55, AP_RangeFinder_Params, cutoff_freq, 20),
-
-    AP_GROUPINFO("RANGE", 56, AP_RangeFinder_Params, range, 0.0f),  //10.0f//40.0f
-
-    AP_GROUPINFO("KOEF", 57, AP_RangeFinder_Params, koef, 0.3f), //0.1f
+    AP_GROUPINFO("RANGE", 62, AP_RangeFinder_Params, range, 0.0f),  //10.0f//40.0f
+    AP_GROUPINFO("KOEF", 63, AP_RangeFinder_Params, koef, 0.3f), //0.1f
 
     AP_GROUPEND
 };

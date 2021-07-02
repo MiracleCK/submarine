@@ -38,14 +38,15 @@ public:
 	bool sensor_ok() const { return _sensor_ok; }
 	uint8_t get_distance_num() const { return DISTANCE_NUM; }
 	bool limit_enable() const { return _limit_enable_in; }
+	void distance_reset(void) {        _distance_reset = true; }
 	
-    bool front_face_is_active() const { return (_distance_face_in & 0x01); }
-    bool back_face_is_active() const { return (_distance_face_in & 0x02); }
-    bool left_face_is_active() const { return (_distance_face_in & 0x04); }
-    bool right_face_is_active() const { return (_distance_face_in & 0x08); }
-    bool top_face_is_active() const { return (_distance_face_in & 0x10); }
-    bool bottom_face_is_active() const { return (_distance_face_in & 0x20); }
-    uint8_t get_distance_face() const { return _distance_face_in; }
+    bool front_face_is_active() const { return (_distance_face_ned & 0x01); }
+    bool back_face_is_active() const { return (_distance_face_ned & 0x02); }
+    bool left_face_is_active() const { return (_distance_face_ned & 0x04); }
+    bool right_face_is_active() const { return (_distance_face_ned & 0x08); }
+    bool top_face_is_active() const { return (_distance_face_ned & 0x10); }
+    bool bottom_face_is_active() const { return (_distance_face_ned & 0x20); }
+    uint8_t get_distance_face() const { return _distance_face_ned; }
 
     int16_t get_front_cm() const { return distance_ned[DISTANCE_FRONT]; }
     int16_t get_back_cm() const { return distance_ned[DISTANCE_BACK]; }
@@ -72,13 +73,13 @@ public:
     int16_t get_bottom_safe_cm() const { return distance_safe[DISTANCE_BOTTOM]; }
     int16_t get_distance_safe(uint8_t i) const { return distance_safe[i]; }
 
-    int16_t get_front_limit_cm() const { return (_limit_enable_in ? distance_limit[DISTANCE_FRONT] : 0); }
-    int16_t get_back_limit_cm() const { return (_limit_enable_in ? distance_limit[DISTANCE_BACK] : 0); }
-    int16_t get_left_limit_cm() const { return (_limit_enable_in ? distance_limit[DISTANCE_LEFT] : 0); }
-    int16_t get_right_limit_cm() const { return (_limit_enable_in ? distance_limit[DISTANCE_RIGHT] : 0); }
-    int16_t get_top_limit_cm() const { return (_limit_enable_in ? distance_limit[DISTANCE_TOP] : 0); }
-    int16_t get_bottom_limit_cm() const { return (_limit_enable_in ? distance_limit[DISTANCE_BOTTOM] : 0); }
-    int16_t get_distance_limit(uint8_t i) const { return (_limit_enable_in ? distance_limit[i] : 0); }
+    int16_t get_front_limit_cm() const { return (_limit_enable_in ? distance_limit_ned[DISTANCE_FRONT] : 0); }
+    int16_t get_back_limit_cm() const { return (_limit_enable_in ? distance_limit_ned[DISTANCE_BACK] : 0); }
+    int16_t get_left_limit_cm() const { return (_limit_enable_in ? distance_limit_ned[DISTANCE_LEFT] : 0); }
+    int16_t get_right_limit_cm() const { return (_limit_enable_in ? distance_limit_ned[DISTANCE_RIGHT] : 0); }
+    int16_t get_top_limit_cm() const { return (_limit_enable_in ? distance_limit_ned[DISTANCE_TOP] : 0); }
+    int16_t get_bottom_limit_cm() const { return (_limit_enable_in ? distance_limit_ned[DISTANCE_BOTTOM] : 0); }
+    int16_t get_distance_limit(uint8_t i) const { return (_limit_enable_in ? distance_limit_ned[i] : 0); }
 
     int16_t get_delayms_x() const { return _delay_ms_x.get(); }
     int16_t get_delayms_y() const { return _delay_ms_y.get(); }
@@ -92,6 +93,7 @@ public:
     int8_t get_front13_pos_offset() const { return _front13_offset.get(); }
     
 	void update_backend(Vector3f &thrusts);
+	void distance_status_report(void);
 	static AC_DistanceControl *get_singleton(void) { return _singleton; }
 	
     static const struct AP_Param::GroupInfo var_info[];
@@ -121,7 +123,7 @@ private:
 	void pilot_thrusts_limit(Vector3f &thrusts);
 	void attitude_filter(Vector3f &thrusts);
 	void rangefinder_check(void);
-	void attitude_check(Vector3f &thrusts);
+	void status_check(Vector3f &thrusts);
 
     // references to inertial nav and ahrs libraries
     const AP_AHRS_View &        _ahrs;
@@ -195,16 +197,20 @@ private:
     
     int16_t distance_bf[DIS_BF_NUM];
     int16_t distance_ned[DISTANCE_NUM];
-    int16_t distance_limit[DISTANCE_NUM];
+    int16_t distance_limit_ned[DISTANCE_NUM];
     int8_t distance_face_bf[DISTANCE_NUM];
-    int8_t distance_face[DISTANCE_NUM];
+    int8_t distance_face_ned[DISTANCE_NUM];
     int16_t distance_safe[DIS_BF_NUM];
     int16_t blind_area[DIS_BF_NUM];
     bool _limit_enable_in;
-    uint8_t _distance_face_in;
+    uint8_t _distance_face_bf;
+    uint8_t _distance_face_ned;
+    uint8_t _distance_face_ned_backup;
     bool _sensor_ok;
     uint32_t _invalid_ms;
     bool _debug_enable;
+    bool _distance_ok;
+    bool _distance_reset;
 
 	AP_Float	_thr_face_p;
 	AP_Float	_thr_limit_p;
@@ -242,6 +248,9 @@ private:
     AP_Float	_max_speed_x;
     AP_Float	_max_speed_y;
     AP_Float	_max_speed_z;
+
+	AP_Int16 	_max_limit_cm;
+    AP_Int16 	_max_face_limit_cm;
 };
 
 namespace AP {
