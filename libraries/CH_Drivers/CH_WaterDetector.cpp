@@ -14,7 +14,7 @@ void CH_WaterDetector::init()
 void CH_WaterDetector::update()
 {
     uint8_t s = palReadLine(HAL_GPIO_PIN_WATER_DETECTOR1);
-    _state = s|(palReadLine(HAL_GPIO_PIN_WATER_DETECTOR1)<<1);
+    _state = s|(palReadLine(HAL_GPIO_PIN_WATER_DETECTOR2)<<1);
 }
 
 uint8_t CH_WaterDetector::read(void)
