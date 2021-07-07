@@ -219,9 +219,18 @@ void Sub::init_ardupilot()
     ins.set_log_raw_bit(MASK_LOG_IMU_RAW);
 
     // disable safety if requested
-    BoardConfig.init_safety();  
+    BoardConfig.init_safety();
 
-	hal.shell->register_commands(shell_commands);
+    hal.shell->register_commands(shell_commands);
+    // Configure LED PINs as outputs.
+    palSetLineMode(PAL_LINE(GPIOC, 3U), PAL_MODE_OUTPUT_OPENDRAIN);
+    palSetLineMode(PAL_LINE(GPIOB, 1U), PAL_MODE_OUTPUT_OPENDRAIN);
+    palSetLineMode(PAL_LINE(GPIOE, 15U), PAL_MODE_OUTPUT_OPENDRAIN);
+    palSetLineMode(PAL_LINE(GPIOB, 3U), PAL_MODE_OUTPUT_OPENDRAIN);
+    // Light LEDs on to indicate the pilot program is running
+    palWriteLine(PAL_LINE(GPIOC, 3U), 0);
+    palWriteLine(PAL_LINE(GPIOB, 1U), 0);
+
 
     hal.console->print("\nInit complete");
     printf("\r\ninit complete \r\n");
