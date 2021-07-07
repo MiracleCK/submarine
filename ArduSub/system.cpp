@@ -101,7 +101,11 @@ void Sub::init_ardupilot()
 
     init_rc_in();               // sets up rc channels from radio
     init_rc_out();              // sets up motors and output to escs
-    init_joystick();            // joystick initialization
+    //  TODO: Restore below line. Removing it for Stabilize mode test only Yinlanshan 210706
+    //  If below line is run, mode change back to manual again.
+    //init_joystick();            // joystick initialization
+    //  TODO: REMOVE below line. Adding it for Stabilize mode test only Yinlanshan 210706
+    motors.armed(true);
 
     relay.init();
 

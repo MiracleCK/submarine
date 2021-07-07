@@ -142,7 +142,12 @@ const AP_Param::Info Sub::var_info[] = {
     // @Description: Controls what action to take if no pilot input has been received after the timeout period specified by the FS_PILOT_TIMEOUT parameter
     // @Values: 0:Disabled, 1:Warn Only, 2:Disarm
     // @User: Standard
-    GSCALAR(failsafe_pilot_input, "FS_PILOT_INPUT", FS_PILOT_INPUT_DISARM),
+    //  TODO: Parameter change: FS_PILOT_INPUT_DISARM -> FS_PILOT_INPUT_WARN_ONLY
+    //  This change is made to TEST Stabilize mode,
+    //  Because of FS_PILOT_INPUT_DISABLED failsafe
+    //  and forcing mode to MANUAL.
+    //  RESTORE to FS_PILOT_INPUT_DISARM when CR500 modes done. Yinlanshan 210706
+    GSCALAR(failsafe_pilot_input, "FS_PILOT_INPUT", FS_PILOT_INPUT_WARN_ONLY),
 
     // @Param: FS_PILOT_TIMEOUT
     // @DisplayName: Timeout for activation of pilot input failsafe

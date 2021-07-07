@@ -90,6 +90,10 @@ void Sub::stabilize_run()
 
     //control_in is range -1000-1000
     //radio_in is raw pwm value
-    motors.set_forward(channel_forward->norm_input());
+
+    //  TODO: motors.set_forward() is changed for test only,
+    //  restore it when CR500 modes done. Yinlanshan 210706
+    //motors.set_forward(channel_forward->norm_input());
+    motors.set_forward(0.5f);
     motors.set_lateral(channel_lateral->norm_input());
 }
