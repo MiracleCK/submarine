@@ -555,8 +555,8 @@ define RC_IN_CHANNEL_ARM 1
 #define ROTATE_CUSTOM_MAG {tmp = y; y = x; x = tmp; z = -z; return;}
 #define ROTATE_CUSTOM_MAG {x = -x; y = -y; return;}
 
-define ROTATE_CUSTOM_IMU {x = -x; y = y; z = -z; return;}
-define ROTATE_CUSTOM_MAG {tmp = x; x = y; y = tmp; z = -z; return;}
+define ROTATE_CUSTOM_IMU {tmp = x; x = -y; y = -tmp; z = -z; return;}
+define ROTATE_CUSTOM_MAG {x = -x; y = y; z = -z; return;}
 
 #      Motor #               Roll   Pitch    Yaw    Throttle   Forward   Lateral
 define CUSTOM_MOTORS_MOT_1      0,      0,   1.0f,      0,      1.0f,     0.0f
