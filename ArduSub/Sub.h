@@ -162,6 +162,11 @@ public:
     void setup() override;
     void loop() override;
 
+    //TODO revert belows to private. I changed it for shell mode cmd. Yinlanshan 210707
+    control_mode_t control_mode;
+    bool set_mode(control_mode_t mode, ModeReason reason);
+    bool set_mode(const uint8_t mode, const ModeReason reason) override;
+
 private:
     static const AP_FWVersion fwver;
 
@@ -253,7 +258,7 @@ private:
 
     // This is the state of the flight control system
     // There are multiple states defined such as STABILIZE, ACRO,
-    control_mode_t control_mode;
+    //control_mode_t control_mode;
     ModeReason control_mode_reason = ModeReason::UNKNOWN;
 
     control_mode_t prev_control_mode;
@@ -577,8 +582,8 @@ private:
     void mainloop_failsafe_enable();
     void mainloop_failsafe_disable();
     void fence_check();
-    bool set_mode(control_mode_t mode, ModeReason reason);
-    bool set_mode(const uint8_t mode, const ModeReason reason) override;
+//    bool set_mode(control_mode_t mode, ModeReason reason);
+//    bool set_mode(const uint8_t mode, const ModeReason reason) override;
     void update_flight_mode();
     void exit_mode(control_mode_t old_control_mode, control_mode_t new_control_mode);
     bool mode_requires_GPS(control_mode_t mode);

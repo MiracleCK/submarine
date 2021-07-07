@@ -108,6 +108,8 @@ static void cmd_param_dbg(int argc, char *argv[]);
 
 static void cmd_version(int argc, char *argv[]);
 static void cmd_reset(int argc, char *argv[]);
+static void cmd_led(int argc, char *argv[]);
+static void cmd_mode(int argc, char *argv[]);
 
 static int radian_to_degree(float value);
 static float degree_to_radian(int value);
@@ -117,6 +119,8 @@ AP_HAL::Shell::ShellCommand shell_commands[] = {
     {"version", cmd_version},
     {"reset", cmd_reset},
     {"cali", cmd_cali},
+    {"led", cmd_led},
+    {"mode", cmd_mode},
     {NULL, NULL} // this is the end of commands
 };
 
@@ -211,6 +215,68 @@ void cmd_reset(int argc, char *argv[]) {
 	hal.shell->printf("system reboot%s\r\n", hold_in_bootloader ? ", hold boot" : "");
 	hal.scheduler->delay(500);
     hal.scheduler->reboot(hold_in_bootloader);
+}
+
+static void cmd_led(int argc, char *argv[])
+{
+    if(argc >= 2 && strlen(argv[0]) == 1
+        && *argv[0] >= '1' && *argv[0] <= '4')
+    {
+        uint32_t pin;
+        switch (*argv[0]) {
+            case '1':
+            default:
+                pin = PAL_LINE(GPIOC, 3U);
+                break;
+            case '2':
+                pin = PAL_LINE(GPIOB, 1U);
+                break;
+            case '3':
+                pin = PAL_LINE(GPIOE, 15U);
+                break;
+            case '4':
+                pin = PAL_LINE(GPIOB, 3U);
+                break;
+        }
+
+        if(strcasecmp(argv[1], "on") == 0)
+        {
+            palWriteLine(pin, 0);
+            return;
+        }
+        else if(strcasecmp(argv[1], "off") == 0)
+        {
+            palWriteLine(pin, 1);
+            return;
+        }
+    }
+
+    hal.shell->printf("usage: led 1|2|3|4 on|off\r\n");
+}
+
+static void cmd_mode(int argc, char *argv[])
+{
+    if(argc >= 1)
+    {
+        if(strcasecmp(argv[0], "manual") == 0)
+        {
+            bool r = sub.set_mode(MANUAL, ModeReason::RC_COMMAND);
+            hal.shell->printf(r ? "ok\r\n" : "fail\r\n");
+            return;
+        }
+        else if(strcasecmp(argv[0], "stabilize") == 0)
+        {
+            bool r = sub.set_mode(STABILIZE, ModeReason::RC_COMMAND);
+            hal.shell->printf(r ? "ok\r\n" : "fail\r\n");
+            return;
+        }
+    }
+    else
+    {
+        hal.shell->printf("mode= %d\r\n", sub.control_mode);
+    }
+
+    hal.shell->printf("usage: mode [manual | stabilize]\r\n");
 }
 
 // param dbg motor|atti|ctrl on|[off] [print_cnt]

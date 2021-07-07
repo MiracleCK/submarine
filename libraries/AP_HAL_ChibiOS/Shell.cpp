@@ -16,6 +16,8 @@ static void cmd_param(BaseSequentialStream *chp, int argc, char *argv[]);
 static void cmd_version(BaseSequentialStream *chp, int argc, char *argv[]);
 static void cmd_reset(BaseSequentialStream *chp, int argc, char *argv[]);
 static void cmd_cali(BaseSequentialStream *chp, int argc, char *argv[]);
+static void cmd_led(BaseSequentialStream *chp, int argc, char *argv[]);
+static void cmd_mode(BaseSequentialStream *chp, int argc, char *argv[]);
 static void cmd_commands(const char* name, BaseSequentialStream *chp, int argc, char *argv[]);
 static AP_HAL::Shell::ShellCommand* _shell_commands = NULL;
 
@@ -24,6 +26,8 @@ static ShellCommand chibi_shell_commands[] = {
   {"version", cmd_version},
   {"reset", cmd_reset},
   {"cali", cmd_cali},
+  {"led", cmd_led},
+  {"mode", cmd_mode},
   {NULL, NULL} // this is the end of commands
 };
 
@@ -70,6 +74,14 @@ void cmd_reset(BaseSequentialStream *chp, int argc, char *argv[]) {
 
 void cmd_cali(BaseSequentialStream *chp, int argc, char *argv[]) {
     cmd_commands("cali", chp, argc, argv);
+}
+
+void cmd_led(BaseSequentialStream *chp, int argc, char *argv[]) {
+    cmd_commands("led", chp, argc, argv);
+}
+
+void cmd_mode(BaseSequentialStream *chp, int argc, char *argv[]) {
+    cmd_commands("mode", chp, argc, argv);
 }
 
 void cmd_commands(const char* name, BaseSequentialStream *chp, int argc, char *argv[]) {
