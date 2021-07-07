@@ -41,12 +41,12 @@ void Sub::manual_run()
     motors.set_yaw(channel_yaw->norm_input() * g.acro_yaw_p / ACRO_YAW_P);
     //motors.set_throttle(channel_throttle->norm_input());
     motors.set_forward(channel_forward->norm_input());
-    //motors.set_lateral(channel_lateral->norm_input());
+    motors.set_lateral(channel_lateral->norm_input());
 
-    SRV_Channels::set_output_pwm(SRV_Channel::k_steering, channel_arm->get_radio_in());
-    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, channel_left_pump->get_radio_in());
-    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, channel_right_pump->get_radio_in());
-    SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, channel_up_pump->get_radio_in());
+//    SRV_Channels::set_output_pwm(SRV_Channel::k_steering, channel_arm->get_radio_in());
+//    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, channel_left_pump->get_radio_in());
+//    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, channel_right_pump->get_radio_in());
+//    SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, channel_up_pump->get_radio_in());
 
     if(0) {
         static uint32_t _startup_ms = 0;

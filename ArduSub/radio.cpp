@@ -9,10 +9,10 @@ void Sub::init_rc_in()
     channel_forward  = RC_Channels::rc_channel(RC_IN_CHANNEL_FORWARD);
     channel_lateral  = RC_Channels::rc_channel(RC_IN_CHANNEL_LATERAL);
 
-    channel_left_pump = RC_Channels::rc_channel(RC_IN_CHANNEL_LEFT_PUMP);
+    /*channel_left_pump = RC_Channels::rc_channel(RC_IN_CHANNEL_LEFT_PUMP);
     channel_right_pump = RC_Channels::rc_channel(RC_IN_CHANNEL_RIGHT_PUMP);
     channel_up_pump = RC_Channels::rc_channel(RC_IN_CHANNEL_UP_PUMP);
-    channel_arm = RC_Channels::rc_channel(RC_IN_CHANNEL_ARM);
+    channel_arm = RC_Channels::rc_channel(RC_IN_CHANNEL_ARM);*/
 
     // set rc channel ranges
     //channel_roll->set_angle(ROLL_PITCH_INPUT_MAX);
@@ -74,7 +74,7 @@ void Sub::init_rc_out()
     // refresh auxiliary channel to function map
     SRV_Channels::update_aux_servo_function();
 
-    SRV_Channels::set_aux_channel_default(SRV_Channel::k_steering, AP_MOTORS_MOT_3);
+    /*SRV_Channels::set_aux_channel_default(SRV_Channel::k_steering, AP_MOTORS_MOT_3);
     SRV_Channels::set_aux_channel_default(SRV_Channel::k_throttleLeft, AP_MOTORS_MOT_4);
     SRV_Channels::set_aux_channel_default(SRV_Channel::k_throttleRight, AP_MOTORS_MOT_5);
     SRV_Channels::set_aux_channel_default(SRV_Channel::k_boost_throttle, AP_MOTORS_MOT_6);
@@ -83,4 +83,5 @@ void Sub::init_rc_out()
     SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, channel_left_pump->get_radio_trim());
     SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, channel_right_pump->get_radio_trim());
     SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, channel_up_pump->get_radio_trim());
+    */
 }
