@@ -16,6 +16,7 @@ public:
         AP_MotorsMatrix(loop_rate, speed_hz) {
         AP_Param::setup_object_defaults(this, var_info);
     };
+    int16_t motor_out[AP_MOTORS_MAX_NUM_MOTORS];
 
     // Supported frame types
     typedef enum {

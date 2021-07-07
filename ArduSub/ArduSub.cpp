@@ -307,6 +307,13 @@ void Sub::one_hz_loop()
     // need to set "likely flying" when armed to allow for compass
     // learning to run
     ahrs.set_likely_flying(hal.util->get_soft_armed());
+
+    const Matrix3f &m = ahrs.get_rotation_body_to_ned();
+    hal.shell->printf("%.2f %.2f %.2f, %d %d %d\r\n",
+                      m.a.x, m.b.x, m.c.x,
+                      water_detector.read(),
+                      motors.motor_out[0],
+                      motors.motor_out[1]);
 }
 
 // called at 50hz
