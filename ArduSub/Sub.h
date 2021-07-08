@@ -565,6 +565,14 @@ private:
     bool wiring_init(void);
     void wiring_run();
 
+    bool water_line_init(void);
+    void water_line_run();
+    void detect(void);
+    void wash_left(void);
+    void wash_right(void);
+    void back_to_bottom(void);
+    bool turning_orientation(Vector3f &target);
+
     bool stabilize_init(void);
     void stabilize_run();
     bool manual_init(void);
