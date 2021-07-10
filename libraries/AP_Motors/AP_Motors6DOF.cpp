@@ -417,7 +417,8 @@ void AP_Motors6DOF::output_to_motors()
 	        	if(motor_out[i] > 0 && motor_out[i] < max)
 	        		motor_out[i] = max;
         	}
-        	
+
+#if defined(HAL_GPIO_PIN_M1_CTRL)
 			if(i==0) {
 	        	if(motor_out[i] >= 0) {
 	        		palWriteLine(HAL_GPIO_PIN_M1_CTRL, 1);
@@ -425,7 +426,8 @@ void AP_Motors6DOF::output_to_motors()
 	        		palWriteLine(HAL_GPIO_PIN_M1_CTRL, 0);
 	        	}
         	}
-
+#endif
+#if defined(HAL_GPIO_PIN_M2_CTRL)
         	if(i==1) {
 	        	if(motor_out[i] >= 0) {
 	        		palWriteLine(HAL_GPIO_PIN_M2_CTRL, 1);
@@ -433,6 +435,7 @@ void AP_Motors6DOF::output_to_motors()
 	        		palWriteLine(HAL_GPIO_PIN_M2_CTRL, 0);
 	        	}
         	}
+#endif
 
         	//hal.shell->printf("%d:%d\r\n", _motor_mapping[i] - 1, motor_out[i]);
             rc_write(_motor_mapping[i] - 1, abs(motor_out[i]));

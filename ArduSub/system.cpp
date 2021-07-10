@@ -222,14 +222,15 @@ void Sub::init_ardupilot()
     BoardConfig.init_safety();
 
     hal.shell->register_commands(shell_commands);
-    // Configure LED PINs as outputs.
-    palSetLineMode(PAL_LINE(GPIOC, 3U), PAL_MODE_OUTPUT_OPENDRAIN);
-    palSetLineMode(PAL_LINE(GPIOB, 1U), PAL_MODE_OUTPUT_OPENDRAIN);
-    palSetLineMode(PAL_LINE(GPIOE, 15U), PAL_MODE_OUTPUT_OPENDRAIN);
-    palSetLineMode(PAL_LINE(GPIOB, 3U), PAL_MODE_OUTPUT_OPENDRAIN);
+
+#ifdef HAL_GPIO_PIN_LED_1
     // Light LEDs on to indicate the pilot program is running
-    palWriteLine(PAL_LINE(GPIOC, 3U), 0);
-    palWriteLine(PAL_LINE(GPIOB, 1U), 0);
+    palWriteLine(HAL_GPIO_PIN_LED_1, 0);
+#endif
+#ifdef HAL_GPIO_PIN_LED_2
+    // In case of LED_1 is out of order or not available, using LED_2
+    palWriteLine(HAL_GPIO_PIN_LED_2, 0);
+#endif
 
 
     hal.console->print("\nInit complete");

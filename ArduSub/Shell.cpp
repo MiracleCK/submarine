@@ -219,23 +219,31 @@ void cmd_reset(int argc, char *argv[]) {
 
 static void cmd_led(int argc, char *argv[])
 {
+#if CONFIG_HAL_BOARD != HAL_BOARD_SITL
     if(argc >= 2 && strlen(argv[0]) == 1
         && *argv[0] >= '1' && *argv[0] <= '4')
     {
-        uint32_t pin;
+        uint32_t pin = 0;
         switch (*argv[0]) {
             case '1':
-            default:
-                pin = PAL_LINE(GPIOC, 3U);
+#ifdef HAL_GPIO_PIN_LED_1
+                pin = HAL_GPIO_PIN_LED_1;
+#endif
                 break;
             case '2':
-                pin = PAL_LINE(GPIOB, 1U);
+#ifdef HAL_GPIO_PIN_LED_2
+                pin = HAL_GPIO_PIN_LED_2;
+#endif
                 break;
             case '3':
-                pin = PAL_LINE(GPIOE, 15U);
+#ifdef HAL_GPIO_PIN_LED_3
+                pin = HAL_GPIO_PIN_LED_3;
+#endif
                 break;
             case '4':
-                pin = PAL_LINE(GPIOB, 3U);
+#ifdef HAL_GPIO_PIN_LED_4
+                pin = HAL_GPIO_PIN_LED_4;
+#endif
                 break;
         }
 
@@ -252,6 +260,7 @@ static void cmd_led(int argc, char *argv[])
     }
 
     hal.shell->printf("usage: led 1|2|3|4 on|off\r\n");
+#endif
 }
 
 static void cmd_mode(int argc, char *argv[])
