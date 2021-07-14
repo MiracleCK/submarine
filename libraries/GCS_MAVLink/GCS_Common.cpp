@@ -1535,7 +1535,7 @@ void GCS_MAVLINK::send_system_time()
 //extern int16_t set_distance;
 //extern int16_t set_bora;
 //void GCS_MAVLINK::send_rc_channels() const
-#if 0
+#if 1
 void GCS_MAVLINK::send_rc_channels()
 {
     AP_RSSI *rssi = AP::rssi();
@@ -1638,7 +1638,7 @@ void GCS_MAVLINK::send_rc_channels()
 }
 #endif
 
-#if 1
+#if 0
 void GCS_MAVLINK::send_rc_channels()
 {
 

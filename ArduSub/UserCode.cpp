@@ -40,6 +40,6 @@ void Sub::userhook_SlowLoop()
 void Sub::userhook_SuperSlowLoop()
 {
     // put your 1Hz code here
-    distance_control.distance_status_report();
+    distance_control.distance_work_1hz();
 }
 #endif

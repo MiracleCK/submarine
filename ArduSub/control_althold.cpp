@@ -211,31 +211,16 @@ bool Sub::attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int1
         target_roll_rate = 0.0f;
     }
 
-#if 0
-    if(is_ned_pilot && (distance_control.get_distance_face() || distance_control.limit_enable())) {
-		is_reseting = true;
-        target_pitch_rate = 0.0f;
-        target_roll_rate = 0.0f;
-        channel_roll->disable_channel();
-		channel_pitch->disable_channel();
-    } else {
-		channel_roll->enable_channel();
-		channel_pitch->enable_channel();
-    }
-#endif
-
     if (!is_zero(target_roll_rate) || !is_zero(target_pitch_rate)) {
         is_reseting = false;
     }
 
     if (is_reseting) {
-        attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, target_yaw_rate);;
+        attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, target_yaw_rate);
     } else if (is_ned_pilot) {
         target_roll_rate *= 50;
-        target_pitch_rate *= 50;
+        target_pitch_rate *= 50;     
         attitude_control.input_euler_rate_roll_limited_pitch_yaw(target_roll_rate, target_pitch_rate, target_yaw_rate);
-        // attitude_control.input_euler_rate_roll0_pitch_yaw(target_pitch_rate, target_yaw_rate);
-        // attitude_control.input_euler_rate_roll_pitch_yaw(target_roll_rate, target_pitch_rate, target_yaw_rate);
     } else {
         attitude_control.input_rate_bf_roll_pitch_yaw(target_roll_rate, target_pitch_rate, target_yaw_rate);
     }
@@ -299,11 +284,27 @@ void Sub::althold_run_rate()
 
     motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
-    attitude_control_rate(is_request_reset_rp, 
-        channel_roll->get_control_in(), channel_pitch->get_control_in(), channel_yaw->get_control_in());
-    if (is_request_reset_rp) {
-        is_request_reset_rp = false;
-        distance_control.distance_reset();
+	if(is_ned_pilot && distance_control.cage_detect_enable()) {
+        channel_roll->disable_channel();
+		channel_pitch->disable_channel();
+		channel_yaw->disable_channel();
+		channel_forward->disable_channel();
+		channel_lateral->disable_channel();
+		channel_throttle->disable_channel();
+		distance_control.update_cage_controller(pilot_trans_thrusts);
+    } else {
+		channel_roll->enable_channel();
+		channel_pitch->enable_channel();
+		channel_yaw->enable_channel();
+		channel_forward->enable_channel();
+		channel_lateral->enable_channel();
+		channel_throttle->enable_channel();
+		attitude_control_rate(is_request_reset_rp, 
+        	channel_roll->get_control_in(), channel_pitch->get_control_in(), channel_yaw->get_control_in());
+		if (is_request_reset_rp) {
+	        is_request_reset_rp = false;
+	        distance_control.distance_reset();
+	    }
     }
 	
 	if(is_ned_pilot && 

@@ -39,6 +39,7 @@ public:
 	uint8_t get_distance_num() const { return DISTANCE_NUM; }
 	bool limit_enable() const { return _limit_enable_in; }
 	void distance_reset(void) {        _distance_reset = true; }
+	bool cage_detect_enable() const { return _cage_detect_in; }
 	
     bool front_face_is_active() const { return (_distance_face_ned & 0x01); }
     bool back_face_is_active() const { return (_distance_face_ned & 0x02); }
@@ -91,9 +92,13 @@ public:
     int8_t get_right_pos_offset() const { return _right_offset.get(); }
     int8_t get_front347_pos_offset() const { return _front347_offset.get(); }
     int8_t get_front13_pos_offset() const { return _front13_offset.get(); }
+    float get_cage_p() const { return _cage_p.get(); }
+    float get_cage_yaw_rate() const { return _cage_yaw_rate.get(); }
     
 	void update_backend(Vector3f &thrusts);
-	void distance_status_report(void);
+	void distance_work_1hz(void);
+	void init_cage_controller(void);
+	void update_cage_controller(Vector3f &thrusts);
 	static AC_DistanceControl *get_singleton(void) { return _singleton; }
 	
     static const struct AP_Param::GroupInfo var_info[];
@@ -124,6 +129,10 @@ private:
 	void attitude_filter(Vector3f &thrusts);
 	void rangefinder_check(void);
 	void status_check(Vector3f &thrusts);
+	void run_steering_controller(void);
+	uint8_t cage_get_stage(int32_t yaw_value);
+	void cage_circle_time(Vector3f &thrusts);
+	void cage_circle_auto(Vector3f &thrusts);
 
     // references to inertial nav and ahrs libraries
     const AP_AHRS_View &        _ahrs;
@@ -169,6 +178,7 @@ private:
     float _pitch_lock;
 	LowPassFilterFloat  _roll_filter; 
 	LowPassFilterFloat  _pitch_filter;
+	LowPassFilterFloat  _cage_err_filter;
 	
     // high vibration handling
     bool        _vibe_comp_enabled;     // true when high vibration compensation is on
@@ -196,12 +206,14 @@ private:
     };
     
     int16_t distance_bf[DIS_BF_NUM];
+    int16_t distance_bf_last[DIS_BF_NUM];
     int16_t distance_ned[DISTANCE_NUM];
     int16_t distance_limit_ned[DISTANCE_NUM];
     int8_t distance_face_bf[DISTANCE_NUM];
     int8_t distance_face_ned[DISTANCE_NUM];
     int16_t distance_safe[DIS_BF_NUM];
     int16_t blind_area[DIS_BF_NUM];
+    uint16_t alarm_count[DISTANCE_NUM];
     bool _limit_enable_in;
     uint8_t _distance_face_bf;
     uint8_t _distance_face_ned;
@@ -211,6 +223,14 @@ private:
     bool _debug_enable;
     bool _distance_ok;
     bool _distance_reset;
+    bool _cage_detect_in;
+    uint8_t _cage_state;
+    int32_t _cage_init_yaw;
+    uint32_t _cage_circles;
+    uint32_t _cage_seconds;
+    float _cage_target_yaw_rate;
+    int16_t _cage_dis_err;
+    float _cage_alt_last;
 
 	AP_Float	_thr_face_p;
 	AP_Float	_thr_limit_p;
@@ -251,6 +271,19 @@ private:
 
 	AP_Int16 	_max_limit_cm;
     AP_Int16 	_max_face_limit_cm;
+
+    AP_Int8     _cage_detect;
+    AP_Float    _cage_p;
+    AP_Float    _cage_yaw_rate;
+    AP_Float    _cage_alt_step;
+    AP_Float    _cage_vel_y;
+    AP_Float    _cage_vel_z;
+    AP_Int16    _cage_cm_y;
+    AP_Int16    _cage_cm_z;
+    AP_Int32    _cage_circle_seconds;
+    AP_Float    _cage_turning_vel_y;
+    AP_Float    _cage_turning_yaw_rate;
+    AP_Int16    _cage_timeout_z;
 };
 
 namespace AP {

@@ -20,6 +20,8 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_ROLL_CUTOFF_FREQ          0.2f    // low-pass filter on output error (unit: hz)
 #define DISCONTROL_PITCH_CUTOFF_FREQ         0.2f    // low-pass filter on output error (unit: hz)
 
+#define DISCONTROL_CAGE_CUTOFF_FREQ          1.0f    // low-pass filter on cage error (unit: hz)
+
 #if 0 // default
 // default gains for Sub
 #define DISCONTROL_POS_Z_P                    3.0f    // vertical position controller P gain default
@@ -183,6 +185,18 @@ extern const AP_HAL::HAL& hal;
 
 #define DISCONTROL_MAX_LIMIT_CM               100    // discontrol max limit
 #define DISCONTROL_MAX_FACE_LIMIT_CM          150    // discontrol max face limit
+
+#define DISCONTROL_CAGE_DETECT_P             300.0f		// cage detect P gain
+#define DISCONTROL_CAGE_MAX_YAW_RATE         3000.0f	// cage max yaw rate
+#define DISCONTROL_CAGE_ALT_STEP_CM          10.0f		// cage alt step
+#define DISCONTROL_CAGE_VEL_Y                0.15f		// lateral velocity
+#define DISCONTROL_CAGE_VEL_Z                0.1f		// throttle velocity
+#define DISCONTROL_CAGE_Y_CM                 60			// default y detection distance
+#define DISCONTROL_CAGE_Z_CM                 30			// default z detection distance
+#define DISCONTROL_CAGE_CIRCLE_TIMES         0			// default circle times
+#define DISCONTROL_CAGE_TURNING_VEL_Y        0.05f		// Turning lateral velocity
+#define DISCONTROL_CAGE_TURNING_YAW_RATE     1000.0f	// Turning yaw rate
+#define DISCONTROL_CAGE_TIMEOUT_Z            5			// Z detection timeout
 
 #endif
 
@@ -586,6 +600,90 @@ const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("_FACE_LIMIT", 50, AC_DistanceControl, _max_face_limit_cm, DISCONTROL_MAX_FACE_LIMIT_CM),
 
+    // @Param: _CAGE_DETECT
+    // @DisplayName: fishing cage detection
+    // @Description: fishing cage detection
+    // @Values: 1:enable,0:disable
+    // @User: Advanced
+    AP_GROUPINFO("_CAGE_DETECT",  51, AC_DistanceControl, _cage_detect, 0),
+
+    // @Param: _CAGE_P
+    // @DisplayName: cage detect P gain
+    // @Description: cage detect P gain
+    // @User: Standard
+    // @Values: > 0
+    AP_GROUPINFO("_CAGE_P",  52, AC_DistanceControl, _cage_p, DISCONTROL_CAGE_DETECT_P),
+
+    // @Param: _CAGE_Y_RATE
+    // @DisplayName: yaw rate max 
+    // @Description: yaw rate max 
+    // @User: Standard
+    // @Values: > 0
+    AP_GROUPINFO("_CAGE_Y_RATE",  53, AC_DistanceControl, _cage_yaw_rate, DISCONTROL_CAGE_MAX_YAW_RATE),
+
+    // @Param: _CAGE_Z_STEP
+    // @DisplayName: altitude step 
+    // @Description: altitude step
+    // @Unit: cm
+    // @User: Advanced
+    AP_GROUPINFO("_CAGE_Z_STEP",  54, AC_DistanceControl, _cage_alt_step, DISCONTROL_CAGE_ALT_STEP_CM),
+
+    // @Param: _CAGE_VELY
+    // @DisplayName: Lateral velocity
+    // @Description: Lateral velocity
+    // @User: Standard
+    // @Values: -1 ~ 1
+    AP_GROUPINFO("_CAGE_VELY",  55, AC_DistanceControl, _cage_vel_y, DISCONTROL_CAGE_VEL_Y),
+
+    // @Param: _CAGE_VELZ
+    // @DisplayName: Throttle velocity
+    // @Description: Throttle velocity
+    // @User: Standard
+    // @Values: -1 ~ 1
+    AP_GROUPINFO("_CAGE_VELZ",  56, AC_DistanceControl, _cage_vel_z, DISCONTROL_CAGE_VEL_Z),
+
+    // @Param: _CAGE_Y_CM
+    // @DisplayName: Y detection distance
+    // @Description: Y detection distance
+    // @Unit: cm
+    // @User: Advanced
+    AP_GROUPINFO("_CAGE_Y_CM",  57, AC_DistanceControl, _cage_cm_y, DISCONTROL_CAGE_Y_CM),
+
+    // @Param: _CAGE_Z_CM
+    // @DisplayName: Z detection distance
+    // @Description: Z detection distance
+    // @Unit: cm
+    // @User: Advanced
+    AP_GROUPINFO("_CAGE_Z_CM",  58, AC_DistanceControl, _cage_cm_z, DISCONTROL_CAGE_Z_CM),
+
+    // @Param: _CAGE_TIMES
+    // @DisplayName: time mode, total circle time
+    // @Description: time mode, total circle time
+    // @User: Standard
+    // @Values: > 0
+    AP_GROUPINFO("_CAGE_TIMES",  59, AC_DistanceControl, _cage_circle_seconds, DISCONTROL_CAGE_CIRCLE_TIMES),
+
+    // @Param: _CAGE_T_VELY
+    // @DisplayName: Turning lateral velocity
+    // @Description: Turning lateral velocity
+    // @User: Standard
+    // @Values: -1 ~ 1
+    AP_GROUPINFO("_CAGE_T_VELY",  60, AC_DistanceControl, _cage_turning_vel_y, DISCONTROL_CAGE_TURNING_VEL_Y),
+
+    // @Param: _CAGE_T_RATEY
+    // @DisplayName: Turning yaw rate
+    // @Description: Turning yaw rate
+    // @User: Standard
+    // @Values: -1 ~ 1
+    AP_GROUPINFO("_CAGE_T_RATEY",  61, AC_DistanceControl, _cage_turning_yaw_rate, DISCONTROL_CAGE_TURNING_YAW_RATE),
+
+    // @Param: _CAGE_Z_TMO
+    // @DisplayName: Z detection timeout
+    // @Description: Z detection timeout
+    // @User: Standard
+    // @Values: > 0
+    AP_GROUPINFO("_CAGE_Z_TMO",  62, AC_DistanceControl, _cage_timeout_z, DISCONTROL_CAGE_TIMEOUT_Z),
+
     AP_GROUPEND
 };
 
@@ -619,7 +717,8 @@ AC_DistanceControl::AC_DistanceControl(const AP_AHRS_View& ahrs, const AP_Inerti
     _out_x_filter(DISCONTROL_OUT_X_CUTOFF_FREQ),
     _out_y_filter(DISCONTROL_OUT_Y_CUTOFF_FREQ),
     _roll_filter(DISCONTROL_ROLL_CUTOFF_FREQ),
-    _pitch_filter(DISCONTROL_PITCH_CUTOFF_FREQ)
+    _pitch_filter(DISCONTROL_PITCH_CUTOFF_FREQ),
+    _cage_err_filter(DISCONTROL_CAGE_CUTOFF_FREQ)
 {
     AP_Param::setup_object_defaults(this, var_info);
 
@@ -637,6 +736,7 @@ AC_DistanceControl::AC_DistanceControl(const AP_AHRS_View& ahrs, const AP_Inerti
     _flags.use_desvel_ff_z = true;
 
     _limit_enable_in = false;
+    _cage_detect_in = false;
     _distance_face_ned = false;
     _sensor_ok = false;
     _distance_ok = false;
@@ -663,6 +763,7 @@ void AC_DistanceControl::rangefinder_check(void)
 
     if(!sensors_ok) {
 		_limit_enable_in = false;
+		_cage_detect_in = false;
 		_distance_face_bf = 0;
 		_sensor_ok = false;
 		return ;
@@ -672,6 +773,7 @@ void AC_DistanceControl::rangefinder_check(void)
 	uint32_t tnow = AP_HAL::millis();
     if (!_motors.armed() || _distance_reset) {
     	_limit_enable_in = false;
+    	_cage_detect_in = false;
 		_distance_face_bf = 0;
 		_distance_ok = false;
 		_distance_reset = false;
@@ -682,6 +784,12 @@ void AC_DistanceControl::rangefinder_check(void)
 	if (tnow - _invalid_ms > 5000) {
 		_limit_enable_in = _limit_enable.get() ? true : false;
 		_distance_face_bf = _distance_face.get();
+		if(_cage_detect.get() != _cage_detect_in) {
+			if(_cage_detect.get()) {
+				init_cage_controller();
+			}
+			_cage_detect_in = _cage_detect.get() ? true : false;
+		}
 		_distance_ok = true;
 	}
 
@@ -1201,15 +1309,231 @@ void AC_DistanceControl::status_check(Vector3f &thrusts)
 	}
 }
 
-void AC_DistanceControl::distance_status_report(void)
+void AC_DistanceControl::init_cage_controller(void)
+{
+	//_distance_face_bf = 0x01;
+	_cage_init_yaw = _ahrs.yaw_sensor;
+	_cage_circles = 0;
+	_cage_state = 0;
+	_cage_seconds = 0;
+	_cage_alt_last = _inav.get_altitude();
+}
+
+void AC_DistanceControl::run_steering_controller(void)
+{
+	//if(distance_bf[DIS_BF_FRONT347] > 10 && distance_bf[DIS_BF_FRONT13] > 10) {
+		_cage_dis_err = distance_bf[DIS_BF_FRONT347] - distance_bf[DIS_BF_FRONT13];
+		_cage_dis_err = _cage_err_filter.apply(_cage_dis_err, _dt);
+		_cage_target_yaw_rate = constrain_float(_cage_dis_err*_cage_p, -_cage_yaw_rate, _cage_yaw_rate);
+	//}
+}
+
+void AC_DistanceControl::cage_circle_time(Vector3f &thrusts)
+{
+	static uint8_t state = 0;
+	
+	switch (state) {
+		case 0: //按时间检测
+			if(_cage_seconds >= _cage_circle_seconds) {
+				thrusts.y = 0.0f;
+				_cage_seconds = 0;
+				//state = 1;
+				_cage_detect.set_and_save(0);
+			} else {
+				if(distance_bf[DIS_BF_LEFT] <= _cage_cm_y) {
+					_cage_target_yaw_rate = -_cage_turning_yaw_rate;
+					thrusts.y = -_cage_turning_vel_y;
+				} else {
+					thrusts.y = -_cage_vel_y;
+				}
+			}
+		break;
+		case 1: //调整高度
+			if(distance_bf[DIS_BF_BOTTOM] <= _cage_cm_z) {
+				thrusts.z = 0.0f;
+				_cage_seconds = 0;
+				state = 2;
+			} else {
+				thrusts.z = -_cage_vel_z;
+				if(_inav.get_altitude() <= _cage_alt_last - _cage_alt_step) {
+					thrusts.z = 0.0f;
+					_cage_seconds = 0;
+					_cage_circles++;
+					state = 0;
+				}
+			}
+		break;
+		case 2: //结束
+			if(distance_bf[DIS_BF_BOTTOM] <= _cage_cm_z &&
+			   _cage_seconds >= _cage_timeout_z) {
+				_cage_seconds = 0;
+				_cage_detect.set_and_save(0);
+				state = 0;
+			} else {
+				thrusts.z = -_cage_vel_z;
+				if(_inav.get_altitude() <= _cage_alt_last - _cage_alt_step) {
+					thrusts.z = 0.0f;
+					_cage_seconds = 0;
+					_cage_circles++;
+					state = 0;
+				}
+			}
+		break;
+	}
+
+	if(1) {
+		static uint32_t _startup_ms = 0;
+
+		if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+		}
+
+		if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+
+			hal.shell->printf("cage_circle_time: f347 %d, f13 %d, err %d, rate %.4f, state %d, left %d, circles %d\r\n",
+				           get_front347_cm_bf(),
+				           get_front13_cm_bf(),
+				           _cage_dis_err,
+				           _cage_target_yaw_rate,
+				           state,
+				           distance_bf[DIS_BF_LEFT],
+				           _cage_circles);
+		}
+	}
+}
+
+uint8_t AC_DistanceControl::cage_get_stage(int32_t yaw_value)
+{
+	uint8_t stage;
+	
+	if(yaw_value >= 0 && yaw_value < 9000) {
+		stage = 0;
+	} else if(yaw_value >= 9000 && yaw_value < 18000) {
+		stage = 1;
+	} else if(yaw_value >= 18000 && yaw_value < 27000) {
+		stage = 2;
+	} else {
+		stage = 3;
+	}
+
+	return stage;
+}
+
+void AC_DistanceControl::cage_circle_auto(Vector3f &thrusts)
+{
+	static uint8_t state = 0;
+	static uint8_t cur_stage = 0, next_stage = 0;
+	static uint8_t stage_count = 0;
+	
+	switch (state) {
+		case 0: //初始化
+			cur_stage = cage_get_stage(_cage_init_yaw);
+			next_stage = (cur_stage + 1) % 4;
+			stage_count = 1;
+			state = 1;
+		break;
+		case 1: //检测
+			cur_stage = cage_get_stage(_ahrs.yaw_sensor);
+			if(cur_stage == next_stage) {
+				next_stage = (cur_stage + 1) % 4;
+				stage_count++;
+			}
+			
+			if(distance_bf[DIS_BF_LEFT] <= _cage_cm_y) {
+				_cage_target_yaw_rate = -_cage_turning_yaw_rate;
+				thrusts.y = -_cage_turning_vel_y;
+			} else {
+				thrusts.y = -_cage_vel_y;
+			}
+
+			if(stage_count==6) {
+				thrusts.y = 0.0f;
+				//state = 2;
+				_cage_detect.set_and_save(0);
+			}
+		break;
+		case 2: //调整高度
+			if(distance_bf[DIS_BF_BOTTOM] <= _cage_cm_z) {
+				thrusts.z = 0.0f;
+				_cage_seconds = 0;
+				state = 3;
+			} else {
+				thrusts.z = -_cage_vel_z;
+				if(_inav.get_altitude() <= _cage_alt_last - _cage_alt_step) {
+					thrusts.z = 0.0f;
+					stage_count = 2;
+					_cage_circles++;
+					state = 1;
+				}
+			}
+		break;
+		case 3: //结束
+			if(distance_bf[DIS_BF_BOTTOM] <= _cage_cm_z &&
+			   _cage_seconds >= _cage_timeout_z) {
+				_cage_seconds = 0;
+				_cage_detect.set_and_save(0);
+				state = 0;
+			} else {
+				thrusts.z = -_cage_vel_z;
+				if(_inav.get_altitude() <= _cage_alt_last - _cage_alt_step) {
+					thrusts.z = 0.0f;
+					_cage_seconds = 0;
+					stage_count = 2;
+					_cage_circles++;
+					state = 0;
+				}
+			}
+		break;
+	}
+
+	if(1) {
+		static uint32_t _startup_ms = 0;
+
+		if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+		}
+
+		if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+
+			hal.shell->printf("cage_circle_auto: f347 %d, f13 %d, err %d, rate %.4f, state %d, left %d, circles %d\r\n",
+				           get_front347_cm_bf(),
+				           get_front13_cm_bf(),
+				           _cage_dis_err,
+				           _cage_target_yaw_rate,
+				           state,
+				           distance_bf[DIS_BF_LEFT],
+				           _cage_circles);
+		}
+	}
+}
+
+void AC_DistanceControl::update_cage_controller(Vector3f &thrusts)
+{
+	run_steering_controller();
+	
+	if(_cage_circle_seconds) {
+		cage_circle_time(thrusts);
+	} else {
+		cage_circle_auto(thrusts);
+	}
+	
+	_attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, _cage_target_yaw_rate);
+}
+
+void AC_DistanceControl::distance_work_1hz(void)
 {
 	const static char *name[] = {"front", "back", "left", "right", "top", "bottom"};
 
 	for(uint8_t i = 0; i < DISTANCE_NUM; i++) {
 		if(_limit_enable_in && distance_bf[i] > 0 && distance_safe[i] > 0) {
 			if(distance_bf[i] < distance_safe[i] + 10) {
+				alarm_count[i]++;
 				gcs().send_text(MAV_SEVERITY_WARNING, "dis:%s,limit=%d", name[i], distance_bf[i]);
 				//hal.shell->printf("dis:%s,limit=%d\r\n", name[i], distance_bf[i]);
+			} else {
+				alarm_count[i] = 0;
 			}
 		}
 
@@ -1231,6 +1555,10 @@ void AC_DistanceControl::distance_status_report(void)
 			gcs().send_text(MAV_SEVERITY_WARNING, "dis:not ready");
 			//hal.shell->printf("dis:not ready\r\n");
 		}
+	}
+
+	if(_cage_detect_in) {
+		_cage_seconds++;
 	}
 }
 
