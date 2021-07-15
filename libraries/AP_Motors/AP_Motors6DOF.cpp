@@ -366,7 +366,10 @@ void AP_Motors6DOF::output_min()
 
 int16_t AP_Motors6DOF::calc_thrust_to_pwm(float thrust_in) const
 {
-    return constrain_int16(thrust_in * 2200, _throttle_radio_min, _throttle_radio_max);
+    if (thrust_in < 0)
+        return constrain_int16(-1500 + thrust_in*700, _throttle_radio_min, -1500);
+    else
+        return constrain_int16(1500 + thrust_in*700, 1500, _throttle_radio_max);
 }
 
 void AP_Motors6DOF::output_to_motors()
