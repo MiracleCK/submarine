@@ -130,7 +130,8 @@ private:
 	void rangefinder_check(void);
 	void status_check(Vector3f &thrusts);
 	void run_steering_controller(void);
-	uint8_t cage_get_stage(int32_t yaw_value);
+	int8_t cage_get_stage(int32_t yaw_value);
+	void cage_create_stage(int32_t init_yaw);
 	void cage_circle_time(Vector3f &thrusts);
 	void cage_circle_auto(Vector3f &thrusts);
 
@@ -224,13 +225,17 @@ private:
     bool _distance_ok;
     bool _distance_reset;
     bool _cage_detect_in;
-    uint8_t _cage_state;
+    uint8_t _cage_time_state;
+    uint8_t _cage_auto_state;
     int32_t _cage_init_yaw;
     uint32_t _cage_circles;
     uint32_t _cage_seconds;
     float _cage_target_yaw_rate;
     int16_t _cage_dis_err;
     float _cage_alt_last;
+    int32_t _cage_yaw_zone[8];
+    uint32_t _cage_circle_ms;
+    int16_t _cage_cm_y;
 
 	AP_Float	_thr_face_p;
 	AP_Float	_thr_limit_p;
@@ -278,7 +283,7 @@ private:
     AP_Float    _cage_alt_step;
     AP_Float    _cage_vel_y;
     AP_Float    _cage_vel_z;
-    AP_Int16    _cage_cm_y;
+    AP_Float    _cage_y_p;
     AP_Int16    _cage_cm_z;
     AP_Int32    _cage_circle_seconds;
     AP_Float    _cage_turning_vel_y;
