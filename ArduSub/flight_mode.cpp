@@ -38,6 +38,17 @@ bool Sub::set_mode(control_mode_t mode, ModeReason reason)
     }
 
     switch (mode) {
+        case ULTRA:
+        case FAST:
+        case REGULAR:
+        case FLOOR:
+        case WATERLINE:
+        case SMART:
+        case PULLUP:
+            success = wash_init();
+            hal.shell->printf("MODE: %d\r\n", mode);
+            break;
+
     case ACRO:
         success = acro_init();
         break;
@@ -89,6 +100,7 @@ bool Sub::set_mode(control_mode_t mode, ModeReason reason)
         break;
 
     default:
+        hal.shell->printf("To Mode %d\r\n", mode);
         success = false;
         break;
     }
@@ -189,6 +201,16 @@ void Sub::update_flight_mode()
 
     case WIRING:
         wiring_run();
+        break;
+
+    case ULTRA:
+    case FAST:
+    case REGULAR:
+    case FLOOR:
+    case WATERLINE:
+    case SMART:
+    case PULLUP:
+        wash_run();
         break;
 
     default:

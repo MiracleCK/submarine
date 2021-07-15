@@ -164,6 +164,7 @@ public:
 
     //TODO revert belows to private. I changed it for shell mode cmd. Yinlanshan 210707
     control_mode_t control_mode;
+    step_t _step;
     bool set_mode(control_mode_t mode, ModeReason reason);
     bool set_mode(const uint8_t mode, const ModeReason reason) override;
 
@@ -454,6 +455,23 @@ private:
     static const AP_Param::Info var_info[];
     static const struct LogStructure log_structure[];
 
+    const Quaternion UP_STRAIGHT = Quaternion(0.7071f, 0, 0.7071f, 0);
+    Vector3f v_desire_direction;
+    Vector3f v_downward, v_forward;
+    enum STATUS {
+        TURNING,
+        FORWARDING,
+        BACKING,
+        WASH_LEFT,
+        WASH_RIGHT,
+        ERROR
+    } _status;
+    uint32_t _status_ms;
+    uint32_t _mode_ms;
+    uint32_t _notify_ms;
+    uint32_t _action_ms;
+    uint32_t _stable_ms;
+
     void fast_loop();
     void fifty_hz_loop();
     void update_batt_compass(void);
@@ -565,13 +583,12 @@ private:
     bool wiring_init(void);
     void wiring_run();
 
-    bool water_line_init(void);
-    void water_line_run();
-    void detect(void);
-    void wash_left(void);
-    void wash_right(void);
-    void back_to_bottom(void);
-    bool turning_orientation(Vector3f &target);
+    bool wash_init(void);
+    void wash_run(void);
+    void set_status(STATUS status);
+    void set_error(const char *msg);
+    bool turning_orientation(const Vector3f &target, const Vector3f &forward);
+    bool should_wash_wall(void);
 
     bool stabilize_init(void);
     void stabilize_run();
@@ -721,6 +738,20 @@ public:
     void mavlink_delay_cb();
     void mainloop_failsafe_check();
 };
+
+static inline bool is_standing_straight(Vector3f &downward)
+{
+    return (downward.z*downward.z) > 0.97; // < 10deg
+}
+static inline bool is_flip_over(Vector3f &downward)
+{
+    return downward.z < -0.5f; // > 30 deg elevation
+}
+
+static inline bool is_on_wall(Vector3f &downward)
+{
+    return downward.z >= -0.5f && downward.z <= 0.5f;
+}
 
 extern const AP_HAL::HAL& hal;
 extern Sub sub;

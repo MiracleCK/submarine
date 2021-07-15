@@ -52,6 +52,11 @@ enum control_mode_t : uint8_t {
     PULLUP =       66,  // Go to waterline to be retrieved
 };
 
+enum step_t {
+    WALL,
+    BOTTOM
+};
+
 // Acro Trainer types
 #define ACRO_TRAINER_DISABLED   0
 #define ACRO_TRAINER_LEVELING   1
