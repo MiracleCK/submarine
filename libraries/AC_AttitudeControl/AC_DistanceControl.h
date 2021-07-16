@@ -131,7 +131,7 @@ private:
 	void status_check(Vector3f &thrusts);
 	void run_steering_controller(void);
 	int8_t cage_get_stage(int32_t yaw_value);
-	void cage_create_stage(int32_t init_yaw);
+	void cage_create_zone(int32_t init_yaw);
 	void cage_circle_time(Vector3f &thrusts);
 	void cage_circle_auto(Vector3f &thrusts);
 

@@ -1435,7 +1435,7 @@ int8_t AC_DistanceControl::cage_get_stage(int32_t yaw_value)
 	return stage;
 }
 
-void AC_DistanceControl::cage_create_stage(int32_t init_yaw)
+void AC_DistanceControl::cage_create_zone(int32_t init_yaw)
 {
 	_cage_yaw_zone[0] = wrap_360_cd(init_yaw - 1500);
 	_cage_yaw_zone[1] = wrap_360_cd(init_yaw + 1500);
@@ -1467,7 +1467,8 @@ void AC_DistanceControl::cage_circle_auto(Vector3f &thrusts)
 	switch (_cage_auto_state) {
 		case 0: //初始化
 			_cage_init_yaw = _ahrs.yaw_sensor;
-			cage_create_stage(_cage_init_yaw);
+			_cage_alt_last = _inav.get_altitude();
+			cage_create_zone(_cage_init_yaw);
 			cur_stage = cage_get_stage(_cage_init_yaw);
 			next_stage = (cur_stage + 1) % 4;
 			stage_count = 1;
@@ -1505,6 +1506,7 @@ void AC_DistanceControl::cage_circle_auto(Vector3f &thrusts)
 					thrusts.z = 0.0f;
 					stage_count = 2;
 					_cage_circles++;
+					_cage_alt_last = _inav.get_altitude();
 					_cage_auto_state = 1;
 				}
 			}
@@ -1512,6 +1514,7 @@ void AC_DistanceControl::cage_circle_auto(Vector3f &thrusts)
 		case 3: //结束
 			if(distance_bf[DIS_BF_BOTTOM] <= _cage_cm_z &&
 			   _cage_seconds >= _cage_timeout_z) {
+			   	thrusts.z = 0.0f;
 				_cage_seconds = 0;
 				_cage_detect.set_and_save(0);
 				_cage_auto_state = 0;
@@ -1522,7 +1525,8 @@ void AC_DistanceControl::cage_circle_auto(Vector3f &thrusts)
 					_cage_seconds = 0;
 					stage_count = 2;
 					_cage_circles++;
-					_cage_auto_state = 0;
+					_cage_alt_last = _inav.get_altitude();
+					_cage_auto_state = 1;
 				}
 			}
 		break;
@@ -1538,7 +1542,7 @@ void AC_DistanceControl::cage_circle_auto(Vector3f &thrusts)
 		if(AP_HAL::millis() - _startup_ms > 1000) {
 			_startup_ms = AP_HAL::millis();
 
-			hal.shell->printf("cage_circle_auto: f347 %d, f13 %d, err %d, rate %.4f, state %d, left %d, circles %d, cur_stage %d, next_stage %d, stage_count %d, yaw %d\r\n",
+			hal.shell->printf("cage_circle_auto: f347 %d, f13 %d, err %d, rate %.4f, state %d, left %d, circles %d, cur_stage %d, next_stage %d, stage_count %d, yaw %d, alt_last %f, alt_cur %f, thrusts.z %f\r\n",
 				           get_front347_cm_bf(),
 				           get_front13_cm_bf(),
 				           _cage_dis_err,
@@ -1549,7 +1553,10 @@ void AC_DistanceControl::cage_circle_auto(Vector3f &thrusts)
 				           cur_stage,
 				           next_stage,
 				           stage_count,
-				           _ahrs.yaw_sensor);
+				           _ahrs.yaw_sensor,
+				           _cage_alt_last,
+				           _inav.get_altitude(),
+				           thrusts.z);
 		}
 	}
 }
@@ -1574,7 +1581,6 @@ void AC_DistanceControl::distance_work_1hz(void)
 {
 	const static char *name[] = {"front", "back", "left", "right", "top", "bottom"};
 
-	//cage_create_stage(0);
 	for(uint8_t i = 0; i < DISTANCE_NUM; i++) {
 		if(_limit_enable_in && distance_bf[i] > 0 && distance_safe[i] > 0) {
 			if(distance_bf[i] < distance_safe[i] + 10) {

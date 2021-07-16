@@ -353,11 +353,9 @@ int cmd_param_reset(void) {
 }
 
 int cmd_param_erase(void) {
-    AP_Param::erase_all();
-    hal.shell->printf("All parameters reset, would auto-reboot board now\r\n");
-
+    AP_Param::set_and_save_by_name("SYSID_SW_MREV", 0);
+    hal.shell->printf("parameters erase...\r\n");
     hal.scheduler->delay(500);
-
     hal.scheduler->reboot(false);
 
     return 0;

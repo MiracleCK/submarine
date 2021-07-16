@@ -292,6 +292,9 @@ void Sub::althold_run_rate()
 		channel_lateral->disable_channel();
 		channel_throttle->disable_channel();
 		distance_control.update_cage_controller(pilot_trans_thrusts);
+		if(!is_zero(pilot_trans_thrusts.z)) {
+			is_affect_z = true;
+		}
     } else {
 		channel_roll->enable_channel();
 		channel_pitch->enable_channel();
