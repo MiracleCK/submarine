@@ -471,6 +471,7 @@ private:
     uint32_t _notify_ms;
     uint32_t _action_ms;
     uint32_t _stable_ms;
+    float _last_big_yaw_rate;
 
     void fast_loop();
     void fifty_hz_loop();

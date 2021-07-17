@@ -6,7 +6,10 @@ bool Sub::wash_init(void)
 {
     v_desire_direction.zero();
     _mode_ms = AP_HAL::millis();
-    set_status(BACKING);
+    if (control_mode == PULLUP)
+        set_status(FORWARDING);
+    else
+        set_status(BACKING);
     _step = WALL;
     return true;
 }
@@ -129,22 +132,36 @@ void Sub::wash_run(void)
             }
             else if((!should_wash_wall()) && is_standing_straight(v_downward))
             {
-                // Maybe a wall could change forwarding orientation, turn to
+                // Maybe a wall could change forwarding orientation, turn and
                 // move away from the wall
-                float gz = ahrs.get_gyro_latest().z;
-                if (gz < -0.7f)
+                float gz = ahrs.get_gyro().z;
+                if (gz < -0.7f || gz > 0.7f)
                 {
-                    //Turn to left by 90 deg
-                    Vector3f z(0, 0, 1);
-                    v_desire_direction = v_forward%z;
-                    set_status(TURNING);
+                    _last_big_yaw_rate = gz;
+                    _stable_ms = now;
                 }
-                else if (gz > 0.7f)
+                else
                 {
-                    //Turn to right by 90 deg
-                    Vector3f z(0, 0, 1);
-                    v_desire_direction = z%v_forward;
-                    set_status(TURNING);
+                    //When orientation is stable for 2 seconds,
+                    //turn away to move off wall
+                    if (_stable_ms != 0 && now - _stable_ms > 2000)
+                    {
+                        if (_last_big_yaw_rate < 0.7f)
+                        {
+                            //Turn to left by 90 deg
+                            Vector3f z(0, 0, 1);
+                            v_desire_direction = v_forward%z;
+                            set_status(TURNING);
+                        }
+                        else
+                        {
+                            //Turn to right by 90 deg
+                            Vector3f z(0, 0, 1);
+                            v_desire_direction = z%v_forward;
+                            set_status(TURNING);
+                        }
+                        _stable_ms = 0;
+                    }
                 }
             }
             break;
