@@ -337,7 +337,7 @@ void Sub::althold_run_rate()
 		        // output pilot's throttle
 		        motors.set_throttle_pilot(pilot_trans_thrusts.z);
 		        attitude_control.set_throttle_out(motors.get_throttle_hover(), false, g.throttle_filt);
-		        //distance_control.relax_z_controller((float)distance);
+		        distance_control.relax_z_controller((float)distance);
 		        pos_control.relax_alt_hold_controllers();
 		        last_pilot_z_input_ms = tnow;
 		        is_z_ctrl_relaxed = true;
@@ -460,7 +460,7 @@ void Sub::althold_run_rate()
 			if (fabsf(pilot_trans_thrusts.x) > 0.0f || channel_yaw->get_control_in() || channel_pitch->get_control_in()) {
 		        // output pilot's throttle
 		        motors.set_forward(pilot_trans_thrusts.x);
-		        //distance_control.relax_x_controller((float)distance);
+		        distance_control.relax_x_controller((float)distance);
 		        last_pilot_x_input_ms = tnow;
 		        is_x_ctrl_relaxed = true;
 		    } else { // hold x
@@ -508,7 +508,7 @@ void Sub::althold_run_rate()
 			if (fabsf(pilot_trans_thrusts.y) > 0.0f || channel_yaw->get_control_in() || channel_roll->get_control_in()) {
 		        // output pilot's throttle
 		        motors.set_lateral(pilot_trans_thrusts.y);
-		        //distance_control.relax_y_controller((float)distance);
+		        distance_control.relax_y_controller((float)distance);
 		        last_pilot_y_input_ms = tnow;
 		        is_y_ctrl_relaxed = true;
 		    } else { // hold y

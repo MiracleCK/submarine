@@ -172,6 +172,8 @@ private:
     LowPassFilterFloat _vel_z_error_filter;   // low-pass-filter on z-axis velocity error
 	LowPassFilterFloat  _out_x_filter; 
 	LowPassFilterFloat  _out_y_filter; 
+	Vector3f    _alg_out; 
+	Vector3ul   _alg_cnt;
 
 	float _roll;
     float _pitch;
