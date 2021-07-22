@@ -26,7 +26,7 @@ const AP_HAL::HAL& hal = AP_HAL::get_HAL();
 Sub::Sub()
     : logger(g.log_bitmask),
     //TODO Set default mode MANUAL. I changed it to STABILIZE for TEST ONLY. Yinlanshan 210706
-          control_mode(STABILIZE),
+          control_mode(MANUAL),
           motors(MAIN_LOOP_RATE),
           scaleLongDown(1),
           auto_mode(Auto_WP),

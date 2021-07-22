@@ -162,6 +162,11 @@ public:
     void setup() override;
     void loop() override;
 
+    float ctrl_forward = 0;
+    float ctrl_yaw = 0;
+    float ctrl_lateral = 0;
+    float ctrl_pump = 0;
+
     //TODO revert belows to private. I changed it for shell mode cmd. Yinlanshan 210707
     control_mode_t control_mode;
     step_t _step;

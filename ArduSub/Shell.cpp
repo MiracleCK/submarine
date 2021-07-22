@@ -110,6 +110,7 @@ static void cmd_version(int argc, char *argv[]);
 static void cmd_reset(int argc, char *argv[]);
 static void cmd_led(int argc, char *argv[]);
 static void cmd_mode(int argc, char *argv[]);
+static void cmd_ctrl(int argc, char *argv[]);
 
 static int radian_to_degree(float value);
 static float degree_to_radian(int value);
@@ -121,6 +122,7 @@ AP_HAL::Shell::ShellCommand shell_commands[] = {
     {"cali", cmd_cali},
     {"led", cmd_led},
     {"mode", cmd_mode},
+    {"ctrl", cmd_ctrl},
     {NULL, NULL} // this is the end of commands
 };
 
@@ -128,7 +130,7 @@ AP_HAL::Shell::ShellCommand shell_commands[] = {
 
 // param     set     xxx   value
 //       argv[0] argv[1] argv[2]
-void cmd_param(int argc, char *argv[]) 
+void cmd_param(int argc, char *argv[])
 {
     if (argc < 1) { // at least should be param show
         hal.shell->printf("usage: param set|show|dbg|reset|erase [param_short_name value]|dbg_param\r\n");
@@ -286,6 +288,20 @@ static void cmd_mode(int argc, char *argv[])
     }
 
     hal.shell->printf("usage: mode [manual | stabilize]\r\n");
+}
+
+static void cmd_ctrl(int argc, char *argv[])
+{
+    if (argc >= 4)
+    {
+        sub.ctrl_forward = strtof(argv[0], NULL);
+        sub.ctrl_yaw = strtof(argv[1], NULL);
+        sub.ctrl_lateral = strtof(argv[2], NULL);
+        sub.ctrl_pump = strtof(argv[3], NULL);
+        return;
+    }
+
+    hal.shell->printf("usage: ctrl forward yaw lateral pump\r\n");
 }
 
 // param dbg motor|atti|ctrl on|[off] [print_cnt]
