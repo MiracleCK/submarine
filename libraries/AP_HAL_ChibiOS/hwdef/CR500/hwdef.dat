@@ -561,13 +561,18 @@ define RC_IN_CHANNEL_ARM 1
 #define ROTATE_CUSTOM_MAG {tmp = y; y = x; x = tmp; z = -z; return;}
 #define ROTATE_CUSTOM_MAG {x = -x; y = -y; return;}
 
-define ROTATE_CUSTOM_IMU {tmp = x; x = -y; y = -tmp; z = -z; return;}
-define ROTATE_CUSTOM_MAG {x = -x; y = y; z = -z; return;}
+#EVT2 DEBUG BOARD ONLY
+#define ROTATE_CUSTOM_IMU {tmp = x; x = -y; y = -tmp; z = -z; return;}
+#define ROTATE_CUSTOM_MAG {x = -x; y = y; z = -z; return;}
+
+#EVT2 CUSTOM ROTATE
+define ROTATE_CUSTOM_IMU {tmp = x; x = z; z = -tmp;  return;}
+define ROTATE_CUSTOM_MAG {tmp = x; x = z; z = y; y = tmp; return;}
 
 #      Motor #               Roll   Pitch    Yaw    Throttle   Forward   Lateral
-define CUSTOM_MOTORS_MOT_1      0,      0,   1.0f,      0,      1.0f,     0.0f
-define CUSTOM_MOTORS_MOT_2      0,      0,   1.0f,      0,     -1.0f,     0.0f
-define CUSTOM_MOTORS_MOT_3      0,      0,   0.0f,      0,     0.0f,     1.0f
+define CUSTOM_MOTORS_MOT_1      0,      0,   -1.0f,      0,     -1.0f,     0.0f
+define CUSTOM_MOTORS_MOT_2      0,      0,   -1.0f,      0,      1.0f,     0.0f
+define CUSTOM_MOTORS_MOT_3      0,      0,   0.0f,       0,      0.0f,     1.0f
 
 #define CUSTOM_MOTORS_MOT_3      0,      0,   1.0f,      0,      1.0f,     -1.0f
 #define CUSTOM_MOTORS_MOT_4      0,      0,   1.0f,      0,     -1.0f,     -1.0f
