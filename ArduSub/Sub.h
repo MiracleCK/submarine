@@ -747,6 +747,17 @@ public:
     void mainloop_failsafe_check();
 };
 
+static inline void yaw_vector_to_quat(float x, float y, Quaternion &q)
+{
+    float len = sqrtf(x*x + y*y);
+    float cos_square = (1 + x/len)/2;
+    q.q1 = sqrtf(cos_square);
+    if (y < 0)
+        q.q4 = -sqrtf(1 - cos_square);
+    else
+        q.q4 = sqrtf(1 - cos_square);
+}
+
 static inline bool is_standing_straight(Vector3f &downward)
 {
     return (downward.z*downward.z) > 0.97; // < 10deg
