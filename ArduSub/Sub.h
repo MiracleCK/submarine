@@ -471,6 +471,7 @@ private:
     uint32_t _notify_ms;
     uint32_t _action_ms;
     uint32_t _stable_ms;
+    float _target_lateral;
     float _last_big_yaw_rate;
 
     void fast_loop();
@@ -590,6 +591,7 @@ private:
     void set_error(const char *msg);
     bool turning_orientation(const Vector3f &target, const Vector3f &forward);
     bool should_wash_wall(void);
+    void control_lateral(void);
 
     bool stabilize_init(void);
     void stabilize_run();
@@ -751,7 +753,7 @@ static inline bool is_flip_over(Vector3f &downward)
 
 static inline bool is_on_wall(Vector3f &downward)
 {
-    return downward.z >= -0.5f && downward.z <= 0.5f;
+    return downward.z >= -0.7f && downward.z <= 0.7f;
 }
 
 extern const AP_HAL::HAL& hal;

@@ -359,3 +359,24 @@ bool Sub::should_wash_wall(void)
     }
 }
 
+void Sub::control_lateral()
+{
+    if (!isnan(_target_lateral))
+    {
+        float l = motors.get_lateral();
+        if (_target_lateral - l > 0.001f)
+        {
+            motors.set_lateral(l + 0.001f);
+        }
+        else if (_target_lateral - l < -0.001f)
+        {
+            motors.set_lateral(l - 0.001f);
+        }
+        else
+        {
+            motors.set_lateral(_target_lateral);
+            _target_lateral = std::numeric_limits<float>::signaling_NaN();
+        }
+    }
+}
+

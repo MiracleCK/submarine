@@ -136,6 +136,7 @@ void Sub::fast_loop()
 	if(!factory.isFactoryTestMode()) 
 #endif
 	{
+	    control_lateral();
 	    // run the attitude controllers
 	    update_flight_mode();
     }
