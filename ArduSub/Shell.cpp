@@ -281,6 +281,24 @@ static void cmd_mode(int argc, char *argv[])
             hal.shell->printf(r ? "ok\r\n" : "fail\r\n");
             return;
         }
+        else if(strcasecmp(argv[0], "floor") == 0)
+        {
+            bool r = sub.set_mode(FLOOR, ModeReason::RC_COMMAND);
+            hal.shell->printf(r ? "ok\r\n" : "fail\r\n");
+            return;
+        }
+        else if(strcasecmp(argv[0], "waterline") == 0)
+        {
+            bool r = sub.set_mode(WATERLINE, ModeReason::RC_COMMAND);
+            hal.shell->printf(r ? "ok\r\n" : "fail\r\n");
+            return;
+        }
+        else if(strcasecmp(argv[0], "regular") == 0)
+        {
+            bool r = sub.set_mode(REGULAR, ModeReason::RC_COMMAND);
+            hal.shell->printf(r ? "ok\r\n" : "fail\r\n");
+            return;
+        }
     }
     else
     {

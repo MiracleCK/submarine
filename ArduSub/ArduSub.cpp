@@ -113,7 +113,7 @@ void Sub::fast_loop()
     ins.update();
 
     //don't run rate controller in manual or motordetection modes
-    if (control_mode != MANUAL && control_mode != MOTOR_DETECT) {
+    if (control_mode != MANUAL && control_mode != MOTOR_DETECT && control_mode < ULTRA) {
         // run low level rate controllers that only require IMU data
         attitude_control.rate_controller_run();
     }
