@@ -215,6 +215,10 @@ bool Sub::attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int1
         is_reseting = false;
     }
 
+    if(is_ned_pilot && distance_control.steer_enable() && !yaw) {
+		target_yaw_rate = distance_control.get_steer_yaw_rate();
+    }
+
     if (is_reseting) {
         attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, target_yaw_rate);
     } else if (is_ned_pilot) {
@@ -283,31 +287,12 @@ void Sub::althold_run_rate()
     }
 
     motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
-
-	if(is_ned_pilot && distance_control.cage_detect_enable()) {
-        channel_roll->disable_channel();
-		channel_pitch->disable_channel();
-		channel_yaw->disable_channel();
-		channel_forward->disable_channel();
-		channel_lateral->disable_channel();
-		channel_throttle->disable_channel();
-		distance_control.update_cage_controller(pilot_trans_thrusts);
-		if(!is_zero(pilot_trans_thrusts.z)) {
-			is_affect_z = true;
-		}
-    } else {
-		channel_roll->enable_channel();
-		channel_pitch->enable_channel();
-		channel_yaw->enable_channel();
-		channel_forward->enable_channel();
-		channel_lateral->enable_channel();
-		channel_throttle->enable_channel();
-		attitude_control_rate(is_request_reset_rp, 
-        	channel_roll->get_control_in(), channel_pitch->get_control_in(), channel_yaw->get_control_in());
-		if (is_request_reset_rp) {
-	        is_request_reset_rp = false;
-	        distance_control.distance_reset();
-	    }
+    
+    attitude_control_rate(is_request_reset_rp, 
+        	pilot_attitude_thrusts.x, pilot_attitude_thrusts.y, pilot_attitude_thrusts.z);
+	if (is_request_reset_rp) {
+        is_request_reset_rp = false;
+        distance_control.distance_reset();
     }
 	
 	if(is_ned_pilot && 
@@ -333,7 +318,7 @@ void Sub::althold_run_rate()
 		    	distance = distance_control.get_top_cm();
 		    }
 		    	
-			if (fabsf(pilot_trans_thrusts.z) > 0.0f || channel_roll->get_control_in() || channel_pitch->get_control_in()) {
+			if (fabsf(pilot_trans_thrusts.z) > 0.0f || pilot_attitude_thrusts.x || pilot_attitude_thrusts.y) {
 		        // output pilot's throttle
 		        motors.set_throttle_pilot(pilot_trans_thrusts.z);
 		        attitude_control.set_throttle_out(motors.get_throttle_hover(), false, g.throttle_filt);
@@ -457,7 +442,7 @@ void Sub::althold_run_rate()
 		    	distance = distance_control.get_back_cm();
 		    }
 		    
-			if (fabsf(pilot_trans_thrusts.x) > 0.0f || channel_yaw->get_control_in() || channel_pitch->get_control_in()) {
+			if (fabsf(pilot_trans_thrusts.x) > 0.0f || pilot_attitude_thrusts.z || pilot_attitude_thrusts.y) {
 		        // output pilot's throttle
 		        motors.set_forward(pilot_trans_thrusts.x);
 		        distance_control.relax_x_controller((float)distance);
@@ -469,6 +454,9 @@ void Sub::althold_run_rate()
 		        		distance_target.x = distance;
 			        	is_x_ctrl_relaxed = false;
 		        	}
+		        	if(distance_control.cage_detect_enable()) {
+						distance_target.x = distance_control.get_cage_cm_x();
+	        		}
 					if(!is_equal(distance_control.get_target_x(), (float)distance_target.x)) {
 			        	distance_control.relax_x_controller((float)distance_target.x);
 		        	}
@@ -505,7 +493,7 @@ void Sub::althold_run_rate()
 		    	distance = distance_control.get_left_cm();
 		    }
 		    
-			if (fabsf(pilot_trans_thrusts.y) > 0.0f || channel_yaw->get_control_in() || channel_roll->get_control_in()) {
+			if (fabsf(pilot_trans_thrusts.y) > 0.0f || pilot_attitude_thrusts.z || pilot_attitude_thrusts.x) {
 		        // output pilot's throttle
 		        motors.set_lateral(pilot_trans_thrusts.y);
 		        distance_control.relax_y_controller((float)distance);

@@ -118,9 +118,12 @@ void Sub::update_flight_mode()
 	pilot_trans_thrusts.x = channel_forward->slew_norm_input_bidirectional();
     pilot_trans_thrusts.y = channel_lateral->slew_norm_input_bidirectional();
     pilot_trans_thrusts.z = channel_throttle->slew_norm_input_bidirectional();
+    pilot_attitude_thrusts.x = channel_roll->get_control_in();
+    pilot_attitude_thrusts.y = channel_pitch->get_control_in();
+    pilot_attitude_thrusts.z = channel_yaw->get_control_in();
     
     if(is_ned_pilot) {
-    	distance_control.update_backend(pilot_trans_thrusts);
+    	distance_control.update_backend(pilot_trans_thrusts, pilot_attitude_thrusts);
     }
 
     is_affect_z = is_affect_z_pos(is_ned_pilot, pilot_trans_thrusts.x, pilot_trans_thrusts.y, pilot_trans_thrusts.z);

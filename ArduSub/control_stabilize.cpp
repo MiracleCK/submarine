@@ -96,7 +96,7 @@ void Sub::stabilize_run_rate() {
     motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
     attitude_control_rate(is_request_reset_rp, 
-        channel_roll->get_control_in(), channel_pitch->get_control_in(), channel_yaw->get_control_in());
+        pilot_attitude_thrusts.x, pilot_attitude_thrusts.y, pilot_attitude_thrusts.z);
     if (is_request_reset_rp) {
         is_request_reset_rp = false;
     }

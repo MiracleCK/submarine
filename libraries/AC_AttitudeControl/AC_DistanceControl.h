@@ -40,6 +40,7 @@ public:
 	bool limit_enable() const { return _limit_enable_in; }
 	void distance_reset(void) {        _distance_reset = true; }
 	bool cage_detect_enable() const { return _cage_detect_in; }
+	bool steer_enable() const { return _steer_enable_in; }
 	
     bool front_face_is_active() const { return (_distance_face_ned & 0x01); }
     bool back_face_is_active() const { return (_distance_face_ned & 0x02); }
@@ -93,12 +94,12 @@ public:
     int8_t get_front347_pos_offset() const { return _front347_offset.get(); }
     int8_t get_front13_pos_offset() const { return _front13_offset.get(); }
     float get_cage_p() const { return _cage_p.get(); }
-    float get_cage_yaw_rate() const { return _cage_yaw_rate.get(); }
+    float get_steer_max_yaw_rate() const { return _max_steer_yaw_rate.get(); }
+    int16_t get_cage_cm_x() const { return _cage_cm_x.get(); }
+    float get_steer_yaw_rate() const { return _steer_yaw_rate; }
     
-	void update_backend(Vector3f &thrusts);
+	void update_backend(Vector3f &mv_thrusts, Vector3i &rot_thrusts);
 	void distance_work_1hz(void);
-	void init_cage_controller(void);
-	void update_cage_controller(Vector3f &thrusts);
 	static AC_DistanceControl *get_singleton(void) { return _singleton; }
 	
     static const struct AP_Param::GroupInfo var_info[];
@@ -124,12 +125,15 @@ private:
     /// Proportional controller with piecewise sqrt sections to constrain second derivative
     static Vector3f sqrt_controller(const Vector3f& error, float p, float second_ord_lim);
 	void update_distance();
-	void pilot_thrusts_scale(Vector3f &thrusts);
+	void pilot_thrusts_scale(Vector3f &mv_thrusts, Vector3i &rot_thrusts);
 	void pilot_thrusts_limit(Vector3f &thrusts);
 	void attitude_filter(Vector3f &thrusts);
 	void rangefinder_check(void);
 	void status_check(Vector3f &thrusts);
-	void run_steering_controller(void);
+	void relax_steering_controller(void);
+	void update_steering_controller(void);
+	void init_cage_controller(void);
+	void update_cage_controller(Vector3f &thrusts);
 	int8_t cage_get_stage(int32_t yaw_value);
 	void cage_create_zone(int32_t init_yaw);
 	void cage_circle_time(Vector3f &thrusts);
@@ -153,6 +157,8 @@ private:
     AC_P        _p_pos_z;
     AC_P        _p_vel_z;
     AC_PID      _pid_accel_z;
+
+    AC_PID      _pid_steer;
 	
     // internal variables
     float       _dt;                    // time difference (in seconds) between calls from the main program
@@ -227,17 +233,22 @@ private:
     bool _distance_ok;
     bool _distance_reset;
     bool _cage_detect_in;
+    uint8_t _cage_state;
     uint8_t _cage_time_state;
     uint8_t _cage_auto_state;
     int32_t _cage_init_yaw;
     uint32_t _cage_circles;
     uint32_t _cage_seconds;
-    float _cage_target_yaw_rate;
-    int16_t _cage_dis_err;
     float _cage_alt_last;
     int32_t _cage_yaw_zone[8];
     uint32_t _cage_circle_ms;
     int16_t _cage_cm_y;
+    bool _steer_enable_in;
+    float _steer_yaw_rate;
+    int16_t _steer_dis_err;
+    float _steer_pid_out;
+    bool _print_flag;
+    uint32_t last_pilot_yaw_input_ms;
 
 	AP_Float	_thr_face_p;
 	AP_Float	_thr_limit_p;
@@ -252,6 +263,7 @@ private:
     AP_Int8 	_right_offset;
     AP_Int8 	_front347_offset;
     AP_Int8 	_front13_offset;
+    AP_Int8 	_steer_enable;
     
     AP_Int16 	_front_limit_cm;
     AP_Int16 	_back_limit_cm;
@@ -281,12 +293,13 @@ private:
 
     AP_Int8     _cage_detect;
     AP_Float    _cage_p;
-    AP_Float    _cage_yaw_rate;
+    AP_Float    _max_steer_yaw_rate;
     AP_Float    _cage_alt_step;
     AP_Float    _cage_vel_y;
     AP_Float    _cage_vel_z;
     AP_Float    _cage_y_p;
     AP_Int16    _cage_cm_z;
+    AP_Int16    _cage_cm_x;
     AP_Int32    _cage_circle_seconds;
     AP_Float    _cage_turning_vel_y;
     AP_Float    _cage_turning_yaw_rate;
