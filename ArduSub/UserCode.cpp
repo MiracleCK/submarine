@@ -41,5 +41,11 @@ void Sub::userhook_SuperSlowLoop()
 {
     // put your 1Hz code here
     distance_control.distance_work_1hz();
+
+	if(ap.at_bottom)
+    	hal.shell->printf("at_bottom\r\n");
+
+    if(ap.at_surface)
+    	hal.shell->printf("at_surface\r\n");
 }
 #endif

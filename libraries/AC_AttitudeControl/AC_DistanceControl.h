@@ -93,7 +93,6 @@ public:
     int8_t get_right_pos_offset() const { return _right_offset.get(); }
     int8_t get_front347_pos_offset() const { return _front347_offset.get(); }
     int8_t get_front13_pos_offset() const { return _front13_offset.get(); }
-    float get_cage_p() const { return _cage_p.get(); }
     float get_steer_max_yaw_rate() const { return _max_steer_yaw_rate.get(); }
     int16_t get_cage_cm_x() const { return _cage_cm_x.get(); }
     float get_steer_yaw_rate() const { return _steer_yaw_rate; }
@@ -135,9 +134,12 @@ private:
 	void init_cage_controller(void);
 	void update_cage_controller(Vector3f &thrusts);
 	int8_t cage_get_stage(int32_t yaw_value);
-	void cage_create_zone(int32_t init_yaw);
+	void cage_create_zone(int32_t init_yaw, uint8_t direction);
 	void cage_circle_time(Vector3f &thrusts);
 	void cage_circle_auto(Vector3f &thrusts);
+	void cage_cylinder(Vector3f &thrusts);
+	void cage_cone(Vector3f &thrusts);
+	void cage_bottom_detector(Vector3f &mv_thrusts);
 
     // references to inertial nav and ahrs libraries
     const AP_AHRS_View &        _ahrs;
@@ -179,7 +181,8 @@ private:
 	LowPassFilterFloat  _out_x_filter; 
 	LowPassFilterFloat  _out_y_filter; 
 	Vector3f    _alg_out; 
-	Vector3ul   _alg_cnt;
+	Vector3ul   _alg_tight_cnt;
+	Vector3ul   _alg_relax_cnt;
 
 	float _roll;
     float _pitch;
@@ -223,6 +226,7 @@ private:
     int16_t distance_safe[DIS_BF_NUM];
     int16_t blind_area[DIS_BF_NUM];
     uint16_t alarm_count[DISTANCE_NUM];
+    uint32_t face_lost_count[DISTANCE_NUM];
     bool _limit_enable_in;
     uint8_t _distance_face_bf;
     uint8_t _distance_face_ned;
@@ -249,6 +253,7 @@ private:
     float _steer_pid_out;
     bool _print_flag;
     uint32_t last_pilot_yaw_input_ms;
+    bool at_bottom;
 
 	AP_Float	_thr_face_p;
 	AP_Float	_thr_limit_p;
@@ -292,7 +297,7 @@ private:
     AP_Int16 	_max_face_limit_cm;
 
     AP_Int8     _cage_detect;
-    AP_Float    _cage_p;
+    AP_Int8     _cage_mode;
     AP_Float    _max_steer_yaw_rate;
     AP_Float    _cage_alt_step;
     AP_Float    _cage_vel_y;

@@ -152,6 +152,7 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_STEER_IMAX                 200     // vertical steer controller IMAX gain default
 #define DISCONTROL_STEER_FILT_HZ              0.8f   // vertical steer controller input filter default
 #define DISCONTROL_STEER_DT                   0.0025f // vertical steer controller dt default
+#define DISCONTROL_STEER_MAX_YAW_RATE         8000.0f	// cage max yaw rate
 
 #define DISCONTROL_LIMIT_X_P                  0.1f    // discontrol limit x P gain default
 #define DISCONTROL_LIMIT_Y_P                  0.1f    // discontrol limit y P gain default
@@ -193,8 +194,6 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_MAX_LIMIT_CM               100    // discontrol max limit
 #define DISCONTROL_MAX_FACE_LIMIT_CM          150    // discontrol max face limit
 
-#define DISCONTROL_CAGE_DETECT_P             300.0f		// cage detect P gain
-#define DISCONTROL_STEER_MAX_YAW_RATE        8000.0f	// cage max yaw rate
 #define DISCONTROL_CAGE_ALT_STEP_CM          10.0f		// cage alt step
 #define DISCONTROL_CAGE_VEL_Y                0.15f		// lateral velocity
 #define DISCONTROL_CAGE_VEL_Z                0.1f		// throttle velocity
@@ -492,6 +491,13 @@ const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
     // @User: Standard
     AP_SUBGROUPINFO(_pid_steer, "_STEER_", 23, AC_DistanceControl, AC_PID),
 
+    // @Param: _STEER_Y_RATE
+    // @DisplayName: yaw rate max 
+    // @Description: yaw rate max 
+    // @User: Standard
+    // @Values: > 0
+    AP_GROUPINFO("_STEER_Y_RATE",  24, AC_DistanceControl, _max_steer_yaw_rate, DISCONTROL_STEER_MAX_YAW_RATE),
+
     // @Param: _FACE
     // @DisplayName: distance face
     // @Description: distance face
@@ -656,19 +662,12 @@ const AP_Param::GroupInfo AC_DistanceControl::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("_CAGE_ENABLE",  51, AC_DistanceControl, _cage_detect, 0),
 
-    // @Param: _CAGE_P
-    // @DisplayName: cage detect P gain
-    // @Description: cage detect P gain
+    // @Param: _CAGE_MODE
+    // @DisplayName: cage detect mode
+    // @Description: cage detect mode
     // @User: Standard
     // @Values: > 0
-    AP_GROUPINFO("_CAGE_P",  52, AC_DistanceControl, _cage_p, DISCONTROL_CAGE_DETECT_P),
-
-    // @Param: _STEER_Y_RATE
-    // @DisplayName: yaw rate max 
-    // @Description: yaw rate max 
-    // @User: Standard
-    // @Values: > 0
-    AP_GROUPINFO("_STEER_Y_RATE",  53, AC_DistanceControl, _max_steer_yaw_rate, DISCONTROL_STEER_MAX_YAW_RATE),
+    AP_GROUPINFO("_CAGE_MODE",  52, AC_DistanceControl, _cage_mode, 2),
 
     // @Param: _CAGE_Z_STEP
     // @DisplayName: altitude step 
@@ -855,12 +854,12 @@ void AC_DistanceControl::rangefinder_check(void)
 			if(_cage_detect.get()) {
 				//_cage_detect.set_and_save(0);
 				init_cage_controller();
+				_steer_enable_in = false;
 			}
 		}
 
 		if(_cage_detect_in) {
 			_distance_face_bf = 0x01;
-			_steer_enable_in = true;
 		}
 		
 		_distance_ok = true;
@@ -869,7 +868,14 @@ void AC_DistanceControl::rangefinder_check(void)
 	for(uint8_t i = 0; i < DISTANCE_NUM; i++) {
 		if((_distance_face_bf >> i) & 0x01) {
 			if(distance_bf[i] == 0 || distance_bf[i] > _max_face_limit_cm) {
-				_distance_face_bf &= ~(1 << i);
+				if (face_lost_count[i] < ((float)5.0f)/_dt) {
+		            face_lost_count[i]++;
+		        } else {
+		        	_distance_face_bf &= ~(1 << i);
+		            face_lost_count[i] = 0;
+		        }
+			} else {
+				face_lost_count[i] = 0;
 			}
 		}
 	}
@@ -1211,9 +1217,10 @@ void AC_DistanceControl::pilot_thrusts_scale(Vector3f &mv_thrusts, Vector3i &rot
 	}
 
 	if(_steer_enable_in) {
-		rot_thrusts.x *= 0.3f;
-		rot_thrusts.y *= 0.3f;
-		rot_thrusts.z *= 0.3f;
+		//rot_thrusts.x *= 0.3f;
+		//rot_thrusts.y *= 0.3f;
+		//rot_thrusts.z *= 0.3f;
+		mv_thrusts.z *= 0.5;
 	}
 }
 
@@ -1366,17 +1373,23 @@ void AC_DistanceControl::status_check(Vector3f &thrusts)
 void AC_DistanceControl::relax_steering_controller(void)
 {
 	_pid_steer.reset_filter();
+	_pid_steer.reset_I();
 	//hal.shell->printf("relax_steering_controller\r\n");
 }
 
 void AC_DistanceControl::update_steering_controller(void)
 {
 	bool print_flag = _print_flag;
+	float max_yaw_rate = _max_steer_yaw_rate.get();
+
+	if(_cage_detect_in) {
+		max_yaw_rate = 5000;
+	}
 	
 	if(distance_bf[DIS_BF_FRONT347] > 10 && distance_bf[DIS_BF_FRONT13] > 10) {
 		_steer_dis_err = distance_bf[DIS_BF_FRONT347] - distance_bf[DIS_BF_FRONT13];
 		_steer_pid_out = _pid_steer.update_error(_steer_dis_err, false) * 1000.0f;
-		_steer_yaw_rate = constrain_float(_steer_pid_out, -_max_steer_yaw_rate, _max_steer_yaw_rate);
+		_steer_yaw_rate = constrain_float(_steer_pid_out, -max_yaw_rate, max_yaw_rate);
 	}
 
 	if(print_flag) {
@@ -1385,7 +1398,7 @@ void AC_DistanceControl::update_steering_controller(void)
 				           get_front13_cm_bf(),
 				           _steer_dis_err,
 				           _steer_pid_out,
-				           _max_steer_yaw_rate.get(),
+				           max_yaw_rate,
 				           _steer_yaw_rate);
 	}
 }
@@ -1455,11 +1468,7 @@ void AC_DistanceControl::cage_circle_time(Vector3f &thrusts)
 	}
 
 	if(print_flag) {
-		hal.shell->printf("cage_circle_time: f347 %d, f13 %d, err %d, rate %.4f, state %d, left %d, circles %d, sec %d(%d)\r\n",
-			           get_front347_cm_bf(),
-			           get_front13_cm_bf(),
-			           _steer_dis_err,
-			           _steer_yaw_rate,
+		hal.shell->printf("cage_circle_time: state %d, left %d, circles %d, sec %d(%d)\r\n",
 			           _cage_time_state,
 			           distance_bf[DIS_BF_LEFT],
 			           _cage_circles,
@@ -1499,19 +1508,33 @@ int8_t AC_DistanceControl::cage_get_stage(int32_t yaw_value)
 	return stage;
 }
 
-void AC_DistanceControl::cage_create_zone(int32_t init_yaw)
+void AC_DistanceControl::cage_create_zone(int32_t init_yaw, uint8_t direction)
 {
-	_cage_yaw_zone[0] = wrap_360_cd(init_yaw - 1500);
-	_cage_yaw_zone[1] = wrap_360_cd(init_yaw + 1500);
-	init_yaw = wrap_360_cd(init_yaw - 9000);
-	_cage_yaw_zone[2] = wrap_360_cd(init_yaw - 1500);
-	_cage_yaw_zone[3] = wrap_360_cd(init_yaw + 1500);
-	init_yaw = wrap_360_cd(init_yaw - 9000);
-	_cage_yaw_zone[4] = wrap_360_cd(init_yaw - 1500);
-	_cage_yaw_zone[5] = wrap_360_cd(init_yaw + 1500);
-	init_yaw = wrap_360_cd(init_yaw - 9000);
-	_cage_yaw_zone[6] = wrap_360_cd(init_yaw - 1500);
-	_cage_yaw_zone[7] = wrap_360_cd(init_yaw + 1500);
+	if(direction) {
+		_cage_yaw_zone[0] = wrap_360_cd(init_yaw);
+		_cage_yaw_zone[1] = wrap_360_cd(init_yaw + 1500);
+		init_yaw = wrap_360_cd(init_yaw + 9000);
+		_cage_yaw_zone[2] = wrap_360_cd(init_yaw);
+		_cage_yaw_zone[3] = wrap_360_cd(init_yaw + 1500);
+		init_yaw = wrap_360_cd(init_yaw + 9000);
+		_cage_yaw_zone[4] = wrap_360_cd(init_yaw);
+		_cage_yaw_zone[5] = wrap_360_cd(init_yaw + 1500);
+		init_yaw = wrap_360_cd(init_yaw + 9000);
+		_cage_yaw_zone[6] = wrap_360_cd(init_yaw);
+		_cage_yaw_zone[7] = wrap_360_cd(init_yaw + 1500);
+	} else {
+		_cage_yaw_zone[0] = wrap_360_cd(init_yaw - 1500);
+		_cage_yaw_zone[1] = wrap_360_cd(init_yaw);
+		init_yaw = wrap_360_cd(init_yaw - 9000);
+		_cage_yaw_zone[2] = wrap_360_cd(init_yaw - 1500);
+		_cage_yaw_zone[3] = wrap_360_cd(init_yaw);
+		init_yaw = wrap_360_cd(init_yaw - 9000);
+		_cage_yaw_zone[4] = wrap_360_cd(init_yaw - 1500);
+		_cage_yaw_zone[5] = wrap_360_cd(init_yaw);
+		init_yaw = wrap_360_cd(init_yaw - 9000);
+		_cage_yaw_zone[6] = wrap_360_cd(init_yaw - 1500);
+		_cage_yaw_zone[7] = wrap_360_cd(init_yaw);
+	}
 	hal.shell->printf("_cage_yaw_zone:[%d %d],[%d %d],[%d %d],[%d %d]\r\n",
 	                  _cage_yaw_zone[0],
 	                  _cage_yaw_zone[1],
@@ -1527,90 +1550,84 @@ void AC_DistanceControl::cage_circle_auto(Vector3f &thrusts)
 {
 	static int8_t cur_stage = 0, next_stage = 0;
 	static uint8_t stage_count = 0;
-	bool print_flag = 0;//_print_flag;
+	bool print_flag = _print_flag;
 	
 	switch (_cage_auto_state) {
 		case 0: //初始化
-			_cage_init_yaw = _ahrs.yaw_sensor;
-			_cage_alt_last = _inav.get_altitude();
-			cage_create_zone(_cage_init_yaw);
-			cur_stage = cage_get_stage(_cage_init_yaw);
-			next_stage = (cur_stage + 1) % 4;
-			stage_count = 1;
-			_cage_auto_state = 1;
-			gcs().send_text(MAV_SEVERITY_INFO, "dis:cage start");
+		    _cage_init_yaw = _ahrs.yaw_sensor;
+		    _cage_alt_last = _inav.get_altitude();
+		    cage_create_zone(_cage_init_yaw, false);
+		    cur_stage = cage_get_stage(_cage_init_yaw);
+		    next_stage = (cur_stage + 1) % 4;
+		    stage_count = 1;
+		    _cage_auto_state = 1;
+		    gcs().send_text(MAV_SEVERITY_INFO, "dis:cage start");
+		    gcs().send_text(MAV_SEVERITY_INFO, "dis:start recording");
 		break;
-		case 1: //检测
-			cur_stage = cage_get_stage(_ahrs.yaw_sensor);
-			if(cur_stage == next_stage) {
-				next_stage = (next_stage + 1) % 4;
-				if(stage_count==1) {
-					gcs().send_text(MAV_SEVERITY_INFO, "dis:start recording");
-				}
-				stage_count++;
-			}
-			
-			if(distance_bf[DIS_BF_LEFT] <= _cage_cm_y) {
-				_steer_yaw_rate = -_cage_turning_yaw_rate;
-				thrusts.y = -_cage_turning_vel_y;
-			} else {
-				thrusts.y = -_cage_vel_y;
-			}
+        case 1: //检测
+            cur_stage = cage_get_stage(_ahrs.yaw_sensor);
+            if(cur_stage == next_stage) {
+                next_stage = (next_stage + 1) % 4;
+                stage_count++;
+            }
 
-			if(stage_count==6) {
-				thrusts.y = 0.0f;
-				_cage_circles++;
-				_cage_auto_state = 2;
-				//_cage_detect.set_and_save(0);
-				//_cage_detect_in = 0;
-				//_cage_auto_state = 0;
-			}
-		break;
-		case 2: //调整高度
+            if(distance_bf[DIS_BF_LEFT] <= _cage_cm_y) {
+                _steer_yaw_rate = -_cage_turning_yaw_rate;
+                thrusts.y = -_cage_turning_vel_y;
+            } else {
+            	thrusts.y = -_cage_vel_y;
+            }
+
+            if(stage_count==5) {
+                thrusts.y = 0.0f;
+                _cage_circles++;
+                _cage_auto_state = 2;
+                //_cage_detect.set_and_save(0);
+                //_cage_detect_in = 0;
+                //_cage_auto_state = 0;
+            }
+        break;
+        case 2: //调整高度
 			if(distance_bf[DIS_BF_BOTTOM] <= _cage_cm_z) {
-				thrusts.z = 0.0f;
-				_cage_seconds = 0;
-				_cage_auto_state = 3;
+			    thrusts.z = 0.0f;
+			    _cage_seconds = 0;
+			    _cage_auto_state = 3;
 			} else {
-				thrusts.z = -_cage_vel_z;
-				if(_inav.get_altitude() <= _cage_alt_last - _cage_alt_step) {
-					thrusts.z = 0.0f;
-					stage_count = 2;
-					_cage_alt_last = _inav.get_altitude();
-					_cage_auto_state = 1;
-				}
+			    thrusts.z = -_cage_vel_z;
+			    if(_inav.get_altitude() <= _cage_alt_last - _cage_alt_step) {
+		            thrusts.z = 0.0f;
+		            stage_count = 1;
+		            _cage_alt_last = _inav.get_altitude();
+		            _cage_auto_state = 1;
+			    }
 			}
-		break;
-		case 3: //结束
+        break;
+        case 3: //结束
 			if(distance_bf[DIS_BF_BOTTOM] <= _cage_cm_z) {
-				if(_cage_seconds >= _cage_timeout_z) {
-				   	thrusts.z = 0.0f;
-					_cage_seconds = 0;
-					_cage_detect.set_and_save(0);
-					//_cage_detect_in = 0;
-					_cage_auto_state = 0;
-					gcs().send_text(MAV_SEVERITY_INFO, "dis:cage end");
-				}
+			    if(_cage_seconds >= _cage_timeout_z) {
+		            thrusts.z = 0.0f;
+		            _cage_seconds = 0;
+		            _cage_detect.set_and_save(0);
+		            //_cage_detect_in = 0;
+		            _cage_auto_state = 0;
+		            gcs().send_text(MAV_SEVERITY_INFO, "dis:cage end");
+			    }
 			} else {
-				thrusts.z = -_cage_vel_z;
-				if(_inav.get_altitude() <= _cage_alt_last - _cage_alt_step) {
-					thrusts.z = 0.0f;
-					_cage_seconds = 0;
-					stage_count = 2;
-					_cage_alt_last = _inav.get_altitude();
-					_cage_auto_state = 1;
-				}
+			    thrusts.z = -_cage_vel_z;
+			    if(_inav.get_altitude() <= _cage_alt_last - _cage_alt_step) {
+		            thrusts.z = 0.0f;
+		            _cage_seconds = 0;
+		            stage_count = 1;
+		            _cage_alt_last = _inav.get_altitude();
+		            _cage_auto_state = 1;
+			    }
 			}
-		break;
-	}
+        break;
+    }
 
 	if(print_flag) {
-		hal.shell->printf("cage_circle_auto: f347 %d, f13 %d, bot %d, err %d, rate %.4f, state %d, left %d, circles %d, cur_stage %d, next_stage %d, stage_count %d, yaw %d, alt_last %f, alt_cur %f, thrusts.z %f\r\n",
-			           get_front347_cm_bf(),
-			           get_front13_cm_bf(),
+		hal.shell->printf("cage_circle_auto: bot %d, state %d, left %d, circles %d, cur_stage %d, next_stage %d, stage_count %d, yaw %d, alt_last %f, alt_cur %f, thrusts.z %f\r\n",
 			           get_bottom_cm_bf(),
-			           _steer_dis_err,
-			           _steer_yaw_rate,
 			           _cage_auto_state,
 			           distance_bf[DIS_BF_LEFT],
 			           _cage_circles, 
@@ -1621,6 +1638,211 @@ void AC_DistanceControl::cage_circle_auto(Vector3f &thrusts)
 			           _cage_alt_last,
 			           _inav.get_altitude(),
 			           thrusts.z);
+	}
+}
+
+void AC_DistanceControl::cage_cylinder(Vector3f &thrusts)
+{
+	static int8_t cur_stage = 0, next_stage = 0;
+	static uint8_t stage_count = 0;
+	bool print_flag = _print_flag;
+	
+	switch (_cage_auto_state) {
+		case 0: //初始化
+			gcs().send_text(MAV_SEVERITY_INFO, "dis:cage start");
+			gcs().send_text(MAV_SEVERITY_INFO, "dis:start recording");
+			_cage_auto_state = 1;
+		break;
+		case 1: //构建zone
+			_cage_init_yaw = _ahrs.yaw_sensor;
+			_cage_alt_last = _inav.get_altitude();
+			cage_create_zone(_cage_init_yaw, _cage_circles%2);
+			cur_stage = cage_get_stage(_cage_init_yaw);
+			next_stage = (cur_stage + 1) % 4;
+			stage_count = 1;
+			_cage_auto_state = 2;
+		break;
+		case 2: //检测
+			cur_stage = cage_get_stage(_ahrs.yaw_sensor);
+			if(cur_stage == next_stage) {
+				next_stage = (next_stage + 1) % 4;
+				stage_count++;
+			}
+
+			if(_cage_circles%2) {
+				thrusts.y = _cage_vel_y;
+			} else {
+				thrusts.y = -_cage_vel_y;
+			}
+
+			if(stage_count==5) {
+				thrusts.y = 0.0f;
+				_cage_circles++;
+				_cage_seconds = 0;
+				_cage_auto_state = 3;
+			}
+		break;
+		case 3: //等待一会
+			if(_cage_seconds >= 2) {
+				_cage_auto_state = 4;
+			}	
+		break;
+		case 4: //调整高度
+			if(distance_bf[DIS_BF_BOTTOM] <= _cage_cm_z) {
+				thrusts.z = 0.0f;
+				_cage_seconds = 0;
+				_cage_auto_state = 5;
+			} else {
+				thrusts.z = -_cage_vel_z;
+				if(_inav.get_altitude() <= _cage_alt_last - _cage_alt_step) {
+					thrusts.z = 0.0f;
+					_cage_auto_state = 1;
+				}
+			}
+		break;
+		case 5: //结束
+			if(distance_bf[DIS_BF_BOTTOM] <= _cage_cm_z) {
+				if(_cage_seconds >= _cage_timeout_z) {
+				   	thrusts.z = 0.0f;
+					_cage_seconds = 0;
+					_cage_detect.set_and_save(0);
+					_cage_auto_state = 0;
+					gcs().send_text(MAV_SEVERITY_INFO, "dis:cage end");
+				}
+			} else {
+				thrusts.z = -_cage_vel_z;
+				if(_inav.get_altitude() <= _cage_alt_last - _cage_alt_step) {
+					thrusts.z = 0.0f;
+					_cage_seconds = 0;
+					_cage_auto_state = 1;
+				}
+			}
+		break;
+	}
+
+	if(print_flag) {
+		hal.shell->printf("cage_cylinder: bot %d, state %d, left %d, circles %d, cur_stage %d, next_stage %d, stage_count %d, yaw %d, alt_last %f, alt_cur %f, thrusts.z %f\r\n",
+			           get_bottom_cm_bf(),
+			           _cage_auto_state,
+			           distance_bf[DIS_BF_LEFT],
+			           _cage_circles, 
+			           cur_stage,
+			           next_stage,
+			           stage_count,
+			           _ahrs.yaw_sensor,
+			           _cage_alt_last,
+			           _inav.get_altitude(),
+			           thrusts.z);
+	}
+}
+
+void AC_DistanceControl::cage_cone(Vector3f &thrusts)
+{
+	static int8_t cur_stage = 0, next_stage = 0;
+	static uint8_t stage_count = 0;
+	bool print_flag = _print_flag;
+	
+	switch (_cage_auto_state) {
+		case 0: //初始化
+			gcs().send_text(MAV_SEVERITY_INFO, "dis:cage start");
+			gcs().send_text(MAV_SEVERITY_INFO, "dis:start recording");
+			_cage_auto_state = 1;
+		break;
+		case 1: //构建zone
+			_cage_init_yaw = _ahrs.yaw_sensor;
+			_cage_alt_last = _inav.get_altitude();
+			cage_create_zone(_cage_init_yaw, _cage_circles%2);
+			cur_stage = cage_get_stage(_cage_init_yaw);
+			next_stage = (cur_stage + 1) % 4;
+			stage_count = 1;
+			_cage_auto_state = 2;
+		break;
+		case 2: //检测
+			cur_stage = cage_get_stage(_ahrs.yaw_sensor);
+			if(cur_stage == next_stage) {
+				next_stage = (next_stage + 1) % 4;
+				stage_count++;
+			}
+
+			if(_cage_circles%2) {
+				thrusts.y = _cage_vel_y;
+			} else {
+				thrusts.y = -_cage_vel_y;
+			}
+
+			if(stage_count==5) {
+				thrusts.y = 0.0f;
+				_cage_circles++;
+				_cage_seconds = 0;
+				_cage_auto_state = 3;
+			}
+		break;
+		case 3: //等待一会
+			if(_cage_seconds >= 2) {
+				_cage_auto_state = 4;
+			}	
+		break;
+		case 4: //调整高度
+			if(at_bottom) {
+				thrusts.z = 0.0f;
+				_cage_auto_state = 5;
+			} else {
+				thrusts.z = -_cage_vel_z;
+				if(_inav.get_altitude() <= _cage_alt_last - _cage_alt_step) {
+					thrusts.z = 0.0f;
+					_cage_auto_state = 1;
+				}
+			}
+		break;
+		case 5: //结束
+			_cage_detect.set_and_save(0);
+			_cage_auto_state = 0;
+			gcs().send_text(MAV_SEVERITY_INFO, "dis:cage end");
+		break;
+	}
+
+	if(print_flag) {
+		hal.shell->printf("cage_cone: bot %d, state %d, left %d, circles %d, cur_stage %d, next_stage %d, stage_count %d, yaw %d, alt_last %f, alt_cur %f, thrusts.z %f\r\n",
+			           get_bottom_cm_bf(),
+			           _cage_auto_state,
+			           distance_bf[DIS_BF_LEFT],
+			           _cage_circles, 
+			           cur_stage,
+			           next_stage,
+			           stage_count,
+			           _ahrs.yaw_sensor,
+			           _cage_alt_last,
+			           _inav.get_altitude(),
+			           thrusts.z);
+	}
+}
+
+void AC_DistanceControl::cage_bottom_detector(Vector3f &mv_thrusts)
+{
+	static uint32_t bottom_detector_count = 0;
+ 	Vector3f velocity = _inav.get_velocity();
+ 	bool print_flag = 0;//_print_flag;
+ 	
+	bool vel_stationary = velocity.z > -5.0f && velocity.z < 5.0f;
+	if(mv_thrusts.z <= -0.1f && vel_stationary) {
+		if (bottom_detector_count < ((float)1.0f)/_dt) {
+            bottom_detector_count++;
+        } else {
+            at_bottom = true;
+            bottom_detector_count = 0;
+            hal.shell->printf("at_bottom\r\n");
+        }
+	} else {
+		at_bottom = false;
+		bottom_detector_count = 0;
+	}
+
+	if(print_flag) {
+		hal.shell->printf("cage_bottom_detector: thrusts.z %.04f, vel_stationary %d, at_bottom %d, bottom_detector_count %d\r\n",
+			           mv_thrusts.z,
+			           vel_stationary,
+			           at_bottom,
+			           bottom_detector_count);
 	}
 }
 
@@ -1642,30 +1864,47 @@ void AC_DistanceControl::update_cage_controller(Vector3f &thrusts)
 {
 	switch (_cage_state) {
 		case 0: //检查定距点
-			if(abs(distance_bf[DIS_BF_FRONT] - _cage_cm_x) <= 5.0f) {
+			if(abs(distance_bf[DIS_BF_FRONT] - _cage_cm_x) <= 5 && 
+			   _alg_relax_cnt.x > 3) {
 				_cage_state = 1;
-				hal.shell->printf("arrived face distance...%d\r\n", get_cage_cm_x());
+				//hal.shell->printf("arrived face distance...%d\r\n", get_cage_cm_x());
 			}
 		break;
 		case 1: //检查是否对齐
-			if(abs(_steer_dis_err) <= 3) {
+			if(abs(_steer_dis_err) <= 2) {
 				_cage_state = 2;
-				hal.shell->printf("target aligned, start detect...\r\n");
+				//hal.shell->printf("target aligned, start detect...\r\n");
 			}
 		break;
 		case 2: //延时启动检测
 		{
 			uint32_t tnow = AP_HAL::millis();
+
 			if(tnow - _cage_circle_ms >= 2000) {
-				if(_cage_circle_seconds) {
-					cage_circle_time(thrusts);
-				} else {
-					cage_circle_auto(thrusts);
+				switch(_cage_mode) {
+					case 0:
+						if(_cage_circle_seconds) {
+							cage_circle_time(thrusts);
+						} else {
+							_cage_detect.set_and_save(0);
+						}
+					break;
+					case 1:
+						cage_circle_auto(thrusts);
+					break;
+					case 2:
+						cage_cylinder(thrusts);
+					break;
+					case 3:
+						cage_cone(thrusts);
+					break;
 				}
 			}
 		}
 		break;
 	}
+
+	cage_bottom_detector(thrusts);
 }
 
 void AC_DistanceControl::distance_work_1hz(void)
@@ -1710,35 +1949,59 @@ void AC_DistanceControl::distance_work_1hz(void)
 		_cage_seconds++;
 	}
 
-	if(fabsf(_alg_out.x) > 0.2f) {
-		if(++_alg_cnt.x > 3) {
-			gcs().send_text(MAV_SEVERITY_WARNING, "dis:x runaway");
-			//hal.shell->printf("dis:x runaway\r\n");
+	if (_motors.armed() && (_limit_enable_in || _distance_face_ned)) {
+		if(fabsf(_alg_out.x) > 0.2f) {
+			if(++_alg_tight_cnt.x > 3) {
+				gcs().send_text(MAV_SEVERITY_WARNING, "dis:x runaway");
+				//hal.shell->printf("dis:x runaway\r\n");
+			}
+			_alg_relax_cnt.x = 0;
+		} else {
+			if(++_alg_relax_cnt.x > 3) {
+				//hal.shell->printf("dis:x runaway\r\n");
+			}
+			_alg_tight_cnt.x = 0;
 		}
-	} else {
-		_alg_cnt.x = 0;
-	}
-	//hal.shell->printf("_alg_out.x %.04f\r\n", _alg_out.x);
+		//hal.shell->printf("_alg_out.x %.04f\r\n", _alg_out.x);
 
-	if(fabsf(_alg_out.y) > 0.2f) {
-		if(++_alg_cnt.y > 3) {
-			gcs().send_text(MAV_SEVERITY_WARNING, "dis:y runaway");
-			//hal.shell->printf("dis:y runaway\r\n");
+		if(fabsf(_alg_out.y) > 0.2f) {
+			if(++_alg_tight_cnt.y > 3) {
+				gcs().send_text(MAV_SEVERITY_WARNING, "dis:y runaway");
+				//hal.shell->printf("dis:y runaway\r\n");
+			}
+			_alg_relax_cnt.y = 0;
+		} else {
+			if(++_alg_relax_cnt.y > 3) {
+				//hal.shell->printf("dis:x runaway\r\n");
+			}
+			_alg_tight_cnt.y = 0;
 		}
-	} else {
-		_alg_cnt.y = 0;
-	}
-	//hal.shell->printf("_alg_out.y %.04f\r\n", _alg_out.y);
+		//hal.shell->printf("_alg_out.y %.04f\r\n", _alg_out.y);
 
-	if(fabsf(_alg_out.z) > 0.2f) {
-		if(++_alg_cnt.z > 3) {
-			gcs().send_text(MAV_SEVERITY_WARNING, "dis:z runaway");
-			//hal.shell->printf("dis:z runaway\r\n");
+		if(fabsf(_alg_out.z) > 0.2f) {
+			if(++_alg_tight_cnt.z > 3) {
+				gcs().send_text(MAV_SEVERITY_WARNING, "dis:z runaway");
+				//hal.shell->printf("dis:z runaway\r\n");
+			}
+			_alg_relax_cnt.z = 0;
+		} else {
+			if(++_alg_relax_cnt.z > 3) {
+				//hal.shell->printf("dis:x runaway\r\n");
+			}
+			_alg_tight_cnt.z = 0;
 		}
-	} else {
-		_alg_cnt.z = 0;
+		//hal.shell->printf("_alg_out.z %.04f\r\n", _alg_out.z);
 	}
-	//hal.shell->printf("_alg_out.z %.04f\r\n", _alg_out.z);
+
+	if(_cage_detect_in) {
+		if(_cage_state == 0) {
+			gcs().send_text(MAV_SEVERITY_INFO, "dis:adjust distance");
+			hal.shell->printf("dis:adjust distance...\r\n");
+		} else if(_cage_state == 1) {
+			gcs().send_text(MAV_SEVERITY_INFO, "dis:adjust steering");
+			hal.shell->printf("dis:adjust steering...\r\n");
+		}
+	}
 
 	//hal.shell->printf("_pos_target[%.04f %.04f %.04f]\r\n", _pos_target.x, _pos_target.y, _pos_target.z);
 }
@@ -1767,6 +2030,9 @@ void AC_DistanceControl::update_backend(Vector3f &mv_thrusts, Vector3i &rot_thru
 	if(_cage_detect_in) {
 		mv_thrusts.zero();
 		rot_thrusts.zero();
+		if(_cage_state >= 1) {
+			_steer_enable_in = true;
+		}
 	}
 
 	attitude_filter(mv_thrusts);
@@ -1781,15 +2047,19 @@ void AC_DistanceControl::update_backend(Vector3f &mv_thrusts, Vector3i &rot_thru
 		pilot_thrusts_limit(mv_thrusts);
 	}
 
-	uint32_t tnow = AP_HAL::millis();
+	//uint32_t tnow = AP_HAL::millis();
 	if(_steer_enable_in) {
-		if(rot_thrusts.z) {
+		if(rot_thrusts.x || 
+		   rot_thrusts.y || 
+		   rot_thrusts.z ||
+		   fabsf(mv_thrusts.x) > 0.0f ||
+		   fabsf(mv_thrusts.z) > 0.0f) {
 			relax_steering_controller();
-			last_pilot_yaw_input_ms = tnow;
+			//last_pilot_yaw_input_ms = tnow;
 		} else {
-			if (tnow >= last_pilot_yaw_input_ms + 250) {
+			//if (tnow >= last_pilot_yaw_input_ms + 500) {
 				update_steering_controller();
-			}
+			//}
 		}
 	}
 
@@ -1809,6 +2079,7 @@ void AC_DistanceControl::relax_z_controller(float distance)
     _vel_last.z = _inav.get_velocity_z();
     _accel_desired.z = 0.0f;
     _flags.reset_rate_to_accel_z = true;
+    _pid_accel_z.set_integrator((_attitude_control.get_throttle_in() - _motors.get_throttle_hover()) * 1000.0f);
     _accel_target.z = -(_ahrs.get_accel_ef_blended().z + GRAVITY_MSS) * 100.0f;
     _pid_accel_z.reset_filter();
     _alg_out.z = 0.0f;
@@ -1965,6 +2236,7 @@ void AC_DistanceControl::relax_x_controller(float distance)
     _flags.reset_rate_to_accel_x = true;
     _accel_target.x = _ahrs.get_accel_ef_blended().x * 100.0f;
     _pid_accel_x.reset_filter();
+    _pid_accel_x.reset_I();
     _alg_out.x = 0.0f;
 }
 
@@ -2097,6 +2369,7 @@ void AC_DistanceControl::relax_y_controller(float distance)
     _flags.reset_rate_to_accel_y = true;
     _accel_target.y = _ahrs.get_accel_ef_blended().y * 100.0f;
     _pid_accel_y.reset_filter();
+    _pid_accel_y.reset_I();
     _alg_out.y = 0.0f;
 }
 

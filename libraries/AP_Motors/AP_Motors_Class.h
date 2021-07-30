@@ -104,6 +104,7 @@ public:
     float               get_throttle() const { return constrain_float(_throttle_filter.get(), 0.0f, 1.0f); }
     float               get_throttle_bidirectional() const { return constrain_float(2 * (_throttle_filter.get() - 0.5f), -1.0f, 1.0f); }
     float               get_throttle_bidirectional(float throttle) const { return constrain_float(2 * (throttle - 0.5f), -1.0f, 1.0f); }
+	float               get_throttle_pilot() const { return _throttle_in_bf; }
     float               get_forward() const { return _forward_in; }
     float               get_lateral() const { return _lateral_in; }
     virtual float       get_throttle_hover() const = 0;

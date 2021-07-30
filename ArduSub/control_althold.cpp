@@ -247,6 +247,7 @@ void Sub::althold_run_rate()
 			top_face_actived = distance_control.top_face_is_active();
 			last_pilot_z_input_ms = tnow;
 	    	is_z_ctrl_relaxed = true;
+	    	hal.shell->printf("face z reset\r\n");
     	}
 
     	if(front_face_actived != distance_control.front_face_is_active() ||
@@ -255,6 +256,7 @@ void Sub::althold_run_rate()
 			back_face_actived = distance_control.back_face_is_active();
 			last_pilot_x_input_ms = tnow;
 	    	is_x_ctrl_relaxed = true;
+	    	hal.shell->printf("face x reset\r\n");
     	}
 
     	if(right_face_actived != distance_control.right_face_is_active() ||
@@ -263,6 +265,7 @@ void Sub::althold_run_rate()
 			left_face_actived = distance_control.left_face_is_active();
 			last_pilot_y_input_ms = tnow;
 		    is_y_ctrl_relaxed = true;
+		    hal.shell->printf("face y reset\r\n");
     	}
     }
 
