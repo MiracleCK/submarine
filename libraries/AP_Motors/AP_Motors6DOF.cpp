@@ -374,9 +374,9 @@ int16_t AP_Motors6DOF::calc_thrust_to_pwm(int motor, float thrust_in) const
         case 0:
         case 1:
             if (thrust_in < -0.01f)
-                return constrain_int16(-1500 + thrust_in*3500, -5000, -1500);
+                return constrain_int16(-1700 + thrust_in*2300, -4000, -1700);
             else if (thrust_in > 0.01f)
-                return constrain_int16(1500 + thrust_in*3500, 1500, 5000);
+                return constrain_int16(1700 + thrust_in*2300, 1700, 4000);
             else
                 return 0;
     }
