@@ -73,7 +73,15 @@ void Sub::init_rc_out()
 
     // refresh auxiliary channel to function map
     SRV_Channels::update_aux_servo_function();
+
+    SRV_Channels::set_aux_channel_default(SRV_Channel::k_throttleLeft, AP_MOTORS_MOT_6);
+    SRV_Channels::set_aux_channel_default(SRV_Channel::k_throttleRight, AP_MOTORS_MOT_4);
     SRV_Channels::set_aux_channel_default(SRV_Channel::k_boost_throttle, AP_MOTORS_MOT_5);
+    SRV_Channels::set_rc_frequency(SRV_Channel::k_throttleLeft, g.rc_speed);
+    SRV_Channels::set_rc_frequency(SRV_Channel::k_throttleRight, g.rc_speed);
+    SRV_Channels::set_rc_frequency(SRV_Channel::k_boost_throttle, g.rc_speed);
+    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1500);
+    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1500);
     SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1500);
 
     /*SRV_Channels::set_aux_channel_default(SRV_Channel::k_steering, AP_MOTORS_MOT_3);
