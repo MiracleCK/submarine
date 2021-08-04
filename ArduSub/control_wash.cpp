@@ -11,9 +11,23 @@ bool Sub::wash_init(void)
     motors.set_yaw(0);
     SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1200);
     if (control_mode == PULLUP)
+    {
+        hal.rcout->set_neopixel_rgb_data(6, 1, NEO_PURPLE);
         set_status(FORWARDING);
+    }
     else
+    {
+        if (control_mode == FLOOR)
+            hal.rcout->set_neopixel_rgb_data(6, 1, NEO_YELLOW);
+        else if (control_mode == WATERLINE)
+            hal.rcout->set_neopixel_rgb_data(6, 1, NEO_GREEN);
+        else if (control_mode == SMART)
+            hal.rcout->set_neopixel_rgb_data(6, 1, NEO_CYAN);
+        else
+            hal.rcout->set_neopixel_rgb_data(6, 1, NEO_BLUE);
         set_status(BACKING);
+    }
+    hal.rcout->neopixel_send();
     _step = WALL;
     return true;
 }
@@ -349,6 +363,11 @@ void Sub::set_error(const char *msg)
     set_status(ERROR);
     motors.set_forward(0);
     motors.set_yaw(0);
+    SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1500);
+    SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1500);
+    SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1500);
+    hal.rcout->set_neopixel_rgb_data(6, 1, NEO_RED);
+    hal.rcout->neopixel_send();
     _target_lateral = 0;
     hal.shell->printf("ERROR: %s\r\n", msg);
     return;

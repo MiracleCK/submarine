@@ -97,6 +97,8 @@ void Sub::setup()
 
     // initialise the main loop scheduler
     scheduler.init(&scheduler_tasks[0], ARRAY_SIZE(scheduler_tasks), MASK_LOG_PM);
+    if (control_mode == MANUAL)
+        manual_init();
 }
 
 void Sub::loop()
@@ -310,11 +312,64 @@ void Sub::one_hz_loop()
     ahrs.set_likely_flying(hal.util->get_soft_armed());
 
     const Matrix3f &m = ahrs.get_rotation_body_to_ned();
-    hal.shell->printf("%.2f %.2f %.2f, %d %d %d\r\n",
-                      m.a.x, m.b.x, m.c.x,
+    int16_t left, right;
+    uint16_t lp, rp, p;
+    uint8_t red, green, blue;
+    SRV_Channels::get_output_pwm(SRV_Channel::k_motor1, (uint16_t &)left);
+    SRV_Channels::get_output_pwm(SRV_Channel::k_motor2, (uint16_t &)right);
+    SRV_Channels::get_output_pwm(SRV_Channel::k_throttleLeft, lp);
+    SRV_Channels::get_output_pwm(SRV_Channel::k_throttleRight, rp);
+    SRV_Channels::get_output_pwm(SRV_Channel::k_boost_throttle, p);
+    red = (uint8_t)(left*255/4000);
+    green = (uint8_t)(right*255/4000);
+    blue = 0;
+    if(palReadLine(HAL_GPIO_PIN_M1_CTRL) == 0)
+    {
+        left = -left;
+        blue = red/2;
+    }
+    if(palReadLine(HAL_GPIO_PIN_M2_CTRL) == 0)
+    {
+        blue = 0;
+        right = -right;
+    }
+    else if (left > 0)
+        blue = green/2 + blue;
+
+    hal.rcout->set_neopixel_rgb_data(6, 2, red, green, blue);
+
+    red = abs(1500 - lp)*255/500;
+    green = abs(1500 - rp)*255/500;
+    blue = 0;
+    hal.rcout->set_neopixel_rgb_data(6, 4, red, green, blue);
+
+    red = abs(1500 - p)*255/500;
+    hal.rcout->set_neopixel_rgb_data(6, 8, red, red, red);
+    hal.rcout->neopixel_send();
+
+    hal.shell->printf("[%d %d %d][%d %d %d]<%d>%d %d %d %d %d\r\n",
+                      (int)(m.a.x*100), (int)(m.b.x*100), (int)(m.c.x*100),
+                      (int)(m.a.z*100), (int)(m.b.z*100), (int)(m.c.z*100),
                       water_detector.read(),
-                      motors.motor_out[0],
-                      motors.motor_out[1]);
+                      left, right, lp, rp, p);
+    /*const Vector3f &mag = ahrs.get_compass()->get_field();
+    const Vector3f &gyr = ahrs.get_gyro_latest();
+    hal.shell->printf("%.1f %.1f %.1f %.5f %.5f %.5f\r\n",
+                      mag.x, mag.y, mag.z,
+                      gyr.x, gyr.y, gyr.z);*/
+
+
+    /*uint32_t rx = hal.uartD->available();
+
+    if (rx)
+    {
+        hal.shell->printf("N:%d ", rx);
+        for (int i = 0; i < rx; ++i)
+        {
+            hal.shell->printf("%02X", hal.uartD->read());
+        }
+        hal.shell->printf("\r\n");
+    }*/
 }
 
 // called at 50hz
