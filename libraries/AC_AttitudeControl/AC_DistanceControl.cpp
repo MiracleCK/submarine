@@ -803,7 +803,7 @@ AC_DistanceControl::AC_DistanceControl(const AP_AHRS_View& ahrs, const AP_Inerti
     _singleton = this;
 }
 
-void AC_DistanceControl::rangefinder_check(void)
+void AC_DistanceControl::rangefinder_check(Vector3f &thrusts)
 {
 	uint8_t num_sensors = _rangefinder.num_sensors();
 	uint8_t sensors_ok = 0;
@@ -881,7 +881,7 @@ void AC_DistanceControl::rangefinder_check(void)
 	}
 }
 
-void AC_DistanceControl::update_distance(void)
+void AC_DistanceControl::update_distance(Vector3f &thrusts)
 {
 	bool print_flag = 0;//_print_flag;
 	
@@ -982,6 +982,31 @@ void AC_DistanceControl::update_distance(void)
     distance_bf[DIS_BF_FRONT13] = 144;
     #endif
 
+    Matrix3f m;
+    m.from_euler(_roll, _pitch, 0);
+    	
+	Vector3f thrusts_bf = thrusts;
+	thrusts_bf.z = -thrusts_bf.z;
+	thrusts_bf = m.transposed() * thrusts_bf;
+	thrusts_bf.z = -thrusts_bf.z;	
+	if(_front_limit_cm.get() && _distance_face_bf==0) {
+		if(fabsf(thrusts_bf.y) >= 0.7f || fabsf(thrusts_bf.z) >= 0.7f) {
+			if(thrusts_bf.x < 0.1f) {
+		  		if((distance_bf[DIS_BF_FRONT347] > 15 && distance_bf[DIS_BF_FRONT347] < 25) ||
+		   		   (distance_bf[DIS_BF_FRONT13] > 15 && distance_bf[DIS_BF_FRONT13] < 25)) {
+					//hal.shell->printf("maybe measure errors, (%d %d)\r\n", distance_bf[DIS_BF_FRONT347], distance_bf[DIS_BF_FRONT13]);
+					distance_bf[DIS_BF_FRONT347] = 0;
+					distance_bf[DIS_BF_FRONT13] = 0;
+				}
+			} else if(thrusts_bf.x > 0.8f && 
+			       abs(_ahrs.roll_sensor) < 1000 && 
+			       abs(_ahrs.pitch_sensor) < 1000) {
+				thrusts.y = constrain_float(thrusts.y, -0.3f, 0.3f);
+				//hal.shell->printf("thrusts.z limit\r\n");
+			}
+	    }
+	}
+
 	if(distance_bf[DIS_BF_FRONT347] != 0 || distance_bf[DIS_BF_FRONT13] != 0) {
 		if(distance_bf[DIS_BF_FRONT347] == 0 || 
 		  (distance_bf[DIS_BF_FRONT13] > 0 && distance_bf[DIS_BF_FRONT13] < distance_safe[DIS_BF_FRONT13])) {
@@ -992,6 +1017,8 @@ void AC_DistanceControl::update_distance(void)
 		} else {
 			distance_bf[DIS_BF_FRONT] = (distance_bf[DIS_BF_FRONT13]*distance_bf[DIS_BF_FRONT347]*(1 + cosf(radians(26))))/((distance_bf[DIS_BF_FRONT13] + distance_bf[DIS_BF_FRONT347])*cosf(radians(13)));
 		}
+	} else {
+		distance_bf[DIS_BF_FRONT] = 0;
 	}
 
 	distance_face_bf[DISTANCE_FRONT] = (_distance_face_bf & 0x01) ? 100 : 0;
@@ -1018,9 +1045,7 @@ void AC_DistanceControl::update_distance(void)
 						distance_face_bf[DISTANCE_TOP],
 						distance_face_bf[DISTANCE_BOTTOM]);
 	}
-	 
-	Matrix3f m;
-	m.from_euler(_roll, _pitch, 0);
+	
 	Vector3f dist[DISTANCE_NUM] = {{(float)distance_bf[DIS_BF_FRONT], 0, 0},
 						{(float)-distance_bf[DIS_BF_BACK], 0, 0},
 						{0, (float)-distance_bf[DIS_BF_LEFT], 0},
@@ -1211,16 +1236,25 @@ void AC_DistanceControl::update_distance(void)
 void AC_DistanceControl::pilot_thrusts_scale(Vector3f &mv_thrusts, Vector3i &rot_thrusts)
 {
 	if(_distance_face_ned) {
-		mv_thrusts *= _thr_face_p;
-	} else if(_limit_enable_in) {
-		mv_thrusts *= _thr_limit_p;
+		//mv_thrusts *= _thr_face_p;
+		mv_thrusts.x = constrain_float(mv_thrusts.x, -_thr_face_p, _thr_face_p);
+		mv_thrusts.y = constrain_float(mv_thrusts.y, -_thr_face_p, _thr_face_p);
+		mv_thrusts.z = constrain_float(mv_thrusts.z, -_thr_face_p, _thr_face_p);
+	}
+
+	if(_limit_enable_in) {
+		//mv_thrusts *= _thr_limit_p;
+		mv_thrusts.x = constrain_float(mv_thrusts.x, -_thr_limit_p, _thr_limit_p);
+		mv_thrusts.y = constrain_float(mv_thrusts.y, -_thr_limit_p, _thr_limit_p);
+		mv_thrusts.z = constrain_float(mv_thrusts.z, -_thr_limit_p, _thr_limit_p);
 	}
 
 	if(_steer_enable_in) {
 		//rot_thrusts.x *= 0.3f;
 		//rot_thrusts.y *= 0.3f;
 		//rot_thrusts.z *= 0.3f;
-		mv_thrusts.z *= 0.5;
+		//mv_thrusts.z *= 0.5;
+		mv_thrusts.z = constrain_float(mv_thrusts.z, -0.5f, 0.5f);
 	}
 }
 
@@ -2023,7 +2057,7 @@ void AC_DistanceControl::update_backend(Vector3f &mv_thrusts, Vector3i &rot_thru
 		}
 	}
 	
-	rangefinder_check();
+	rangefinder_check(mv_thrusts);
 	if(!_sensor_ok)
 		return ;
 
@@ -2037,7 +2071,7 @@ void AC_DistanceControl::update_backend(Vector3f &mv_thrusts, Vector3i &rot_thru
 
 	attitude_filter(mv_thrusts);
 	
-	update_distance();
+	update_distance(mv_thrusts);
 
 	status_check(mv_thrusts);
 

@@ -444,8 +444,14 @@ void Sub::althold_run_rate()
 		    } else {
 		    	distance = distance_control.get_back_cm();
 		    }
+
+		    bool att_affect = false;
+		    if(!distance_control.steer_enable() && 
+		       (pilot_attitude_thrusts.z || pilot_attitude_thrusts.y)) {
+				att_affect = true;
+		    }
 		    
-			if (fabsf(pilot_trans_thrusts.x) > 0.0f || pilot_attitude_thrusts.z || pilot_attitude_thrusts.y) {
+			if (fabsf(pilot_trans_thrusts.x) > 0.0f || att_affect) {
 		        // output pilot's throttle
 		        motors.set_forward(pilot_trans_thrusts.x);
 		        distance_control.relax_x_controller((float)distance);
@@ -469,7 +475,7 @@ void Sub::althold_run_rate()
 		        }  
 		    }
 		} else {
-			motors.set_forward(pilot_trans_thrusts.x);	
+			motors.set_forward(pilot_trans_thrusts.x);
 		}
 
 		if(pilot_trans_thrusts.y >= 0.0f && distance_control.get_right_limit_cm() != 0 && 

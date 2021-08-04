@@ -123,11 +123,11 @@ private:
 
     /// Proportional controller with piecewise sqrt sections to constrain second derivative
     static Vector3f sqrt_controller(const Vector3f& error, float p, float second_ord_lim);
-	void update_distance();
+	void update_distance(Vector3f &thrusts);
 	void pilot_thrusts_scale(Vector3f &mv_thrusts, Vector3i &rot_thrusts);
 	void pilot_thrusts_limit(Vector3f &thrusts);
 	void attitude_filter(Vector3f &thrusts);
-	void rangefinder_check(void);
+	void rangefinder_check(Vector3f &thrusts);
 	void status_check(Vector3f &thrusts);
 	void relax_steering_controller(void);
 	void update_steering_controller(void);
