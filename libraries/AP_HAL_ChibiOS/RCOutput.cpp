@@ -414,7 +414,7 @@ void RCOutput::push_local(void)
                 }
                 if (group.current_mode == MODE_PWM_ONESHOT ||
                     group.current_mode == MODE_PWM_ONESHOT125 ||
-                    group.current_mode == MODE_NEOPIXEL ||
+                    //group.current_mode == MODE_NEOPIXEL || /* NEOPIXEL do not need trigger_group Yinlanshan 210804
                     is_dshot_protocol(group.current_mode)) {
                     need_trigger |= (1U<<i);
                 }
