@@ -461,7 +461,8 @@ private:
     static const struct LogStructure log_structure[];
 
     const Quaternion UP_STRAIGHT = Quaternion(0.7071f, 0, 0.7071f, 0);
-    Vector3f v_desire_direction;
+    uint32_t _rotate_degree = 110;
+    Vector3f v_desire_direction, v_forward_target;
     Vector3f v_downward, v_forward;
     enum STATUS {
         TURNING,
@@ -596,7 +597,8 @@ private:
     void set_error(const char *msg);
     bool turning_orientation(const Vector3f &target, const Vector3f &forward);
     bool should_wash_wall(void);
-    void control_lateral(void);
+    void set_lateral(float lateral);
+    void wash_rotate(const Vector3f &fwd, Vector3f &target);
 
     bool stabilize_init(void);
     void stabilize_run();
@@ -770,6 +772,11 @@ static inline bool is_flip_over(Vector3f &downward)
 static inline bool is_on_wall(Vector3f &downward)
 {
     return downward.z >= -0.7f && downward.z <= 0.7f;
+}
+
+static inline bool is_climbing(Vector3f &forward)
+{
+    return forward.z <= -0.38f; // >= 22.5 deg
 }
 
 extern const AP_HAL::HAL& hal;
