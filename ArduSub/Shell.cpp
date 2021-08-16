@@ -310,16 +310,29 @@ static void cmd_mode(int argc, char *argv[])
 
 static void cmd_ctrl(int argc, char *argv[])
 {
-    if (argc >= 4)
+    if (argc >= 5)
     {
         sub.ctrl_forward = strtof(argv[0], NULL);
         sub.ctrl_yaw = strtof(argv[1], NULL);
-        sub.ctrl_lateral = strtof(argv[2], NULL);
-        sub.ctrl_pump = strtof(argv[3], NULL);
+        sub.ctrl_left = strtof(argv[2], NULL);
+        sub.ctrl_right = strtof(argv[3], NULL);
+        sub.ctrl_pump = strtof(argv[4], NULL);
+        return;
+    }
+    else if (argc == 0)
+    {
+        uint16_t left, right, lp , rp, p;
+        SRV_Channels::get_output_pwm(SRV_Channel::k_motor1, left);
+        SRV_Channels::get_output_pwm(SRV_Channel::k_motor2, right);
+        SRV_Channels::get_output_pwm(SRV_Channel::k_throttleLeft, lp);
+        SRV_Channels::get_output_pwm(SRV_Channel::k_throttleRight, rp);
+        SRV_Channels::get_output_pwm(SRV_Channel::k_boost_throttle, p);
+        hal.shell->printf("PWM: %d %d %d %d %d\r\n",
+            left, right, lp, rp, p);
         return;
     }
 
-    hal.shell->printf("usage: ctrl forward yaw lateral pump\r\n");
+    hal.shell->printf("usage: ctrl forward yaw left right pump\r\n");
 }
 
 // param dbg motor|atti|ctrl on|[off] [print_cnt]
