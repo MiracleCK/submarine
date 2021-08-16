@@ -145,7 +145,7 @@ I2C_ORDER I2C1 I2C2
 # 6) SERIAL5: extra UART (usually RTOS debug console)
 
 # order of UARTs (and USB)
-UART_ORDER OTG1 USART2 EMPTY EMPTY EMPTY USART3 USART1
+UART_ORDER OTG1 USART2 EMPTY UART4 EMPTY USART3 USART1
 
 # If the board has an IOMCU connected via a UART then this defines the
 # UART to talk to that MCU. Leave it out for boards with no IOMCU.
@@ -347,8 +347,8 @@ PD9 USART3_RX USART3
 #PD12 USART3_RTS USART3
 
 # UART4 maps to uartD
-#PC10 USART4_TX USART4
-#PC11 USART4_RX USART4
+PC10 UART4_TX UART4
+PC11 UART4_RX UART4
 
 # The CS pin for FRAM (ramtron). This one is marked as using
 # SPEED_VERYLOW, which matches the HAL_PX4 setup.
@@ -567,7 +567,12 @@ define RC_IN_CHANNEL_ARM 1
 #define ROTATE_CUSTOM_MAG {x = -x; y = y; z = -z; return;}
 
 #EVT2 CUSTOM ROTATE
-define ROTATE_CUSTOM_IMU {tmp = x; x = z; z = -tmp;  return;}
+#define ROTATE_CUSTOM_IMU {tmp = x; x = z; z = -tmp;  return;}
+#define ROTATE_CUSTOM_MAG {tmp = x; x = z; z = y; y = tmp; return;}
+
+#EVT3 INS ROTATE
+define HAL_COMPASS_QMC5883L_ORIENTATION_EXTERNAL ROTATION_PITCH_180
+define ROTATE_CUSTOM_IMU {tmp = x; x = z; z = y; y = tmp; return;}
 define ROTATE_CUSTOM_MAG {tmp = x; x = z; z = y; y = tmp; return;}
 
 #      Motor #               Roll   Pitch    Yaw    Throttle   Forward   Lateral
@@ -584,3 +589,6 @@ define CUSTOM_MOTORS_MOT_3      0,      0,   0.0f,       0,      0.0f,     1.0f
 #define MOT_4_DEADZONE 35
 
 #define USERHOOK_SUPERSLOWLOOP
+
+define STM32_GPT_USE_TIM6 TRUE
+define HAL_USE_GPT TRUE
