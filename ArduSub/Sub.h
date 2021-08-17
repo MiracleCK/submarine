@@ -165,6 +165,8 @@ public:
     float ctrl_forward = 0;
     float ctrl_yaw = 0;
     float ctrl_lateral = 0;
+    float ctrl_left = 0;
+    float ctrl_right = 0;
     float ctrl_pump = 0;
 
     //TODO revert belows to private. I changed it for shell mode cmd. Yinlanshan 210707
