@@ -287,6 +287,12 @@ void Sub::althold_run_rate()
         right_face_actived = false;
         left_face_actived = false;
         return;
+    } else {
+		if(is_ned_pilot && distance_control.get_distance_face()) {
+			motors.set_throttle_range(channel_throttle->get_radio_min() + 100, channel_throttle->get_radio_max() - 100);
+		} else {
+			motors.set_throttle_range(channel_throttle->get_radio_min(), channel_throttle->get_radio_max());
+		}
     }
 
     motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);

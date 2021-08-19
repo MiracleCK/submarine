@@ -158,8 +158,8 @@ extern const AP_HAL::HAL& hal;
 #define DISCONTROL_LIMIT_Y_P                  0.1f    // discontrol limit y P gain default
 #define DISCONTROL_LIMIT_Z_P                  0.1f    // discontrol limit z P gain default
 
-#define DISCONTROL_THRUSTS_FACE_P             0.5f //0.3f    // discontrol face thrusts scale P gain default
-#define DISCONTROL_THRUSTS_LIMIT_P            0.8f //0.8f    // discontrol limit thrusts scale P gain default
+#define DISCONTROL_THRUSTS_FACE_P             0.3f //0.3f    // discontrol face thrusts scale P gain default
+#define DISCONTROL_THRUSTS_LIMIT_P            1.0f //0.8f    // discontrol limit thrusts scale P gain default
 
 #define DISCONTROL_FRONT_LIMIT_CM              0    // discontrol front limit default
 #define DISCONTROL_BACK_LIMIT_CM               0    // discontrol back limit default
@@ -845,7 +845,7 @@ void AC_DistanceControl::rangefinder_check(Vector3f &thrusts)
 		return ;
     }
 
-	if (tnow - _invalid_ms > 5000) {
+	if (tnow - _invalid_ms > 3000) {
 		_limit_enable_in = _limit_enable.get() ? true : false;
 		_distance_face_bf = _distance_face.get();
 		_steer_enable_in = _steer_enable.get() ? true : false;
@@ -894,7 +894,7 @@ void AC_DistanceControl::motor_monitor(int16_t *motor_out, uint8_t motor_num)
         } else {
             skip_front_distance = true;
             motor_enter_count = 0;
-            hal.shell->printf("motor: %d %d, %d %d, skip %d\r\n", 4, motor_out[4], 6, motor_out[6], skip_front_distance);
+            //hal.shell->printf("motor: %d %d, %d %d, skip %d\r\n", 4, motor_out[4], 6, motor_out[6], skip_front_distance);
         }
 	} else {
 		motor_enter_count = 0;
@@ -903,7 +903,7 @@ void AC_DistanceControl::motor_monitor(int16_t *motor_out, uint8_t motor_num)
         } else {
             skip_front_distance = false;
             motor_exit_count = 0;
-            hal.shell->printf("motor: %d %d, %d %d, skip %d\r\n", 4, motor_out[4], 6, motor_out[6], skip_front_distance);
+            //hal.shell->printf("motor: %d %d, %d %d, skip %d\r\n", 4, motor_out[4], 6, motor_out[6], skip_front_distance);
         }
 	}
 
@@ -917,18 +917,16 @@ void AC_DistanceControl::motor_monitor(int16_t *motor_out, uint8_t motor_num)
 		if(AP_HAL::millis() - _startup_ms > 1000) {
 			_startup_ms = AP_HAL::millis();
 
-			//for (int i=0; i<motor_num; i++) {
-		    //    hal.shell->printf("motor: %d %d\r\n", i, motor_out[i]);
-		   	//} 
-		   	hal.shell->printf("motor: %d %d, %d %d, skip %d\r\n", 4, motor_out[4], 6, motor_out[6], skip_front_distance);
-		   	hal.shell->printf("\r\n");
+			for (int i=0; i<motor_num; i++) {
+		        hal.shell->printf("motor: %d %d\r\n", i, motor_out[i]);
+		   	} 
 		}
 	}
 }
 
 void AC_DistanceControl::update_distance(Vector3f &thrusts)
 {
-	bool print_flag = 0;//_print_flag;
+	bool print_flag = _print_flag;
 	
 	blind_area[DIS_BF_FRONT] = _rangefinder.find_instance(ROTATION_NONE)->min_distance_cm();
 	blind_area[DIS_BF_BACK] = _rangefinder.find_instance(ROTATION_PITCH_180)->min_distance_cm();
@@ -2002,13 +2000,17 @@ void AC_DistanceControl::distance_work_1hz(void)
 		return ;
 		
 	for(uint8_t i = 0; i < DISTANCE_NUM; i++) {
-		if(_limit_enable_in && distance_bf[i] > 0 && distance_safe[i] > 0) {
-			if(distance_bf[i] < distance_safe[i] + 10) {
-				alarm_count[i]++;
-				gcs().send_text(MAV_SEVERITY_WARNING, "dis:%s,limit=%d", name[i], distance_bf[i]);
-				//hal.shell->printf("dis:%s,limit=%d\r\n", name[i], distance_bf[i]);
+		if(_limit_enable_in && distance_safe[i] > 0) {
+			if(distance_bf[i] > 0) {
+				if(distance_bf[i] < distance_safe[i] + 10) {
+					alarm_count[i]++;
+					gcs().send_text(MAV_SEVERITY_WARNING, "dis:%s,limit=%d", name[i], distance_bf[i]);
+					//hal.shell->printf("dis:%s,limit=%d\r\n", name[i], distance_bf[i]);
+				} else {
+					alarm_count[i] = 0;
+				}
 			} else {
-				alarm_count[i] = 0;
+				
 			}
 		}
 
@@ -2017,6 +2019,12 @@ void AC_DistanceControl::distance_work_1hz(void)
 			//gcs().send_text(MAV_SEVERITY_WARNING, "dis:%s,face=0", name[i]);
 			//hal.shell->printf("dis:%s,face=0\r\n", name[i]);
 		}
+	}
+
+	if(_limit_enable_in && 
+	   distance_safe[DISTANCE_FRONT] > 0 && 
+	   skip_front_distance) {
+		gcs().send_text(MAV_SEVERITY_WARNING, "dis:%s, force invalid", name[0]);
 	}
 
 	if(_distance_ok) {
@@ -2036,6 +2044,7 @@ void AC_DistanceControl::distance_work_1hz(void)
 		_cage_seconds++;
 	}
 
+#if 0
 	if (_motors.armed() && (_limit_enable_in || _distance_face_ned)) {
 		if(fabsf(_alg_out.x) > 0.2f) {
 			if(++_alg_tight_cnt.x > 3) {
@@ -2079,6 +2088,7 @@ void AC_DistanceControl::distance_work_1hz(void)
 		}
 		//hal.shell->printf("_alg_out.z %.04f\r\n", _alg_out.z);
 	}
+#endif
 
 	if(_cage_detect_in) {
 		if(_cage_state == 0) {
@@ -2095,8 +2105,8 @@ void AC_DistanceControl::distance_work_1hz(void)
 
 void AC_DistanceControl::update_backend(Vector3f &mv_thrusts, Vector3i &rot_thrusts)
 {
-	//if(is_dbg_distance) {
-	if(1) {
+	if(is_dbg_distance) {
+	//if(1) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {
