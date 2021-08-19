@@ -4,6 +4,8 @@
 #include <AP_Logger/AP_Logger.h>
 #include <AP_RangeFinder/AP_RangeFinder_Backend.h>
 
+#include <stdio.h>
+
 extern const AP_HAL::HAL& hal;
 
 #define DISCONTROL_DT_50HZ                      0.02f   // time difference in seconds for 50hz update rate
@@ -805,10 +807,10 @@ AC_DistanceControl::AC_DistanceControl(const AP_AHRS_View& ahrs, const AP_Inerti
 
 void AC_DistanceControl::rangefinder_check(Vector3f &thrusts)
 {
-	uint8_t num_sensors = _rangefinder.num_sensors();
 	uint8_t sensors_ok = 0;
 
-	for (uint8_t i = 0; i < num_sensors; i++) {
+	_num_sensors = _rangefinder.num_sensors();
+	for (uint8_t i = 0; i < _num_sensors; i++) {
         AP_RangeFinder_Backend *sensor = _rangefinder.get_backend(i);
         if (sensor == nullptr) {
             continue;
@@ -1501,7 +1503,7 @@ void AC_DistanceControl::cage_circle_time(Vector3f &thrusts)
 			gcs().send_text(MAV_SEVERITY_INFO, "dis:start recording");
 		break;
 		case 1: //按时间检测
-			if(_cage_seconds >= _cage_circle_seconds) {
+			if(_cage_seconds >= (uint32_t)_cage_circle_seconds) {
 				thrusts.y = 0.0f;
 				_cage_seconds = 0;
 				_cage_circles++;
@@ -1534,7 +1536,7 @@ void AC_DistanceControl::cage_circle_time(Vector3f &thrusts)
 		break;
 		case 3: //结束
 			if(distance_bf[DIS_BF_BOTTOM] <= _cage_cm_z) {
-			   if(_cage_seconds >= _cage_timeout_z) {
+			   if(_cage_seconds >= (uint16_t)_cage_timeout_z) {
 					_cage_seconds = 0;
 					_cage_detect.set_and_save(0);
 					//_cage_detect_in = 0;
@@ -1690,7 +1692,7 @@ void AC_DistanceControl::cage_circle_auto(Vector3f &thrusts)
         break;
         case 3: //结束
 			if(distance_bf[DIS_BF_BOTTOM] <= _cage_cm_z) {
-			    if(_cage_seconds >= _cage_timeout_z) {
+			    if(_cage_seconds >= (uint16_t)_cage_timeout_z) {
 		            thrusts.z = 0.0f;
 		            _cage_seconds = 0;
 		            _cage_detect.set_and_save(0);
@@ -1788,7 +1790,7 @@ void AC_DistanceControl::cage_cylinder(Vector3f &thrusts)
 		break;
 		case 5: //结束
 			if(distance_bf[DIS_BF_BOTTOM] <= _cage_cm_z) {
-				if(_cage_seconds >= _cage_timeout_z) {
+				if(_cage_seconds >= (uint16_t)_cage_timeout_z) {
 				   	thrusts.z = 0.0f;
 					_cage_seconds = 0;
 					_cage_detect.set_and_save(0);
@@ -2111,7 +2113,7 @@ void AC_DistanceControl::update_backend(Vector3f &mv_thrusts, Vector3i &rot_thru
 	}
 	
 	rangefinder_check(mv_thrusts);
-	if(!_sensor_ok)
+	if(_num_sensors < 5 || !_sensor_ok)
 		return ;
 
 	if(_cage_detect_in) {

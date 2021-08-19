@@ -31,8 +31,10 @@ void Sub::init_ardupilot()
 
     // load parameters from EEPROM
     load_parameters();
-
+    
+#if CONFIG_HAL_BOARD != HAL_BOARD_SITL
     factory.mode_check();
+#endif
 
     BoardConfig.init();
 #if HAL_WITH_UAVCAN
