@@ -68,6 +68,11 @@ public:
         _setup_custom_motors_callback = callback;
     }
 
+    FUNCTOR_TYPEDEF(motor_fn_t, void, int16_t *, uint8_t); // forward lateral throttle
+    void                set_motor_callback(motor_fn_t callback) {
+        _motor_callback = callback;
+    }
+
     void set_motors_log(bool log_start) {motor_log_start = log_start;}
 
 protected:
@@ -98,6 +103,7 @@ protected:
 
     thrust_decomposition_fn_t _thrust_decomposition_callback;
     setup_custom_motors_fn_t  _setup_custom_motors_callback;
+    motor_fn_t _motor_callback;
 
     void output_armed_stabilizing_custom();
 

@@ -881,6 +881,51 @@ void AC_DistanceControl::rangefinder_check(Vector3f &thrusts)
 	}
 }
 
+void AC_DistanceControl::motor_monitor(int16_t *motor_out, uint8_t motor_num)
+{
+	static uint32_t motor_enter_count = 0, motor_exit_count = 0;
+
+	//if((motor_out[4] > 1800 || motor_out[6] < 1200) && 
+	//   ((distance_bf[DIS_BF_FRONT347] > 15 && distance_bf[DIS_BF_FRONT347] < 25) ||
+	//	(distance_bf[DIS_BF_FRONT13] > 15 && distance_bf[DIS_BF_FRONT13] < 25))) {
+	if(motor_out[4] > 1800 || motor_out[6] < 1200) {
+		if(motor_enter_count < ((float)0.05f)/_dt) {
+            motor_enter_count++;
+        } else {
+            skip_front_distance = true;
+            motor_enter_count = 0;
+            hal.shell->printf("motor: %d %d, %d %d, skip %d\r\n", 4, motor_out[4], 6, motor_out[6], skip_front_distance);
+        }
+	} else {
+		motor_enter_count = 0;
+		if(motor_exit_count < ((float)2.0f)/_dt) {
+            motor_exit_count++;
+        } else {
+            skip_front_distance = false;
+            motor_exit_count = 0;
+            hal.shell->printf("motor: %d %d, %d %d, skip %d\r\n", 4, motor_out[4], 6, motor_out[6], skip_front_distance);
+        }
+	}
+
+	if(0) {
+		static uint32_t _startup_ms = 0;
+
+		if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+		}
+
+		if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+
+			//for (int i=0; i<motor_num; i++) {
+		    //    hal.shell->printf("motor: %d %d\r\n", i, motor_out[i]);
+		   	//} 
+		   	hal.shell->printf("motor: %d %d, %d %d, skip %d\r\n", 4, motor_out[4], 6, motor_out[6], skip_front_distance);
+		   	hal.shell->printf("\r\n");
+		}
+	}
+}
+
 void AC_DistanceControl::update_distance(Vector3f &thrusts)
 {
 	bool print_flag = 0;//_print_flag;
@@ -984,7 +1029,8 @@ void AC_DistanceControl::update_distance(Vector3f &thrusts)
 
     Matrix3f m;
     m.from_euler(_roll, _pitch, 0);
-    	
+
+#if 0 	
 	Vector3f thrusts_bf = thrusts;
 	thrusts_bf.z = -thrusts_bf.z;
 	thrusts_bf = m.transposed() * thrusts_bf;
@@ -1002,10 +1048,16 @@ void AC_DistanceControl::update_distance(Vector3f &thrusts)
 			       abs(_ahrs.roll_sensor) < 1000 && 
 			       abs(_ahrs.pitch_sensor) < 1000) {
 				thrusts.y = constrain_float(thrusts.y, -0.3f, 0.3f);
-				//hal.shell->printf("thrusts.z limit\r\n");
+				//hal.shell->printf("thrusts.y limit\r\n");
 			}
 	    }
 	}
+#else 
+	if(skip_front_distance) {
+		distance_bf[DIS_BF_FRONT347] = 0;
+		distance_bf[DIS_BF_FRONT13] = 0;
+	}
+#endif
 
 	if(distance_bf[DIS_BF_FRONT347] != 0 || distance_bf[DIS_BF_FRONT13] != 0) {
 		if(distance_bf[DIS_BF_FRONT347] == 0 || 
@@ -1907,6 +1959,7 @@ void AC_DistanceControl::update_cage_controller(Vector3f &thrusts)
 		case 1: //检查是否对齐
 			if(abs(_steer_dis_err) <= 2) {
 				_cage_state = 2;
+				_cage_circle_ms = AP_HAL::millis();
 				//hal.shell->printf("target aligned, start detect...\r\n");
 			}
 		break;

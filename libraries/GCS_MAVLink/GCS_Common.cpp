@@ -1703,6 +1703,43 @@ void GCS_MAVLINK::send_rc_channels()
 }
 #endif
 
+#if 0
+void GCS_MAVLINK::send_rc_channels()
+{
+    AP_RSSI *rssi = AP::rssi();
+    uint8_t receiver_rssi = 0;
+    if (rssi != nullptr) {
+        receiver_rssi = rssi->read_receiver_rssi_uint8();
+    }
+
+    uint16_t values[18] = {};
+    rc().get_radio_in(values, ARRAY_SIZE(values));
+
+    mavlink_msg_rc_channels_send(
+        chan,
+        AP_HAL::millis(),
+        RC_Channels::get_valid_channel_count(),
+        values[0],
+        values[1],
+        values[2],
+        values[3],
+        values[4],
+        values[5],
+        values[6],
+        values[7],
+        values[8],
+        values[9],
+        values[10],
+        values[11],
+        values[12],
+        values[13],
+        values[14],
+        values[15],
+        values[16],
+        values[17],
+        receiver_rssi); 
+}
+#endif
 
 bool GCS_MAVLINK::sending_mavlink1() const
 {

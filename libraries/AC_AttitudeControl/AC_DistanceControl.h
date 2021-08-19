@@ -99,6 +99,7 @@ public:
     
 	void update_backend(Vector3f &mv_thrusts, Vector3i &rot_thrusts);
 	void distance_work_1hz(void);
+	void motor_monitor(int16_t *motor_out, uint8_t num);
 	static AC_DistanceControl *get_singleton(void) { return _singleton; }
 	
     static const struct AP_Param::GroupInfo var_info[];
@@ -254,6 +255,7 @@ private:
     bool _print_flag;
     uint32_t last_pilot_yaw_input_ms;
     bool at_bottom;
+    bool skip_front_distance;
 
 	AP_Float	_thr_face_p;
 	AP_Float	_thr_limit_p;

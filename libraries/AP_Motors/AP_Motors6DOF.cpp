@@ -382,12 +382,17 @@ void AP_Motors6DOF::output_to_motors()
         break;
     }
 
+	int16_t motor_buf[AP_MOTORS_MAX_NUM_MOTORS] = {0}; 
     // send output to each motor
     for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
         if (motor_enabled[i]) {
             rc_write(_motor_mapping[i] - 1, motor_out[i]);
+            motor_buf[(_motor_mapping[i] - 1) % AP_MOTORS_MAX_NUM_MOTORS] = motor_out[i];
         }
     }
+
+    if(_motor_callback)
+        _motor_callback(motor_buf, AP_MOTORS_MAX_NUM_MOTORS);
 }
 
 float AP_Motors6DOF::get_current_limit_max_throttle()

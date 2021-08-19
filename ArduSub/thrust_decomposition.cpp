@@ -315,13 +315,19 @@ void Sub::thrust_decomposition_select(bool is_ned, control_mode_t mode, bool is_
         printf("set decomposition to NED\r\n");
         motors.set_thrust_decomposition_callback(
             FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_ned, Vector3f, Vector3f&, Vector3f, float));
+        motors.set_motor_callback(
+            FUNCTOR_BIND(&distance_control, &AC_DistanceControl::motor_monitor, void, int16_t *, uint8_t));
     } else if (target_axis == AXIS_BODY) {
         printf("set decomposition to body\r\n");
         motors.set_thrust_decomposition_callback(
             FUNCTOR_BIND_MEMBER(&Sub::thrust_decomposition_body_rot_matrix, Vector3f, Vector3f&, Vector3f, float));
+		motors.set_motor_callback(nullptr);
     } else {
         printf("decomposition cleard\r\n");
         motors.set_thrust_decomposition_callback(nullptr);
+        motors.set_motor_callback(nullptr);
+        //motors.set_motor_callback(
+        //    FUNCTOR_BIND(&distance_control, &AC_DistanceControl::motor_monitor, void, int16_t *, uint8_t));
     }
 
     pilot_axis = target_axis;
