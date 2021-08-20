@@ -6,12 +6,12 @@
 
 #include "ap_version.h"
 
-#define THISFIRMWARE "M2 v2.2.3dev"
+#define THISFIRMWARE "M2 v2.2.4dev"
 
 // the following line is parsed by the autotest scripts
-#define FIRMWARE_VERSION 2,2,3,FIRMWARE_VERSION_TYPE_DEV
+#define FIRMWARE_VERSION 2,2,4,FIRMWARE_VERSION_TYPE_DEV
 
 #define FW_MAJOR 2
 #define FW_MINOR 2
-#define FW_PATCH 3
+#define FW_PATCH 4
 #define FW_TYPE FIRMWARE_VERSION_TYPE_DEV

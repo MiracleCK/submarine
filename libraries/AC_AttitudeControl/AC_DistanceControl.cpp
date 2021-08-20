@@ -1308,6 +1308,7 @@ void AC_DistanceControl::pilot_thrusts_scale(Vector3f &mv_thrusts, Vector3i &rot
 	}
 }
 
+#if 0
 void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 {
 	Vector3f dis_error;
@@ -1415,6 +1416,139 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 				thrusts.z); 
 	}
 }
+#else
+void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
+{
+	Vector3f dis_error;
+	bool print_flag = _print_flag;
+
+	Matrix3f m;
+    m.from_euler(_roll, _pitch, 0);
+    Vector3f thrusts_bf = thrusts;
+	thrusts_bf.z = -thrusts_bf.z;
+	thrusts_bf = m.transposed() * thrusts_bf;
+	thrusts_bf.z = -thrusts_bf.z;
+	
+    if(thrusts_bf.x > 0.0f) {
+    	if(distance_safe[DISTANCE_FRONT] != 0 && distance_bf[DISTANCE_FRONT] != 0) {
+			dis_error.x = distance_bf[DISTANCE_FRONT] - distance_safe[DISTANCE_FRONT];
+			if(dis_error.x > 0) {
+				thrusts_bf.x *= constrain_float(powf(dis_error.x/distance_safe[DISTANCE_FRONT], _curve_x)*_limit_x_p, 0.0f, 1.0f);
+			} else {
+				thrusts_bf.x = 0.0f;
+			}
+		}
+	} else if(thrusts_bf.x < -0.0f) {
+		if(distance_safe[DISTANCE_BACK] != 0 && distance_bf[DISTANCE_BACK] != 0) {
+			dis_error.x = distance_bf[DISTANCE_BACK] - distance_safe[DISTANCE_BACK];
+			if(dis_error.x > 0) {
+				thrusts_bf.x *= constrain_float(powf(dis_error.x/distance_safe[DISTANCE_BACK], _curve_x)*_limit_x_p, 0.0f, 1.0f);
+			} else {
+				thrusts_bf.x = 0.0f;
+			}
+		}
+	} else {
+		dis_error.x = 0;
+	}
+
+	if(thrusts_bf.y > 0.0f) {
+		if(distance_safe[DISTANCE_RIGHT] != 0 && distance_bf[DISTANCE_RIGHT] != 0) {
+			dis_error.y = distance_bf[DISTANCE_RIGHT] - distance_safe[DISTANCE_RIGHT];
+			if(dis_error.y > 0) {
+				thrusts_bf.y *= constrain_float(powf(dis_error.y/distance_safe[DISTANCE_RIGHT], _curve_y)*_limit_y_p, 0.0f, 1.0f);
+			} else {
+				thrusts_bf.y = 0.0f;
+			}
+		}
+	} else if(thrusts_bf.y < -0.0f) {
+		if(distance_safe[DISTANCE_LEFT] != 0 && distance_bf[DISTANCE_LEFT] != 0) {
+			dis_error.y = distance_bf[DISTANCE_LEFT] - distance_safe[DISTANCE_LEFT];
+			if(dis_error.y > 0) {
+				thrusts_bf.y *= constrain_float(powf(dis_error.y/distance_safe[DISTANCE_LEFT], _curve_y)*_limit_y_p, 0.0f, 1.0f);
+			} else {
+				thrusts_bf.y = 0.0f;
+			}
+		}
+	} else {
+		dis_error.y = 0;
+	}
+	
+	if(thrusts_bf.z < -0.0f) {
+		if(distance_safe[DISTANCE_BOTTOM] != 0 && distance_bf[DISTANCE_BOTTOM] != 0) {
+			dis_error.z = distance_bf[DISTANCE_BOTTOM] - distance_safe[DISTANCE_BOTTOM];
+			if(dis_error.z > 0) {
+				thrusts_bf.z *= constrain_float(powf(dis_error.z/distance_safe[DISTANCE_BOTTOM], _curve_z)*_limit_z_p, 0.0f, 1.0f);
+			} else {
+				thrusts_bf.z = 0.0f;
+			}
+		}
+	} else if(thrusts_bf.z > 0.0f) {
+		if(distance_safe[DISTANCE_TOP] != 0 && distance_bf[DISTANCE_TOP] != 0) {
+			dis_error.z = distance_bf[DISTANCE_TOP] - distance_safe[DISTANCE_TOP];
+			if(dis_error.z > 0) {
+				thrusts_bf.z *= constrain_float(powf(dis_error.z/abs(distance_safe[DISTANCE_TOP]), _curve_z)*_limit_z_p, 0.0f, 1.0f);
+			} else {
+				thrusts_bf.z = 0.0f;
+			}
+		}
+	} else {
+		dis_error.z = 0;
+	}
+
+	Vector3f thrusts_ned = thrusts_bf;
+	thrusts_ned.z = -thrusts_ned.z;
+	thrusts_ned = m * thrusts_ned;
+	thrusts_ned.z = -thrusts_ned.z;
+
+	if(thrusts.x > 0.0f) {
+		if(thrusts_ned.x < 0.08f)
+			thrusts_ned.x = 0.08f;
+	} else if(thrusts.x < -0.0f) {
+		if(thrusts_ned.x > -0.08f)
+			thrusts_ned.x = -0.08f;
+	} else {
+		thrusts_ned.x = 0.0f;
+	}
+
+	if(thrusts.y > 0.0f) {
+		if(thrusts_ned.y < 0.08f)
+			thrusts_ned.y = 0.08f;
+	} else if(thrusts.y < -0.0f) {
+		if(thrusts_ned.y > -0.08f)
+			thrusts_ned.y = -0.08f;
+	} else {
+		thrusts_ned.y = 0.0f;
+	}
+
+	if(thrusts.z > 0.0f) {
+		if(thrusts_ned.z < 0.15f)
+			thrusts_ned.z = 0.15f;
+	} else if(thrusts.z < -0.0f) {
+		if(thrusts_ned.z > -0.15f)
+			thrusts_ned.z = -0.15f;
+	} else {
+		thrusts_ned.z = 0.0f;
+	}
+
+	if(print_flag) {
+		hal.shell->printf("dis_error [%.4f %.4f %.4f]\r\n",
+				dis_error.x, 
+				dis_error.y, 
+				dis_error.z);
+
+		hal.shell->printf("thrusts_in [%.4f %.4f %.4f]\r\n",
+				thrusts.x, 
+				thrusts.y,
+				thrusts.z); 
+				
+		hal.shell->printf("thrusts_out [%.4f %.4f %.4f]\r\n",
+				thrusts_ned.x, 
+				thrusts_ned.y,
+				thrusts_ned.z);
+	}
+	thrusts = thrusts_ned;
+}
+#endif
 
 void AC_DistanceControl::attitude_filter(Vector3f &thrusts)
 {
@@ -2105,8 +2239,8 @@ void AC_DistanceControl::distance_work_1hz(void)
 
 void AC_DistanceControl::update_backend(Vector3f &mv_thrusts, Vector3i &rot_thrusts)
 {
-	if(is_dbg_distance) {
-	//if(1) {
+	//if(is_dbg_distance) {
+	if(1) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {
