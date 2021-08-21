@@ -41,6 +41,7 @@ public:
 	void distance_reset(void) {        _distance_reset = true; }
 	bool cage_detect_enable() const { return _cage_detect_in; }
 	bool steer_enable() const { return _steer_enable_in; }
+	bool front_dis_invalid() const { return skip_front_distance; }
 	
     bool front_face_is_active() const { return (_distance_face_ned & 0x01); }
     bool back_face_is_active() const { return (_distance_face_ned & 0x02); }
