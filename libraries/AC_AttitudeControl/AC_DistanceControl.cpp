@@ -1375,115 +1375,6 @@ void AC_DistanceControl::pilot_thrusts_scale(Vector3f &mv_thrusts, Vector3i &rot
 	}
 }
 
-#if 0
-void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
-{
-	Vector3f dis_error;
-	bool print_flag = 0;//_print_flag;
-	
-    if(thrusts.x > 0.0f) {
-    	if(distance_limit_ned[DISTANCE_FRONT] != 0 && distance_ned[DISTANCE_FRONT] != 0) {
-			dis_error.x = distance_ned[DISTANCE_FRONT] - distance_limit_ned[DISTANCE_FRONT];
-			if(dis_error.x > 0 && dis_error.x <= 50) {
-				thrusts.x *= constrain_float(powf(dis_error.x/abs(distance_limit_ned[DISTANCE_FRONT]), _curve_x)*_limit_x_p, 0.0f, 1.0f);
-				if(thrusts.x < 0.05f)
-					thrusts.x = 0.05f;
-			} else if(dis_error.x > 50) {
-				thrusts.x *= constrain_float(dis_error.x/100, 0.0f, 1.0f);
-			} else {
-				thrusts.x = 0.0f;
-			}
-		}
-	} else if(thrusts.x < -0.0f) {
-		if(distance_limit_ned[DISTANCE_BACK] != 0 && distance_ned[DISTANCE_BACK] != 0) {
-			dis_error.x = distance_limit_ned[DISTANCE_BACK] - distance_ned[DISTANCE_BACK];
-			if(dis_error.x > 0 && dis_error.x <= 50) {
-				thrusts.x *= constrain_float(powf(dis_error.x/abs(distance_limit_ned[DISTANCE_BACK]), _curve_x)*_limit_x_p, 0.0f, 1.0f);
-				if(thrusts.x > -0.05f)
-					thrusts.x = -0.05f;
-			} else if(dis_error.x > 50) {
-				thrusts.x *= constrain_float(dis_error.x/100, 0.0f, 1.0f);
-			} else {
-				thrusts.x = 0.0f;
-			}
-		}
-	} else {
-		dis_error.x = 0;
-	}
-
-	if(thrusts.y > 0.0f) {
-		if(distance_limit_ned[DISTANCE_RIGHT] != 0 && distance_ned[DISTANCE_RIGHT] != 0) {
-			dis_error.y = distance_ned[DISTANCE_RIGHT] - distance_limit_ned[DISTANCE_RIGHT];
-			if(dis_error.y > 0 && dis_error.y <= 50) {
-				thrusts.y *= constrain_float(powf(dis_error.y/abs(distance_limit_ned[DISTANCE_RIGHT]), _curve_y)*_limit_y_p, 0.0f, 1.0f);
-				if(thrusts.y < 0.08f)
-					thrusts.y = 0.08f;
-			} else if(dis_error.y > 50) {
-				thrusts.y *= constrain_float(dis_error.y/100, 0.0f, 1.0f);
-			} else {
-				thrusts.y = 0.0f;
-			}
-		}
-	} else if(thrusts.y < -0.0f) {
-		if(distance_limit_ned[DISTANCE_LEFT] != 0 && distance_ned[DISTANCE_LEFT] != 0) {
-			dis_error.y = distance_limit_ned[DISTANCE_LEFT] - distance_ned[DISTANCE_LEFT];
-			if(dis_error.y > 0 && dis_error.y <= 50) {
-				thrusts.y *= constrain_float(powf(dis_error.y/abs(distance_limit_ned[DISTANCE_LEFT]), _curve_y)*_limit_y_p, 0.0f, 1.0f);
-				if(thrusts.y > -0.08f)
-					thrusts.y = -0.08f;
-			} else if(dis_error.y > 50) {
-				thrusts.y *= constrain_float(dis_error.y/100, 0.0f, 1.0f);
-			} else {
-				thrusts.y = 0.0f;
-			}
-		}
-	} else {
-		dis_error.y = 0;
-	}
-	
-	if(thrusts.z < -0.0f) {
-		if(distance_limit_ned[DISTANCE_BOTTOM] != 0 && distance_ned[DISTANCE_BOTTOM] != 0) {
-			dis_error.z = distance_ned[DISTANCE_BOTTOM] - distance_limit_ned[DISTANCE_BOTTOM];
-			if(dis_error.z > 0 && dis_error.z <= 50) {
-				thrusts.z *= constrain_float(powf(dis_error.z/abs(distance_limit_ned[DISTANCE_BOTTOM]), _curve_z)*_limit_z_p, 0.0f, 1.0f);
-				if(thrusts.z > -0.15f)
-					thrusts.z = -0.15f;
-			} else if(dis_error.z > 50) {
-				thrusts.z *= constrain_float(dis_error.z/100, 0.0f, 1.0f);
-			} else {
-				thrusts.z = 0.0f;
-			}
-		}
-	} else if(thrusts.z > 0.0f) {
-		if(abs(distance_ned[DISTANCE_TOP]) > 10 && distance_limit_ned[DISTANCE_TOP] != 0) {
-			dis_error.z = distance_limit_ned[DISTANCE_TOP] - distance_ned[DISTANCE_TOP];
-			if(dis_error.z > 0 && dis_error.z <= 50) {
-				thrusts.z *= constrain_float(powf(dis_error.z/abs(distance_limit_ned[DISTANCE_TOP]), _curve_z)*_limit_z_p, 0.0f, 1.0f);
-				if(thrusts.z < 0.15f)
-					thrusts.z = 0.15f;
-			} else if(dis_error.z > 50) {
-				thrusts.z *= constrain_float(dis_error.z/100, 0.0f, 1.0f);
-			} else {
-				thrusts.z = 0.0f;
-			}
-		}
-	} else {
-		dis_error.z = 0;
-	}
-
-	if(print_flag) {
-		hal.shell->printf("dis_error [%.4f %.4f %.4f]\r\n",
-				dis_error.x, 
-				dis_error.y, 
-				dis_error.z);
-
-		hal.shell->printf("thrusts_in [%.4f %.4f %.4f]\r\n",
-				thrusts.x, 
-				thrusts.y,
-				thrusts.z); 
-	}
-}
-#else
 void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 {
 	Vector3f dis_error;
@@ -1615,7 +1506,6 @@ void AC_DistanceControl::pilot_thrusts_limit(Vector3f &thrusts)
 	}
 	thrusts = thrusts_ned;
 }
-#endif
 
 void AC_DistanceControl::attitude_filter(Vector3f &thrusts)
 {
@@ -2245,7 +2135,7 @@ void AC_DistanceControl::distance_work_1hz(void)
 		_cage_seconds++;
 	}
 
-#if 1
+#if 0
 	if (_motors.armed() && (_limit_enable_in || _distance_face_ned)) {
 		if(fabsf(_alg_out.x) > 0.5f) { //0.75 - 1800
 			if(++_alg_tight_cnt.x > 3) {
