@@ -84,9 +84,9 @@ public:
     int16_t get_bottom_limit_cm() const { return (_limit_enable_in ? distance_limit_ned[DISTANCE_BOTTOM] : 0); }
     int16_t get_distance_limit(uint8_t i) const { return (_limit_enable_in ? distance_limit_ned[i] : 0); }
 
-    int16_t get_delayms_x() const { return _delay_ms_x.get(); }
-    int16_t get_delayms_y() const { return _delay_ms_y.get(); }
-    int16_t get_delayms_z() const { return _delay_ms_z.get(); }
+    uint16_t get_delayms_x() const { return (uint16_t)_delay_ms_x.get(); }
+    uint16_t get_delayms_y() const { return (uint16_t)_delay_ms_y.get(); }
+    uint16_t get_delayms_z() const { return (uint16_t)_delay_ms_z.get(); }
 
     int8_t get_front_pos_offset() const { return _front_offset.get(); }
     int8_t get_back_pos_offset() const { return _back_offset.get(); }
@@ -257,6 +257,7 @@ private:
     uint32_t last_pilot_yaw_input_ms;
     bool at_bottom;
     bool skip_front_distance;
+    uint8_t _num_sensors;
 
 	AP_Float	_thr_face_p;
 	AP_Float	_thr_limit_p;

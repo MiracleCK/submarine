@@ -54,7 +54,10 @@ MAV_MODE GCS_MAVLINK_Sub::base_mode() const
     // indicate we have set a custom mode
     _base_mode |= MAV_MODE_FLAG_CUSTOM_MODE_ENABLED;
 
-    if(factory.isFactoryAgingMode()) {
+#if CONFIG_HAL_BOARD != HAL_BOARD_SITL
+    if(factory.isFactoryAgingMode()) 
+#endif
+    {
     	_base_mode |= MAV_MODE_FLAG_TEST_ENABLED;
     }
 

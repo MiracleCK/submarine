@@ -607,10 +607,12 @@ const AP_Param::Info Sub::var_info[] = {
     // @Path: ../libraries/AP_Vehicle/AP_Vehicle.cpp
     { AP_PARAM_GROUP, "", Parameters::k_param_vehicle, (const void *)&sub, {group_info : AP_Vehicle::var_info} },
 
+#if CONFIG_HAL_BOARD != HAL_BOARD_SITL
 	// @Group:
     // @Path: factory.cpp
     { AP_PARAM_GROUP, "", Parameters::k_param_factory, (const void *)&factory, {group_info : Factory::var_info} },
-    
+#endif
+
     AP_VAREND
 };
 
