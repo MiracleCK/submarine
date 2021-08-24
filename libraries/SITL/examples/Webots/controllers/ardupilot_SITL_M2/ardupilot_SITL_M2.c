@@ -34,7 +34,7 @@
 #include <webots/robot.h>
 #include <webots/supervisor.h>
 #include <webots/emitter.h>
-#include "ardupilot_SITL_QUAD.h"
+#include "ardupilot_SITL_M2.h"
 #include "sockets.h"
 #include "sensors.h"
 

@@ -49,11 +49,11 @@ float calc_roll0_psi_from_rot(Matrix3f& rot, float &psi_o) {
     psi_o = psi;
 
     if (fabsf(phi - M_PI) < 1.0e-3f || fabsf(phi + M_PI) < 1.0e-3f) {
-        if (signbit(psi)) {
-            psi += M_PI;
-        } else {
-            psi -= M_PI;
-        }
+        // if (signbit(psi)) {
+        //     psi += M_PI;
+        // } else {
+        //     psi -= M_PI;
+        // }
     }
 
     return psi;

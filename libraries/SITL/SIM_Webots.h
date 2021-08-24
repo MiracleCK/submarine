@@ -53,7 +53,8 @@ private:
         OUTPUT_ROVER=1,
         OUTPUT_QUAD=2,
         OUTPUT_TRICOPTER=3,
-        OUTPUT_PWM=4
+        OUTPUT_PWM=4,
+        OUTPUT_M2=5
     } output_type;
 
     bool connect_sockets(void);
@@ -63,6 +64,7 @@ private:
     void output_quad(const struct sitl_input &input);
     void output_tricopter(const struct sitl_input &input);
     void output_pwm(const struct sitl_input &input);
+    void output_m2(const struct sitl_input &input);
     void report_FPS();
 
     // buffer for parsing pose data in JSON format
