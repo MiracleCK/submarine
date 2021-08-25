@@ -64,7 +64,6 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
     // corrected_pitch = -0.02;
     // corrected_roll = 0;
 
-
     if (is_param_print() && is_dbg_motor) {
         printf("============================\r\n");
         printf("thrust: roll %2.4f pitch %2.4f yaw %2.4f\r\n", roll_thrust, pitch_thrust, yaw_thrust);
@@ -88,6 +87,24 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
     } else {
         throttle_thrust = _throttle_in_bf;
     }
+
+    if(1) {
+		static uint32_t _startup_ms = 0;
+
+		if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+		}
+
+		if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+			hal.console->printf("roll_thrust %.02f\n", roll_thrust);
+			hal.console->printf("pitch_thrust %.02f\n", pitch_thrust);
+			hal.console->printf("yaw_thrust %.02f\n", yaw_thrust);
+			hal.console->printf("throttle_thrust %.02f\n", throttle_thrust);
+			hal.console->printf("forward_thrust %.02f\n", forward_thrust);
+			hal.console->printf("lateral_thrust %.02f\n", lateral_thrust);
+		}
+	}
 
     if (motor_log_start) {
         AP::logger().Write("MDOF", "TimeUS,R,P,Y,RT,PT,YT,FTD,FT,LTD,LT,TTD,TT,BTT", "Qfffffffffffff", 
@@ -129,6 +146,24 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
         limit.throttle_upper = true;
     }
 
+    if(0) {
+		static uint32_t _startup_ms = 0;
+
+		if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+		}
+
+		if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+			hal.console->printf("roll_thrust %.02f\n", roll_thrust);
+			hal.console->printf("pitch_thrust %.02f\n", pitch_thrust);
+			hal.console->printf("yaw_thrust %.02f\n", yaw_thrust);
+			hal.console->printf("throttle_thrust %.02f\n", throttle_thrust);
+			hal.console->printf("forward_thrust %.02f\n", forward_thrust);
+			hal.console->printf("lateral_thrust %.02f\n", lateral_thrust);
+		}
+	}
+
     // calculate roll, pitch and yaw for each motor
     for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
         if (motor_enabled[i]) {
@@ -155,6 +190,24 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
         }
     }
 
+	if(1) {
+		static uint32_t _startup_ms = 0;
+
+		if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+		}
+
+		if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+
+			for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
+		        if (motor_enabled[i]) {
+		            hal.console->printf("_thrust_rpyt_out %d: %.02f\n", i, _thrust_rpyt_out[i]);
+		        }
+		    }
+		}
+	}
+	
     if (is_param_print() && is_dbg_motor) {
         float origin_rpyt_out[8];
         for (i = 0; i < 8; i++) {

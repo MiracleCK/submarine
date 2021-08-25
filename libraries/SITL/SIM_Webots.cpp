@@ -42,14 +42,14 @@ static const struct {
 } sim_defaults[] = {
     { "AHRS_EKF_TYPE", 10 },
     { "INS_GYR_CAL", 0 },
-    { "RC1_MIN", 1000, true },
+    /*{ "RC1_MIN", 1000, true },
     { "RC1_MAX", 2000, true },
     { "RC2_MIN", 1000, true },
     { "RC2_MAX", 2000, true },
     { "RC3_MIN", 1000, true },
     { "RC3_MAX", 2000, true },
     { "RC4_MIN", 1000, true },
-    { "RC4_MAX", 2000, true },
+    { "RC4_MAX", 2000, true },*/
     { "RC2_REVERSED", 1 }, // interlink has reversed rc2
     { "SERVO1_MIN", 1000 },
     { "SERVO1_MAX", 2000 },
@@ -107,6 +107,8 @@ Webots::Webots(const char *frame_str) :
         output_type = OUTPUT_ROVER;
     } else if (strstr(frame_option, "-quad")) {
         output_type = OUTPUT_QUAD;
+    } else if (strstr(frame_option, "-m2")) {
+        output_type = OUTPUT_M2;
     } else if (strstr(frame_option, "-tri")) {
         output_type = OUTPUT_TRICOPTER;
     } else if (strstr(frame_option, "-pwm")) {
@@ -115,7 +117,7 @@ Webots::Webots(const char *frame_str) :
         // default to rover
         output_type = OUTPUT_ROVER;
     }
-
+#if 0
     for (uint8_t i=0; i<ARRAY_SIZE(sim_defaults); i++) {
         AP_Param::set_default_by_name(sim_defaults[i].name, sim_defaults[i].value);
         if (sim_defaults[i].save) {
@@ -126,6 +128,7 @@ Webots::Webots(const char *frame_str) :
             }
         }
     }
+#endif
     printf("Started Webots with %s:%u type %u\n",
            webots_ip, webots_sensors_port,
            (unsigned)output_type);
@@ -431,6 +434,45 @@ void Webots::output_quad(const struct sitl_input &input)
     buf[len] = 0;
     sim_sock->send(buf, len);
 }
+/*
+  output control command assuming a 8 channel quad
+*/
+void Webots::output_m2(const struct sitl_input &input)
+{
+    const float max_thrust = 1.0;
+    float motors[8];
+    for (uint8_t i=0; i<8; i++) {
+        //return a filtered servo input as a value from 0 to 1
+        //servo is assumed to be 1000 to 2000
+        motors[i] = constrain_float(((input.servos[i]-1000)/1000.0f) * max_thrust, 0, max_thrust); 
+        //printf("motors %d: %d, %.02f\n", i, input.servos[i], motors[i]);
+    }
+    //printf("\n");
+    const float &m_front_right_up = motors[0]; 
+    const float &m_front_left_up  = motors[1]; 
+    const float &m_front_left_down = motors[2]; 
+    const float &m_front_right_down = motors[3]; 
+    const float &m_back_right_up = motors[4]; 
+    const float &m_back_left_up  = motors[5]; 
+    const float &m_back_left_down = motors[6]; 
+    const float &m_back_right_down = motors[7]; 
+
+    // quad format in Webots is:
+    // m1: front
+    // m2: right
+    // m3: back
+    // m4: left
+
+    // construct a JSON packet for motors
+    char buf[200];
+    const int len = snprintf(buf, sizeof(buf)-1, "{\"eng\": [%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f], \"wnd\": [%f, %3.1f, %1.1f, %2.1f]}\n",
+             m_front_right_up, m_front_left_up, m_front_left_down, m_front_right_down,
+             m_back_right_up, m_back_left_up, m_back_left_down, m_back_right_down,
+             input.wind.speed, wind_ef.x, wind_ef.y, wind_ef.z);
+    buf[len] = 0;
+    //printf("motor: %s\n", buf);
+    sim_sock->send(buf, len);
+}
 
 /*
   output all 16 channels as PWM values. This allows for general
@@ -460,6 +502,9 @@ void Webots::output (const struct sitl_input &input)
         case OUTPUT_QUAD:
             output_quad(input);
             break;
+        case OUTPUT_M2:
+            output_m2(input);
+            break;
         case OUTPUT_TRICOPTER:
             output_tricopter(input);
             break;
@@ -474,7 +519,7 @@ void Webots::output (const struct sitl_input &input)
  */
 void Webots::update(const struct sitl_input &input)
 {   
-    
+#if 1    
     if (!connect_sockets()) {
         return;
     }
@@ -589,10 +634,11 @@ void Webots::update(const struct sitl_input &input)
         update_mag_field_bf();
 
         update_wind (input);
-        output(input);
+        //output(input);
 
         report_FPS();
     }
+#endif
 }
 
 

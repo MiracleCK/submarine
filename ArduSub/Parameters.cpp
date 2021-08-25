@@ -773,7 +773,7 @@ void Sub::load_parameters()
     //
 
     #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
-        return;
+        //return;
     #endif
     
     AP_Param::set_default_by_name("FRAME_CONFIG", AP_Motors6DOF::SUB_FRAME_CUSTOM);

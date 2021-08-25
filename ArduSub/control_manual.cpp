@@ -38,4 +38,24 @@ void Sub::manual_run()
     motors.set_throttle_pilot(motors.get_throttle_bidirectional(channel_throttle->norm_input()));
     motors.set_forward(channel_forward->norm_input());
     motors.set_lateral(channel_lateral->norm_input());
+
+    if(1) {
+		static uint32_t _startup_ms = 0;
+
+		if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+		}
+
+		if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+			
+			hal.console->printf("[%.2f %.2f %.2f], [%.2f %.2f %.2f]\r\n", 
+						channel_roll->norm_input(),
+						channel_pitch->norm_input(), 
+						channel_yaw->norm_input() * g.acro_yaw_p / ACRO_YAW_P,
+						channel_throttle->norm_input(),
+						channel_forward->norm_input(),
+						channel_lateral->norm_input());
+		}
+	}
 }

@@ -2217,7 +2217,8 @@ void AC_DistanceControl::update_backend(Vector3f &mv_thrusts, Vector3i &rot_thru
 	}
 	
 	rangefinder_check(mv_thrusts);
-	if(_num_sensors < 5 || !_sensor_ok)
+	//if(_num_sensors < 5 || !_sensor_ok)
+	if(1)
 		return ;
 
 	if(_cage_detect_in) {
