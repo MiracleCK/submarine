@@ -1,4 +1,4 @@
-#VRML_SIM R2021a utf8
+#VRML_SIM R2021b utf8
 WorldInfo {
   physics "sitl_physics_env"
   basicTimeStep 2
@@ -8,8 +8,8 @@ WorldInfo {
   randomSeed 52
 }
 Viewpoint {
-  orientation 0.3814198588698537 -0.9242624207319345 -0.016058296374305454 4.998420200893586
-  position 0.9002235874278193 1.3910811709482709 0.16146502279163966
+  orientation -0.9118893559759134 -0.10968300463348497 0.39550909085936936 3.7509628680637177
+  position -0.6055616680849951 0.3852156409135903 -0.5358974155474909
   followType "Mounted Shot"
 }
 TexturedBackground {
@@ -40,6 +40,7 @@ DEF STILL_WATER Fluid {
       }
     }
   ]
+  density 3000
   boundingObject Transform {
     children [
       Box {
@@ -735,7 +736,7 @@ DEF ROV Robot {
       rotation 0 1 0 -0.52361
       children [
         Transform {
-          rotation 1 0 0 0.713613
+          rotation 1 0 0 1.23721
           children [
             Solid {
               rotation 1 0 0 1.5708
@@ -823,66 +824,66 @@ DEF ROV Robot {
       translation 0.07936 -0.0541 -0.12327
       rotation 0 1 0 -2.6176
       children [
-        Solid {
-          rotation 1 0 0 1.5708
-          children [
-            Propeller {
-              shaftAxis 0 -1 0
-              thrustConstants -12.3 0
-              torqueConstants 18 0
-              device RotationalMotor {
-                name "motor7"
-                maxVelocity 1000
-              }
-              fastHelix Solid {
-                rotation 1 0 0 0
-                children [
-                  Shape {
-                    appearance Appearance {
-                      material Material {
-                        diffuseColor 1 0 0.1
-                      }
-                    }
-                    geometry Cylinder {
-                      height 0.002
-                      radius 0.02
-                    }
-                  }
-                ]
-              }
-              slowHelix Solid {
-                rotation 0 1 0 1.16679
-                children [
-                  Shape {
-                    appearance Appearance {
-                      material Material {
-                        diffuseColor 1 0 0.1
-                      }
-                    }
-                    geometry Cylinder {
-                      height 0.002
-                      radius 0.02
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-          name "solid(7)"
-          physics Physics {
-            mass 1
-            centerOfMass [
-              0 0 0
-            ]
-            inertiaMatrix [
-              1 1 1
-              0 0 0
-            ]
-          }
-        }
         Transform {
           rotation 1 0 0 0.713613
           children [
+            Solid {
+              rotation 1 0 0 1.5708
+              children [
+                Propeller {
+                  shaftAxis 0 -1 0
+                  thrustConstants -12.3 0
+                  torqueConstants 18 0
+                  device RotationalMotor {
+                    name "motor7"
+                    maxVelocity 1000
+                  }
+                  fastHelix Solid {
+                    rotation 1 0 0 0
+                    children [
+                      Shape {
+                        appearance Appearance {
+                          material Material {
+                            diffuseColor 1 0 0.1
+                          }
+                        }
+                        geometry Cylinder {
+                          height 0.002
+                          radius 0.02
+                        }
+                      }
+                    ]
+                  }
+                  slowHelix Solid {
+                    rotation 0 1 0 1.16679
+                    children [
+                      Shape {
+                        appearance Appearance {
+                          material Material {
+                            diffuseColor 1 0 0.1
+                          }
+                        }
+                        geometry Cylinder {
+                          height 0.002
+                          radius 0.02
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+              name "solid(7)"
+              physics Physics {
+                mass 1
+                centerOfMass [
+                  0 0 0
+                ]
+                inertiaMatrix [
+                  1 1 1
+                  0 0 0
+                ]
+              }
+            }
             Shape {
               appearance Appearance {
                 material Material {
@@ -913,7 +914,7 @@ DEF ROV Robot {
   immersionProperties [
     ImmersionProperties {
       fluidName "fluid"
-      dragForceCoefficients 0.1 0 0
+      dragForceCoefficients 1 0 0
       dragTorqueCoefficients 0.001 0 0
       viscousResistanceTorqueCoefficient 0.005
     }
@@ -928,11 +929,11 @@ DEF ROV Robot {
     ]
   }
   physics Physics {
-    density 500
+    density 0.01
     damping Damping {
     }
   }
-  controller "my_controller"
+  controller "ardupilot_SITL_M2"
   controllerArgs [
     "-p"
     "5599"

@@ -49,7 +49,7 @@ struct keytable {
 
 } keytable[2] = {
         //{ "", "timestamp", &state.timestamp, DATA_DOUBLE },
-        { "", "eng",    &state.motors, DATA_VECTOR4F },
+        { "", "pwm",    &state.motors, DATA_VECTOR4F },
         { "", "wnd",    &state.wind, DATA_VECTOR4F }
 };
 
