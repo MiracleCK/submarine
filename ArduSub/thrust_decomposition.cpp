@@ -104,6 +104,19 @@ Vector3f thrust_decomp_ned(Matrix3f &rot, Vector3f thrusts) {
     Vector3f decomoped = rot * thrusts;
     decomoped.z = -decomoped.z;
 
+	if(0) {
+		static uint32_t _startup_ms = 0;
+
+		if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+		}
+
+		if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+
+		    hal.shell->printf("thrusts[%.04f %.04f %.04f]\r\n", decomoped.x, decomoped.y, decomoped.z);
+		}
+	}
     return decomoped;
 }
 
