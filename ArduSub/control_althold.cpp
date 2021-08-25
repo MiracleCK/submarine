@@ -287,6 +287,12 @@ void Sub::althold_run_rate()
         right_face_actived = false;
         left_face_actived = false;
         return;
+    } else {
+		if(is_ned_pilot && distance_control.get_distance_face()) {
+			motors.set_throttle_range(channel_throttle->get_radio_min() + 100, channel_throttle->get_radio_max() - 100);
+		} else {
+			motors.set_throttle_range(channel_throttle->get_radio_min(), channel_throttle->get_radio_max());
+		}
     }
 
     motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
@@ -358,9 +364,11 @@ void Sub::althold_run_rate()
 					pos_control.relax_alt_hold_controllers(); 
 	            	pos_control.set_alt_target(inertial_nav.get_altitude() + distance + 2); 
 	            	state1 = 1;
+	            	hal.shell->printf("##up start, %d %d\r\n", distance_control.get_bottom_cm(), distance_control.get_bottom_limit_cm());
 				} else {
 					if(fabsf(inertial_nav.get_altitude() - pos_control.get_alt_target()) <= 1.0f) {
 						state1 = 0;
+						hal.shell->printf("##up end, %.02f\r\n", inertial_nav.get_altitude());
 					}
 				}
 			} else if(pilot_trans_thrusts.z >= 0.0f && distance_control.get_top_limit_cm() != 0 && 
@@ -371,9 +379,11 @@ void Sub::althold_run_rate()
 					pos_control.relax_alt_hold_controllers(); 
 	            	pos_control.set_alt_target(inertial_nav.get_altitude() + distance - 2); 
 	            	state2 = 1;
+	            	hal.shell->printf("##down start, %d %d\r\n", distance_control.get_top_cm(), distance_control.get_top_limit_cm());
 				} else {
 					if(fabsf(inertial_nav.get_altitude() - pos_control.get_alt_target()) <= 1.0f) {
 						state2 = 0;
+						hal.shell->printf("##down end, %.02f\r\n", inertial_nav.get_altitude());
 					}
 				}
 		   	} else {

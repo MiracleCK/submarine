@@ -638,6 +638,23 @@ void SITL_State::_simulator_servos(struct sitl_input &input)
         }
     }
 
+    if(1) {
+		static uint32_t _startup_ms = 0;
+
+		if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+		}
+
+		if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+
+			for (i=0; i<SITL_NUM_CHANNELS; i++) {
+				printf("pwm %d: %d\n", i, pwm_output[i]);
+			}
+			printf("\n");
+		}
+	}
+
     float engine_mul = _sitl?_sitl->engine_mul.get():1;
     uint8_t engine_fail = _sitl?_sitl->engine_fail.get():0;
     float throttle = 0.0f;
@@ -715,6 +732,23 @@ void SITL_State::_simulator_servos(struct sitl_input &input)
     // fake battery2 as just a 25% gain on the first one
     voltage2_pin_value = ((voltage * 0.25f / 10.1f) / 5.0f) * 1024;
     current2_pin_value = ((_current * 0.25f / 17.0f) / 5.0f) * 1024;
+
+    if(1) {
+		static uint32_t _startup_ms = 0;
+
+		if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+		}
+
+		if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+
+			for (i=0; i<SITL_NUM_CHANNELS; i++) {
+				printf("servos %d: %d\n", i, input.servos[i]);
+			}
+			printf("\n");
+		}
+	}
 }
 
 void SITL_State::init(int argc, char * const argv[])
