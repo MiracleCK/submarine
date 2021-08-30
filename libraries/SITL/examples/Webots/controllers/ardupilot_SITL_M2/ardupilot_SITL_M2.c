@@ -56,7 +56,7 @@ float drafFactor = VEHICLE_DRAG_FACTOR;
 
 static int timestep;
 
-// #define DEBUG_USE_KB
+#define DEBUG_USE_KB
 #define DEBUG_SENSORS
 #define DEBUG_MOTORS
 
@@ -227,14 +227,14 @@ void update_controls()
   v[6] = sqrt(state.motors.c) * factor + offset;
   v[7] = sqrt(state.motors.d) * factor + offset;
 #else
-  v[0] = (state.motors.w) * factor + offset;
-  v[1] = (state.motors.x) * factor + offset;
-  v[2] = (state.motors.y) * factor + offset;
-  v[3] = (state.motors.z) * factor + offset;
-  v[4] = (state.motors.a) * factor + offset;
-  v[5] = (state.motors.b) * factor + offset;
-  v[6] = (state.motors.c) * factor + offset;
-  v[7] = (state.motors.d) * factor + offset;
+  v[0] = 0*(state.motors.w) * factor + offset;
+  v[1] = 0*(state.motors.x) * factor + offset;
+  v[2] = 0*(state.motors.y) * factor + offset;
+  v[3] = 1*(state.motors.z) * factor + offset;
+  v[4] = 0*(state.motors.a) * factor + offset;
+  v[5] = 0*(state.motors.b) * factor + offset;
+  v[6] = 0*(state.motors.c) * factor + offset;
+  v[7] = 0*(state.motors.d) * factor + offset;
 #endif
 
   for (int i = 0; i < MOTOR_NUM; ++i)
@@ -243,7 +243,7 @@ void update_controls()
     wb_motor_set_velocity(motors[i], v[i]);
     if (i == 0)
     {
-      printf("wb_motor_set_velocity ");
+      printf("wb_motor_set_velocity \n");
     }
   }
 
