@@ -56,7 +56,10 @@ float drafFactor = VEHICLE_DRAG_FACTOR;
 
 static int timestep;
 
-#define DEBUG_USE_KB
+// #define DEBUG_USE_KB
+#define DEBUG_SENSORS
+#define DEBUG_MOTORS
+
 #ifdef DEBUG_USE_KB
 /*
 // Code used tp simulae motors using keys to make sure that sensors directions and motor torques and thrusts are all correct.
@@ -98,7 +101,7 @@ void process_keyboard()
     break;
 
   case 'Y':     //左转
-    v[０] = v[2] + 0.1;
+    v[2] = v[2] + 0.1;
     v[3] = v[3] + 0.1;
     v[4] = v[4] + 0.1;
     v[5] = v[5] + 0.1;
@@ -212,29 +215,41 @@ void update_controls()
    */
   static float factor = 1.0f;
   static float offset = 0.0f;
-  static float v[4];
+  static float v[MOTOR_NUM];
 
 #ifdef LINEAR_THRUST
   v[0] = sqrt(state.motors.w) * factor + offset;
   v[1] = sqrt(state.motors.x) * factor + offset;
   v[2] = sqrt(state.motors.y) * factor + offset;
   v[3] = sqrt(state.motors.z) * factor + offset;
+  v[4] = sqrt(state.motors.a) * factor + offset;
+  v[5] = sqrt(state.motors.b) * factor + offset;
+  v[6] = sqrt(state.motors.c) * factor + offset;
+  v[7] = sqrt(state.motors.d) * factor + offset;
 #else
   v[0] = (state.motors.w) * factor + offset;
   v[1] = (state.motors.x) * factor + offset;
   v[2] = (state.motors.y) * factor + offset;
   v[3] = (state.motors.z) * factor + offset;
+  v[4] = (state.motors.a) * factor + offset;
+  v[5] = (state.motors.b) * factor + offset;
+  v[6] = (state.motors.c) * factor + offset;
+  v[7] = (state.motors.d) * factor + offset;
 #endif
 
-  for (int i = 0; i < 4; ++i)
+  for (int i = 0; i < MOTOR_NUM; ++i)
   {
     wb_motor_set_position(motors[i], INFINITY);
     wb_motor_set_velocity(motors[i], v[i]);
+    if (i == 0)
+    {
+      printf("wb_motor_set_velocity ");
+    }
   }
 
 #ifdef DEBUG_MOTORS
-  printf("RAW    F:%f  R:%f  B:%f  L:%f\n", state.motors.w, state.motors.x, state.motors.y, state.motors.z);
-  printf("Motors F:%f  R:%f  B:%f  L:%f\n", v[0], v[1], v[2], v[3]);
+  printf("RAW    FRU:%f  FLU:%f  FLD:%f  FRD:%f  BRU:%f  BLU:%f  BLD:%f  BRD:%f\n", state.motors.w, state.motors.x, state.motors.y, state.motors.z, state.motors.a, state.motors.b, state.motors.c, state.motors.d);
+  printf("Motors FRU:%f  FLU:%f  FLD:%f  FRD:%f  BRU:%f  BLU:%f  BLD:%f  BRD:%f\n", v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
 #endif
 
 #ifdef WIND_SIMULATION
@@ -340,6 +355,23 @@ bool parse_controls(const char *json)
 
       break;
     }
+    case DATA_VECTOR8F:
+    {
+      VECTOR8F *v = (VECTOR8F *)key->ptr;
+      if (sscanf(p, "[%f, %f, %f, %f, %f, %f, %f, %f]", &(v->w), &(v->x), &(v->y), &(v->z), &(v->a), &(v->b), &(v->c), &(v->d)) != 8)
+      {
+        printf("Failed to parse Vector8f for %s %s/%s\n", p, key->section, key->key);
+        return false;
+      }
+      else
+      {
+#ifdef DEBUG_INPUT_DATA
+        printf("GOT  %s/%s\n[%f, %f, %f, %f]\n ", key->section, key->key, v->w, v->x, v->y, v->z);
+#endif
+      }
+
+      break;
+    }
     }
   }
   return true;
@@ -355,6 +387,7 @@ void run()
   {
 #ifdef DEBUG_USE_KB
     process_keyboard();
+    printf("process_keyboard()");
 #endif
 
     if (fd == 0)
@@ -418,7 +451,7 @@ void run()
         if (n > 0)
         {
 
-          //printf("Received %d bytes:\n", n);
+          printf("Received %d bytes: %s\n", n, command_buffer);
           command_buffer[n] = 0;
           parse_controls(command_buffer);
           update_controls();

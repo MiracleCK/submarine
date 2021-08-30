@@ -439,15 +439,34 @@ void Webots::output_quad(const struct sitl_input &input)
 */
 void Webots::output_m2(const struct sitl_input &input)
 {
-    const float max_thrust = 1.0;
+    //const float max_thrust = 1.0;
     float motors[8];
     for (uint8_t i=0; i<8; i++) {
         //return a filtered servo input as a value from 0 to 1
         //servo is assumed to be 1000 to 2000
-        motors[i] = constrain_float(((input.servos[i]-1000)/1000.0f) * max_thrust, 0, max_thrust); 
+        //motors[i] = constrain_float(((input.servos[i]-1000)/1000.0f) * max_thrust, 0, max_thrust); 
+        motors[i] = constrain_float((input.servos[i] - 1500)*5.0f, -1000, 1000);
         //printf("motors %d: %d, %.02f\n", i, input.servos[i], motors[i]);
     }
     //printf("\n");
+
+    if(0) {
+		static uint32_t _startup_ms = 0;
+
+		if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+		}
+
+		if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+
+			for (uint8_t i=0; i<8; i++) {
+				printf("motors %d: %.02f\n", i, motors[i]);
+			}
+			printf("\n");
+		}
+	}
+	
     const float &m_front_right_up = motors[0]; 
     const float &m_front_left_up  = motors[1]; 
     const float &m_front_left_down = motors[2]; 
@@ -471,6 +490,21 @@ void Webots::output_m2(const struct sitl_input &input)
              input.wind.speed, wind_ef.x, wind_ef.y, wind_ef.z);
     buf[len] = 0;
     //printf("motor: %s\n", buf);
+
+    if(0) {
+		static uint32_t _startup_ms = 0;
+
+		if(_startup_ms == 0) {
+			_startup_ms = AP_HAL::millis();
+		}
+
+		if(AP_HAL::millis() - _startup_ms > 1000) {
+			_startup_ms = AP_HAL::millis();
+
+			printf("motor: %s\n", buf);
+		}
+	}
+	
     sim_sock->send(buf, len);
 }
 
@@ -634,7 +668,7 @@ void Webots::update(const struct sitl_input &input)
         update_mag_field_bf();
 
         update_wind (input);
-        //output(input);
+        output(input);
 
         report_FPS();
     }

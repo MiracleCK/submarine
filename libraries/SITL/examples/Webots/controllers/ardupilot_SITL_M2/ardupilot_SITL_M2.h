@@ -15,6 +15,7 @@ enum data_type {
         DATA_FLOAT,
         DATA_DOUBLE,
         DATA_VECTOR4F,
+        DATA_VECTOR8F,
     };
 
 struct vector4f 
@@ -22,11 +23,17 @@ struct vector4f
     float w,x,y,z;
 };
 
-typedef struct vector4f VECTOR4F;
+struct vector8f 
+{
+    float w,x,y,z,a,b,c,d;
+};
+
+typedef struct vector4f VECTOR4F; 
+typedef struct vector8f VECTOR8F;
 
 struct {
         double timestamp;
-        VECTOR4F motors;
+        VECTOR8F motors;
         VECTOR4F wind; 
         /*
          struct {
@@ -49,7 +56,7 @@ struct keytable {
 
 } keytable[2] = {
         //{ "", "timestamp", &state.timestamp, DATA_DOUBLE },
-        { "", "pwm",    &state.motors, DATA_VECTOR4F },
+        { "", "eng",    &state.motors, DATA_VECTOR8F },
         { "", "wnd",    &state.wind, DATA_VECTOR4F }
 };
 

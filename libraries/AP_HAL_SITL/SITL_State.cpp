@@ -638,7 +638,7 @@ void SITL_State::_simulator_servos(struct sitl_input &input)
         }
     }
 
-    if(1) {
+    if(0) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {
@@ -733,7 +733,7 @@ void SITL_State::_simulator_servos(struct sitl_input &input)
     voltage2_pin_value = ((voltage * 0.25f / 10.1f) / 5.0f) * 1024;
     current2_pin_value = ((_current * 0.25f / 17.0f) / 5.0f) * 1024;
 
-    if(1) {
+    if(0) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {

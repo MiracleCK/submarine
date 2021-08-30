@@ -39,7 +39,7 @@ void Sub::manual_run()
     motors.set_forward(channel_forward->norm_input());
     motors.set_lateral(channel_lateral->norm_input());
 
-    if(1) {
+    if(0) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {

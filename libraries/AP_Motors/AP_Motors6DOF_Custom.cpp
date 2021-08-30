@@ -88,7 +88,7 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
         throttle_thrust = _throttle_in_bf;
     }
 
-    if(1) {
+    if(0) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {
@@ -190,7 +190,7 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
         }
     }
 
-	if(1) {
+	if(0) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {

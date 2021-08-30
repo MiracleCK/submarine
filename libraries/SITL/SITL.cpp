@@ -190,7 +190,7 @@ const AP_Param::GroupInfo SITL::var_info2[] = {
     AP_GROUPINFO("OPOS_HDG",    54, SITL,  opos.hdg, 353.0f),
 
     // extra delay per main loop
-    AP_GROUPINFO("LOOP_DELAY",  55, SITL,  loop_delay, 0),
+    AP_GROUPINFO("LOOP_DELAY",  55, SITL,  loop_delay, 5),
 
     // @Path: ./SIM_Buzzer.cpp
     AP_SUBGROUPINFO(buzzer_sim, "BZ_", 56, SITL, Buzzer),
