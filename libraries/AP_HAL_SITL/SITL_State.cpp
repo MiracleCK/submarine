@@ -576,7 +576,7 @@ void SITL_State::_simulator_servos(struct sitl_input &input)
 
     if (last_update_usec == 0 || !output_ready) {
         for (i=0; i<SITL_NUM_CHANNELS; i++) {
-            pwm_output[i] = 1000;
+            pwm_output[i] = 1500;
         }
         if (_vehicle == ArduPlane) {
             pwm_output[0] = pwm_output[1] = pwm_output[3] = 1500;
@@ -754,8 +754,8 @@ void SITL_State::_simulator_servos(struct sitl_input &input)
 void SITL_State::init(int argc, char * const argv[])
 {
     pwm_input[0] = pwm_input[1] = pwm_input[3] = 1500;
-    pwm_input[4] = pwm_input[7] = 1800;
-    pwm_input[2] = pwm_input[5] = pwm_input[6] = 1000;
+    pwm_input[4] = pwm_input[7] = 1500;
+    pwm_input[2] = pwm_input[5] = pwm_input[6] = 1500;
 
     _scheduler = Scheduler::from(hal.scheduler);
     _parse_command_line(argc, argv);

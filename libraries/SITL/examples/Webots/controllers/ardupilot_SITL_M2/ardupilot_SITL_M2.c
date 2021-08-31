@@ -56,9 +56,9 @@ float drafFactor = VEHICLE_DRAG_FACTOR;
 
 static int timestep;
 
-#define DEBUG_USE_KB
-#define DEBUG_SENSORS
-#define DEBUG_MOTORS
+// #define DEBUG_USE_KB
+// #define DEBUG_SENSORS
+// #define DEBUG_MOTORS
 
 #ifdef DEBUG_USE_KB
 /*
@@ -227,24 +227,31 @@ void update_controls()
   v[6] = sqrt(state.motors.c) * factor + offset;
   v[7] = sqrt(state.motors.d) * factor + offset;
 #else
-  v[0] = 0*(state.motors.w) * factor + offset;
-  v[1] = 0*(state.motors.x) * factor + offset;
-  v[2] = 0*(state.motors.y) * factor + offset;
+  v[0] = -1*(state.motors.w) * factor + offset;
+  v[1] = 1*(state.motors.x) * factor + offset;
+  v[2] = -1*(state.motors.y) * factor + offset;
   v[3] = 1*(state.motors.z) * factor + offset;
-  v[4] = 0*(state.motors.a) * factor + offset;
-  v[5] = 0*(state.motors.b) * factor + offset;
-  v[6] = 0*(state.motors.c) * factor + offset;
-  v[7] = 0*(state.motors.d) * factor + offset;
+  v[4] = -1*(state.motors.a) * factor + offset;
+  v[5] = 1*(state.motors.b) * factor + offset;
+  v[6] = 1*(state.motors.c) * factor + offset;
+  v[7] = -1*(state.motors.d) * factor + offset;
+
+  // motor test 0831
+  // v[2] = 60;
+  // v[3] = 60;
+  // v[4] = 60;
+  // v[6] = 60;
+
+  // v[0] = -60;
+  // v[1] = -60;
+  // v[5] = -60;
+  // v[7] = -60;
 #endif
 
   for (int i = 0; i < MOTOR_NUM; ++i)
   {
     wb_motor_set_position(motors[i], INFINITY);
     wb_motor_set_velocity(motors[i], v[i]);
-    if (i == 0)
-    {
-      printf("wb_motor_set_velocity \n");
-    }
   }
 
 #ifdef DEBUG_MOTORS
@@ -451,7 +458,7 @@ void run()
         if (n > 0)
         {
 
-          printf("Received %d bytes: %s\n", n, command_buffer);
+          // printf("Received %d bytes: %s\n", n, command_buffer);
           command_buffer[n] = 0;
           parse_controls(command_buffer);
           update_controls();
