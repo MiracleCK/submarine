@@ -1,4 +1,4 @@
-# Copyright 1996-2018 Cyberbotics Ltd.
+# Copyright 1996-2021 Cyberbotics Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -57,8 +57,6 @@
 ### ---- Webots included libraries ----
 ### if you want to use the Webots C API in your C++ controller program:
 ### USE_C_API = true
-### if you want to link with the Qt framework embedded in Webots:
-### QT = core gui widgets network
 ###
 ### ---- Debug mode ----
 ### if you want to display the gcc command line for compilation and link, as
@@ -66,10 +64,9 @@
 ### VERBOSE = 1
 ###
 ###-----------------------------------------------------------------------------
-C_SOURCES = ardupilot_SITL_M2.c sockets.c sensors.c
-INCLUDE = -I"/home/fan/Documents/submarine/submarine/libraries"
+
 ### Do not modify: this includes Webots global Makefile.include
-space :=
-space +=
+null :=
+space := $(null) $(null)
 WEBOTS_HOME_PATH=$(subst $(space),\ ,$(strip $(subst \,/,$(WEBOTS_HOME))))
 include $(WEBOTS_HOME_PATH)/resources/Makefile.include

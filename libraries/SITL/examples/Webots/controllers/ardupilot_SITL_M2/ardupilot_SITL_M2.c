@@ -32,6 +32,7 @@
 #include <webots/robot.h>
 #include <webots/supervisor.h>
 #include <webots/emitter.h>
+// #include <AP_HAL/AP_HAL.h>
 #include "ardupilot_SITL_M2.h"
 #include "sockets.h"
 #include "sensors.h"
@@ -56,9 +57,11 @@ float drafFactor = VEHICLE_DRAG_FACTOR;
 
 static int timestep;
 
+bool print_flag = false;
+
 // #define DEBUG_USE_KB
-// #define DEBUG_SENSORS
-// #define DEBUG_MOTORS
+#define DEBUG_SENSORS
+#define DEBUG_MOTORS
 
 #ifdef DEBUG_USE_KB
 /*
@@ -73,40 +76,40 @@ void process_keyboard()
   case 'Q': // Quit 退出
     for (int i = 0; i < MOTOR_NUM; ++i)
     {
-    v[i] = 0.0;
+      v[i] = 0.0;
     }
     break;
-  case 'R':     //左倾
+  case 'R': //左倾
     v[0] = v[0] + 0.1;
     v[2] = v[2] + 0.1;
     v[4] = v[4] + 0.1;
     v[6] = v[6] + 0.1;
-    
+
     v[1] = v[1] - 0.1;
-    v[3] = v[3] - 0.1;    
+    v[3] = v[3] - 0.1;
     v[5] = v[5] - 0.1;
     v[7] = v[7] - 0.1;
     break;
 
-  case 'P':     //俯
+  case 'P': //俯
     v[2] = v[2] + 0.1;
     v[3] = v[3] + 0.1;
     v[4] = v[4] + 0.1;
     v[5] = v[5] + 0.1;
-    
-    v[0] = v[0] - 0.1;    
+
+    v[0] = v[0] - 0.1;
     v[1] = v[1] - 0.1;
     v[6] = v[6] - 0.1;
     v[7] = v[7] - 0.1;
     break;
 
-  case 'Y':     //左转
+  case 'Y': //左转
     v[2] = v[2] + 0.1;
     v[3] = v[3] + 0.1;
     v[4] = v[4] + 0.1;
     v[5] = v[5] + 0.1;
-    
-    v[0] = v[0] - 0.1;    
+
+    v[0] = v[0] - 0.1;
     v[1] = v[1] - 0.1;
     v[6] = v[6] - 0.1;
     v[7] = v[7] - 0.1;
@@ -127,7 +130,7 @@ void process_keyboard()
     v[3] = v[3] + 0.1;
     break;
 
-  case 'W':   //前进
+  case 'W': //前进
     for (int i = 0; i < MOTOR_NUM; ++i)
     {
       if (i < 4)
@@ -137,11 +140,11 @@ void process_keyboard()
       else
       {
         v[i] -= 0.1;
-      }      
+      }
     }
     break;
 
-  case 'S':     //后退
+  case 'S': //后退
     for (int i = 0; i < MOTOR_NUM; ++i)
     {
       if (i < 4)
@@ -155,23 +158,23 @@ void process_keyboard()
     }
     break;
 
-  case 'A':     //左移
+  case 'A': //左移
     v[0] = v[0] + 0.1;
     v[3] = v[3] + 0.1;
     v[4] = v[4] + 0.1;
     v[7] = v[7] + 0.1;
-    
+
     v[1] = v[1] - 0.1;
-    v[2] = v[2] - 0.1;    
+    v[2] = v[2] - 0.1;
     v[5] = v[5] - 0.1;
     v[6] = v[6] - 0.1;
     break;
 
-  case 'D':     //右移
+  case 'D': //右移
     v[1] = v[1] + 0.1;
-    v[2] = v[2] + 0.1;    
+    v[2] = v[2] + 0.1;
     v[5] = v[5] + 0.1;
-    v[6] = v[6] + 0.1;    
+    v[6] = v[6] + 0.1;
 
     v[0] = v[0] - 0.1;
     v[3] = v[3] - 0.1;
@@ -213,7 +216,7 @@ void update_controls()
     LINEAR_THRUST
       we also want throttle to be linear with thrust so we use sqrt to calculate omega from input.
    */
-  static float factor = 1.0/100*1.0f; 
+  static float factor = 1.0 / 100 * 1.0f;
   // printf("Motors factor %f \n", factor );
   static float offset = 0.0f;
   static float v[MOTOR_NUM];
@@ -228,14 +231,14 @@ void update_controls()
   v[6] = sqrt(state.motors.c) * factor + offset;
   v[7] = sqrt(state.motors.d) * factor + offset;
 #else
-  v[0] = -1*(state.motors.w) * factor + offset;
-  v[1] = 1*(state.motors.x) * factor + offset;
-  v[2] = -1*(state.motors.y) * factor + offset;
-  v[3] = 1*(state.motors.z) * factor + offset;
-  v[4] = -1*(state.motors.a) * factor + offset;
-  v[5] = 1*(state.motors.b) * factor + offset;
-  v[6] = 1*(state.motors.c) * factor + offset;
-  v[7] = -1*(state.motors.d) * factor + offset;
+  v[0] = -1 * (state.motors.w) * factor + offset;
+  v[1] = 1 * (state.motors.x) * factor + offset;
+  v[2] = -1 * (state.motors.y) * factor + offset;
+  v[3] = 1 * (state.motors.z) * factor + offset;
+  v[4] = -1 * (state.motors.a) * factor + offset;
+  v[5] = 1 * (state.motors.b) * factor + offset;
+  v[6] = 1 * (state.motors.c) * factor + offset;
+  v[7] = -1 * (state.motors.d) * factor + offset;
 
   // motor test 0831
   // v[2] = 60;
@@ -388,7 +391,8 @@ bool parse_controls(const char *json)
 void run()
 {
 
-  char send_buf[1000]; //1000 just a safe margin
+  char send_buf[1000];  //1000 just a safe margin
+  char send_buf1[1000]; //1000 just a safe margin
   char command_buffer[200];
   fd_set rfds;
   while (wb_robot_step(timestep) != -1)
@@ -409,14 +413,45 @@ void run()
     }
 
     getAllSensors((char *)send_buf, northDirection, gyro, accelerometer, compass, gps, inertialUnit);
+    getGPS(gps, northDirection, (char *)send_buf1);
 
 #ifdef DEBUG_SENSORS
-    printf("%s\n", send_buf);
+    // printf("%s\n", send_buf);
+
+    // printf("11111\n");
+    if (1)
+    {
+      static int _startup_ms = 0;
+
+      if (_startup_ms == 0)
+      {
+        _startup_ms ++;
+      }
+    // printf("122222\n");
+
+      if (_startup_ms > 1000)
+      {
+        _startup_ms = 0;
+
+        print_flag = 1;
+      }
+    }
+    
+    // printf("3333333\n");
+    if (1)
+    {
+      printf ("%s\n", send_buf1);
+    }
 #endif
 
     if (write(fd, send_buf, strlen(send_buf)) <= 0)
     {
       printf("Send Data Error\n");
+    }
+
+    if (write(fd, send_buf1, strlen(send_buf1)) <= 0)
+    {
+      printf("Send Data1 Error\n");
     }
 
     if (fd)
