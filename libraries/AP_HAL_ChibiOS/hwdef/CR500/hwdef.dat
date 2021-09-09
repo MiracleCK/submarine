@@ -145,7 +145,7 @@ I2C_ORDER I2C1 I2C2
 # 6) SERIAL5: extra UART (usually RTOS debug console)
 
 # order of UARTs (and USB)
-UART_ORDER OTG1 USART2 EMPTY UART4 EMPTY USART3 USART1
+UART_ORDER EMPTY USART2 EMPTY UART4 EMPTY USART3 USART1
 
 # If the board has an IOMCU connected via a UART then this defines the
 # UART to talk to that MCU. Leave it out for boards with no IOMCU.
@@ -233,8 +233,8 @@ PA7 SPI1_MOSI SPI1
 # PA10 IO-debug-console
 
 # Now we define the pins that USB is connected on.
-PA11 OTG_FS_DM OTG1
-PA12 OTG_FS_DP OTG1
+#PA11 OTG_FS_DM OTG1
+#PA12 OTG_FS_DP OTG1
 
 # These are the pins for SWD debugging with a STlinkv2 or black-magic probe.
 #PA13 JTMS-SWDIO SWD
@@ -329,8 +329,8 @@ PC2 MPU_CS CS
 #PE4 MPU_EXT_CS CS
 
 # the first CAN bus
-#PD0 CAN1_RX CAN1
-#PD1 CAN1_TX CAN1
+PA11 CAN1_RX CAN1
+PA12 CAN1_TX CAN1
 
 # Another USART, this one for telem1. This one has RTS and CTS lines.
 # USART2 serial2 telem1
@@ -592,3 +592,24 @@ define CUSTOM_MOTORS_MOT_3      0,      0,   0.0f,       0,      0.0f,     1.0f
 
 define STM32_GPT_USE_TIM6 TRUE
 define HAL_USE_GPT TRUE
+
+define SHELL_MAX_ARGUMENTS 6
+define HAL_USE_RTC TRUE
+define STM32_IRQ_EXTI0_PRIORITY            6
+define STM32_IRQ_EXTI1_PRIORITY            6
+define STM32_IRQ_EXTI2_PRIORITY            6
+define STM32_IRQ_EXTI3_PRIORITY            6
+define STM32_IRQ_EXTI4_PRIORITY            6
+define STM32_IRQ_EXTI5_9_PRIORITY          6
+define STM32_IRQ_EXTI10_15_PRIORITY        6
+define STM32_IRQ_EXTI16_PRIORITY           6
+define STM32_IRQ_EXTI17_PRIORITY           15
+define STM32_IRQ_EXTI18_PRIORITY           6
+define STM32_IRQ_EXTI19_PRIORITY           6
+define STM32_IRQ_EXTI20_PRIORITY           6
+define STM32_IRQ_EXTI21_PRIORITY           15
+define STM32_IRQ_EXTI22_PRIORITY           15
+
+define HAL_USE_CAN TRUE
+define STM32_CAN_USE_CAN1 TRUE
+define CAN_ENFORCE_USE_CALLBACKS FALSE

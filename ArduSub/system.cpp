@@ -21,6 +21,9 @@ static void failsafe_check_static()
 
 void Sub::init_ardupilot()
 {
+    AP_HAL::HAL& l_hal = AP_HAL::get_HAL();
+    l_hal.uartC = &uartOverCan;
+    hal.shell->printf("uoc %X\r\n", (uint32_t)(&uartOverCan));
     // initialise serial port
     serial_manager.init_console();
 

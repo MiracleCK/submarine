@@ -70,6 +70,7 @@
 #include <AP_TemperatureSensor/TSYS01.h>
 #include <AP_Common/AP_FWVersion.h>
 #include <CH_Drivers/CH_WaterDetector.h>
+#include <CH_Drivers/UartOverCan.h>
 
 // Local modules
 #include "defines.h"
@@ -180,6 +181,7 @@ public:
     float pulse_thr = 0.4f;
     Vector3f pre_acc;
 
+    UartOverCan uartOverCan;
 private:
     static const AP_FWVersion fwver;
 

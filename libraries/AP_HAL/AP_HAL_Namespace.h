@@ -61,5 +61,5 @@ namespace AP_HAL {
     };
 
     // Must be implemented by the concrete HALs.
-    const HAL& get_HAL();
+    HAL& get_HAL();
 }
