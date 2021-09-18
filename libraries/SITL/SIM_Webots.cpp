@@ -468,23 +468,23 @@ void Webots::output_m2(const struct sitl_input &input)
 		}
 	}
 	
-    const float &m_front_right_up = 0; 
-    const float &m_front_left_up  = 0; 
-    const float &m_front_left_down =  0; 
-    const float &m_front_right_down = 0; 
-    const float &m_back_right_up = 1*motors[4]; 
-    const float &m_back_left_up  = 0; 
-    const float &m_back_left_down = 0; 
-    const float &m_back_right_down =0; 
+    // const float &m_front_right_up = 0; 
+    // const float &m_front_left_up  = 0; 
+    // const float &m_front_left_down =  0; 
+    // const float &m_front_right_down = 0; 
+    // const float &m_back_right_up = 1*motors[4]; 
+    // const float &m_back_left_up  = 0; 
+    // const float &m_back_left_down = 0; 
+    // const float &m_back_right_down =0; 
 
-    // const float &m_front_right_up = motors[0]; 
-    // const float &m_front_left_up  = motors[1]; 
-    // const float &m_front_left_down = motors[2]; 
-    // const float &m_front_right_down = motors[3]; 
-    // const float &m_back_right_up = motors[4]; 
-    // const float &m_back_left_up  = motors[5]; 
-    // const float &m_back_left_down = motors[6]; 
-    // const float &m_back_right_down = motors[7]; 
+    const float &m_front_right_up = motors[0]; 
+    const float &m_front_left_up  = motors[1]; 
+    const float &m_front_left_down = motors[2]; 
+    const float &m_front_right_down = motors[3]; 
+    const float &m_back_right_up = motors[4]; 
+    const float &m_back_left_up  = motors[5]; 
+    const float &m_back_left_down = motors[6]; 
+    const float &m_back_right_down = motors[7]; 
 
     // quad format in Webots is:
     // m1: front

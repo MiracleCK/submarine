@@ -413,7 +413,8 @@ void run()
     }
 
     getAllSensors((char *)send_buf, northDirection, gyro, accelerometer, compass, gps, inertialUnit);
-    getGPS(gps, northDirection, (char *)send_buf1);
+    // getGPS(gps, northDirection, (char *)send_buf1);
+    getInertia(inertialUnit, northDirection, (char *)send_buf1);
 
 #ifdef DEBUG_SENSORS
     // printf("%s\n", send_buf);
@@ -429,7 +430,7 @@ void run()
       }
     // printf("122222\n");
 
-      if (_startup_ms > 1000)
+      if (_startup_ms > 5000)
       {
         _startup_ms = 0;
 
@@ -438,7 +439,7 @@ void run()
     }
     
     // printf("3333333\n");
-    if (1)
+    if (print_flag)
     {
       printf ("%s\n", send_buf1);
     }
