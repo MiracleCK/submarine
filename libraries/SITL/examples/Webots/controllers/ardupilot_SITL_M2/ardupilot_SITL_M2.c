@@ -216,7 +216,7 @@ void update_controls()
     LINEAR_THRUST
       we also want throttle to be linear with thrust so we use sqrt to calculate omega from input.
    */
-  static float factor = 1.0 / 100 * 1.0f;
+  static float factor = 1.0 / 5000 * 1.0f;
   // printf("Motors factor %f \n", factor );
   static float offset = 0.0f;
   static float v[MOTOR_NUM];

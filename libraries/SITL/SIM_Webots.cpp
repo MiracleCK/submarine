@@ -445,7 +445,7 @@ void Webots::output_m2(const struct sitl_input &input)
         //return a filtered servo input as a value from 0 to 1
         //servo is assumed to be 1000 to 2000
         //motors[i] = constrain_float(((input.servos[i]-1000)/1000.0f) * max_thrust, 0, max_thrust); 
-        motors[i] = constrain_float((input.servos[i] - 1500)*5.0f, -1000, 1000);
+        motors[i] = constrain_float((input.servos[i] - 1500)*2.5f, -1000, 1000);
         //printf("motors %d: %d, %.02f\n", i, input.servos[i], motors[i]);
     }
     //printf("\n");
