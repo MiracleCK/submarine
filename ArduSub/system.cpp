@@ -102,6 +102,10 @@ void Sub::init_ardupilot()
     init_rc_in();               // sets up rc channels from radio
     init_rc_out();              // sets up motors and output to escs
     hal.rcout->set_neopixel_num_LEDs(6, 4);
+    //neo leds must set initial value, otherwise led2～4 would not be lighted
+    hal.rcout->set_neopixel_rgb_data(6, 0xF, 0, 0, 0);
+    hal.rcout->neopixel_send();
+
     //  TODO: Restore below line. Removing it for Stabilize mode test only Yinlanshan 210706
     //  If below line is run, mode change back to manual again.
     //init_joystick();            // joystick initialization
