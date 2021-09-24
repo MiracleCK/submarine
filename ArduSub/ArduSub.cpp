@@ -256,6 +256,28 @@ void Sub::three_hz_loop()
 {
     leak_detector.update();
     water_detector.update();
+    uint8_t state = water_detector.read();
+    if (state ^ water_detector_state)
+    {
+        switch (state)
+        {
+            case 0:
+                hal.rcout->set_neopixel_rgb_data(6, 8, 255, 255, 0);
+                break;
+            case 1:
+                hal.rcout->set_neopixel_rgb_data(6, 8, 0, 255, 0);
+                break;
+            case 2:
+                hal.rcout->set_neopixel_rgb_data(6, 8, 255, 0, 0);
+                break;
+            default:
+                hal.rcout->set_neopixel_rgb_data(6, 8, 0, 0, 0);
+                state = 3;
+                break;
+        }
+        water_detector_state = state;
+        hal.rcout->neopixel_send();
+    }
 
     failsafe_leak_check();
 
@@ -320,31 +342,22 @@ void Sub::one_hz_loop()
     SRV_Channels::get_output_pwm(SRV_Channel::k_throttleLeft, lp);
     SRV_Channels::get_output_pwm(SRV_Channel::k_throttleRight, rp);
     SRV_Channels::get_output_pwm(SRV_Channel::k_boost_throttle, p);
-    red = (uint8_t)(left*255/4000);
-    green = (uint8_t)(right*255/4000);
-    blue = 0;
-    if(palReadLine(HAL_GPIO_PIN_M1_CTRL) == 0)
+
+    int16_t comm = left + right;
+    int16_t diff = left - right;
+    green = (uint8_t)((abs(comm))*255/8000);
+    if (diff >= 0)
     {
-        left = -left;
-        blue = red/2;
+        blue = (uint8_t)(diff*255/8000);
+        red = 0;
     }
-    if(palReadLine(HAL_GPIO_PIN_M2_CTRL) == 0)
+    else
     {
+        red = (uint8_t)(-diff*255/8000);
         blue = 0;
-        right = -right;
     }
-    else if (left > 0)
-        blue = green/2 + blue;
 
     hal.rcout->set_neopixel_rgb_data(6, 2, red, green, blue);
-
-    red = abs(1500 - lp)*255/500;
-    green = abs(1500 - rp)*255/500;
-    blue = 0;
-    hal.rcout->set_neopixel_rgb_data(6, 4, red, green, blue);
-
-    red = abs(1500 - p)*255/500;
-    hal.rcout->set_neopixel_rgb_data(6, 8, red, red, red);
     hal.rcout->neopixel_send();
 
     hal.shell->printf("[%d %d %d][%d %d %d]<%d>%d %d %d %d %d\r\n",

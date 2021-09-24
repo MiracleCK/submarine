@@ -168,6 +168,7 @@ public:
     float ctrl_left = 0;
     float ctrl_right = 0;
     float ctrl_pump = 0;
+    uint8_t water_detector_state;
 
     //TODO revert belows to private. I changed it for shell mode cmd. Yinlanshan 210707
     control_mode_t control_mode;
