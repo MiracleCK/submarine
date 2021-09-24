@@ -111,6 +111,7 @@ static void cmd_reset(int argc, char *argv[]);
 static void cmd_led(int argc, char *argv[]);
 static void cmd_mode(int argc, char *argv[]);
 static void cmd_ctrl(int argc, char *argv[]);
+static void cmd_thr(int argc, char *argv[]);
 
 static int radian_to_degree(float value);
 static float degree_to_radian(int value);
@@ -123,6 +124,7 @@ AP_HAL::Shell::ShellCommand shell_commands[] = {
     {"led", cmd_led},
     {"mode", cmd_mode},
     {"ctrl", cmd_ctrl},
+    {"thr", cmd_thr},
     {NULL, NULL} // this is the end of commands
 };
 
@@ -206,6 +208,28 @@ void cmd_version(int argc, char *argv[]) {
     AP_FWVersion ver = AP_FWVersion::get_fwverz();
 
     hal.shell->printf("%s\r\n", ver.fw_string);
+}
+
+void cmd_thr(int argc, char *argv[])
+{
+    if (argc == 0)
+    {
+        hal.shell->printf("thr: %.2f %d\r\n",
+                          sub.pulse_thr, sub.pulse_thn);
+    }
+    else if (argc == 1)
+    {
+        sub.pulse_thr = strtof(argv[0], NULL);
+    }
+    else if (argc == 2)
+    {
+        sub.pulse_thr = strtof(argv[0], NULL);
+        sub.pulse_thn = strtol(argv[1], NULL, 10);
+    }
+    else
+    {
+        hal.shell->printf("Usage thr [threshold] [n]");
+    }
 }
 
 void cmd_reset(int argc, char *argv[]) {
