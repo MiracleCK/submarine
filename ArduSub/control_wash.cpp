@@ -1,34 +1,29 @@
 #include "Sub.h"
 
 #define SQRT3_2 0.866f
-
-bool Sub::wash_init(void)
+bool Sub::wash_init(control_mode_t mode)
 {
     v_desire_direction.zero();
-    _mode_ms = AP_HAL::millis();
-    _target_lateral = 0;
-    motors.set_forward(0);
-    motors.set_yaw(0);
-    SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1800);
-    if (control_mode == PULLUP)
+    _now = AP_HAL::millis();
+    _mode_ms = _now;
+    if (mode == PULLUP)
     {
         hal.rcout->set_neopixel_rgb_data(6, 1, NEO_PURPLE);
-        set_status(FORWARDING);
     }
     else
     {
-        if (control_mode == FLOOR)
+        if (mode == FLOOR)
             hal.rcout->set_neopixel_rgb_data(6, 1, NEO_YELLOW);
-        else if (control_mode == WATERLINE)
+        else if (mode == WATERLINE)
             hal.rcout->set_neopixel_rgb_data(6, 1, NEO_GREEN);
-        else if (control_mode == SMART)
+        else if (mode == SMART)
             hal.rcout->set_neopixel_rgb_data(6, 1, NEO_CYAN);
         else
             hal.rcout->set_neopixel_rgb_data(6, 1, NEO_BLUE);
-        set_status(BACKING);
     }
+    set_status(UNKNOWN);
     hal.rcout->neopixel_send();
-    _step = WALL;
+    _step = WALL_LEFT;
     return true;
 }
 
@@ -52,15 +47,15 @@ void Sub::wash_run(void)
     v_downward.x = m.a.z;
     v_downward.y = m.b.z;
     v_downward.z = m.c.z;
-    uint32_t now = AP_HAL::millis();
+    _now = AP_HAL::millis();
 
     if (control_mode != FLOOR)
     {
-        if (_step == WALL && now - _status_ms > 60000 && _status == FORWARDING)
+        if (_step == WALL_LEFT && _now -_mode_ms > 300000)
             _step = BOTTOM;
     }
 
-    if (now - _mode_ms > 1800000 && _status != ERROR)
+    if (_now - _mode_ms > 600000 && _status != ERROR)
     {
         set_error("Washing finished");
         return;
@@ -68,37 +63,69 @@ void Sub::wash_run(void)
 
     switch (_status)
     {
+        case UNKNOWN:
+            if (is_on_wall(v_downward))
+            {
+                if (control_mode == FLOOR)
+                    set_status(BACKING);
+                else
+                    set_status(CLIMBING);
+            }
+            else
+            {
+                set_status(FORWARDING);
+            }
+            break;
+        case RELAXING:
+            if (_now - _status_ms > 30000)
+            {
+                set_error("RELAXING TIMEOUT");
+                return;
+            }
+
+            if (is_standing_straight(v_downward))
+                set_status(FORWARDING);
+            break;
         case BACKING:
-            if (now - _status_ms > 60000)
+            if (_now - _status_ms > 60000)
             {
                 set_error("BACKING TIMEOUT");
                 return;
             }
 
-            if (is_standing_straight(v_downward))
+            if (v_desire_direction.is_zero())
             {
-                if (_stable_ms == 0)
-                    _stable_ms = now;
-                else if (now - _status_ms < 10 || //Already stand on floor at the beginning, do next
-                        now - _stable_ms > 1000)
+                if (!is_on_wall(v_downward))
                 {
-                    motors.set_forward(0);
-                    if (v_desire_direction.is_zero())
-                        set_status(FORWARDING);
-                    else
-                        set_status(TURNING);
+                    set_status(FORWARDING);
                     return;
                 }
             }
+            else if (is_standing_straight(v_downward))
+            {
+                if (_now - _status_ms > 10)
+                {
+                    if (_delay_ms == 0){
+                        _delay_ms = _now;
+                        return;
+                    }
+
+                    if (_now - _delay_ms < 1000)
+                        return;
+                }
+
+                set_status(TURNING);
+                return;
+            }
             else
             {
-                _stable_ms = 0;
+                _delay_ms = 0;
             }
             motors.set_forward(-0.5f);
             break;
         case TURNING:
         {
-            if (now - _status_ms > 60000)
+            if (_now - _status_ms > 60000)
             {
                 set_error("TURNING TIMEOUT");
                 return;
@@ -112,37 +139,30 @@ void Sub::wash_run(void)
 
             if (turning_orientation(v_desire_direction, v_forward))
             {
-                if (_action_ms == 0)
-                    _action_ms = now;
-                else if (now - _action_ms >= 500) //turning is stable for 500ms
+                if (_delay_ms == 0)
+                    _delay_ms = _now;
+                else if (_now - _delay_ms >= 500) //turning is stable for 500ms
                 {
                     v_desire_direction.zero();
                     set_status(FORWARDING);
                 }
             } else
-                _action_ms = 0;
+                _delay_ms = 0;
             break;
         }
         case FORWARDING:
-            if (now - _status_ms > 60000)
+            if (_now - _status_ms > 60000)
             {
                 set_error("FORWARDING TIMEOUT");
                 return;
             }
-            motors.set_forward(0.5f);
-            if (control_mode == PULLUP)
-            {
-                //Keep forwarding and be pulled up
-                _status_ms = now;
-                return;
-            }
+            motors.set_forward(0.7f);
 
             if (is_climbing(v_forward))
             {
                 if (should_wash_wall())
                 {
-                    set_status(WASH_LEFT);
-                    motors.set_forward(0.5f);
+                    set_status(RAISING);
                 }
                 else
                 {
@@ -155,278 +175,138 @@ void Sub::wash_run(void)
                     set_status(BACKING);
                 }
             }
-            else if((!should_wash_wall()) && is_standing_straight(v_downward))
+            else
             {
-                turning_orientation(v_forward_target, v_forward);
-                // Maybe a wall could change forwarding orientation, turn and
-                // move away from the wall
-                /*float gz = ahrs.get_gyro().z;
-                if (gz < -0.7f || gz > 0.7f)
+                const Vector3f &acc = AP::ins().get_accel();
+                if (is_standing_straight(v_downward))
                 {
-                    _last_big_yaw_rate = gz;
-                    _stable_ms = now;
+                    turning_orientation(v_forward_target, v_forward);
+                    float d1 = acc.x - pre_acc.x;
+                    float d2 = acc.y - pre_acc.y;
+                    float sa = d1*d1 + d2*d2;
+                    if (sa > pulse_thr) {
+                        pulse_n++;
+                        hal.shell->printf("%0.2f\r\n", sa);
+                        pre_acc = acc;
+                        return;
+                    }
                 }
                 else
                 {
-                    //When orientation is stable for 2 seconds,
-                    //turn away to move off wall
-                    if (_stable_ms != 0 && now - _stable_ms > 2000)
-                    {
-                        if (_last_big_yaw_rate < 0.7f)
-                        {
-                            //Turn to left by 90 deg
-                            Vector3f z(0, 0, 1);
-                            v_desire_direction = v_forward%z;
-                            set_status(TURNING);
-                        }
+                    //horizontal moving on wall
+                    if (is_on_wall(v_downward)) {
+                        if (m.c.y > 0)
+                            motors.set_yaw(0.3f);
                         else
-                        {
-                            //Turn to right by 90 deg
-                            Vector3f z(0, 0, 1);
-                            v_desire_direction = z%v_forward;
-                            set_status(TURNING);
-                        }
-                        _stable_ms = 0;
+                            motors.set_yaw(-0.3f);
                     }
-                }*/
+                    else {
+                        motors.set_yaw(0);
+                    }
+                }
+
+                if (pulse_n)
+                {
+                    if(pulse_n <= 300 && pulse_n >= pulse_thn) {
+                        _delay_ms = _now;
+                    }
+                    pulse_n = 0;
+                }
+                pre_acc = acc;
+                if (_delay_ms && (_now - _delay_ms) > 5000)
+                    set_status(RAISING);
             }
             break;
-        case WASH_LEFT:
-        case WASH_RIGHT:
-/*
-        {
-            float lateral = _status == WASH_LEFT ? -1 : 1;
-            if (now - _status_ms > 30000)
+        case RAISING:
+            motors.set_forward(1);
+            if (is_on_wall(v_downward))
             {
-                //on floor or at waterline, stop and go to next status
-                if (!is_on_wall(v_downward) || water_detector.read())
+                set_status(CLIMBING);
+            }
+            else if ((_now - _status_ms) > 5000)
+            {
+                set_status(FORWARDING);
+            }
+            break;
+        case CLIMBING:
+            motors.set_forward(0.7f);
+            if ((_now - _status_ms) > 100000)
+            {
+                set_error("Timeout");
+            }
+
+            if (is_on_wall(v_downward))
+            {
+                if (m.c.y <= -0.7f)
+                    motors.set_yaw(0.5f);
+                else if (m.c.y >= 0.7f)
+                    motors.set_yaw(-0.5f);
+                else
+                    motors.set_yaw(0);
+                if ((_now - _status_ms) > 15000)
+                    set_status(WASH_LATERAL);
+                /*if(water_detector_state&1)
                 {
-                    motors.set_forward(0);
-                    _target_lateral = 0;
-                    if (_status == WASH_LEFT)
+                    if (_delay_ms == 0)
+                        _delay_ms = _now;
+                    else if (_now - _delay_ms >= 2000)
+                        set_status(WASH_LATERAL);
+                }
+                else
+                    _delay_ms = 0;*/
+            }
+            else
+            {
+                set_status(FORWARDING);
+            }
+            break;
+        case WASH_LATERAL:
+        {
+            if (control_mode == WATERLINE)
+            {
+                uint32_t dt = _now - _status_ms;
+                if (dt < 10000)
+                    motors.set_forward(0.7f);
+                else if (dt < 12000)
+                {
+                    if (_pump != NORMAL)
+                        set_pump(NORMAL);
+                    motors.set_forward(0.5f);
+                }
+                else
+                {
+                    Vector3f fwd(v_downward.x, v_downward.y, 0);
+                    fwd.normalize();
+                    Vector3f z(0, 0, 1);
+                    if (_step == WALL_LEFT)
                     {
-                        set_status(WASH_RIGHT);
-                        motors.set_forward(1);
+                        //Turn to left by 90 deg
+                        v_desire_direction = fwd % z;
                     }
                     else
                     {
                         //Turn to right by 90 deg
-                        Vector3f fwd(v_downward.x, v_downward.y, 0);
-                        fwd.normalize();
-                        Vector3f z(0, 0, 1);
                         v_desire_direction = z % fwd;
-                        set_status(BACKING);
                     }
-
-                    return;
-                }
-                if (_action_ms != 0 && now - _action_ms > 15000)
-                {
-                    //wait for floor or waterline detection timeout
-                    motors.set_forward(0);
-                    _target_lateral = 0;
-                    set_error("WALL TIMEOUT\r\n");
-                    return;
+                    set_status(BACKING);
                 }
             }
-            v_desire_direction = v_downward;
-            if (motors.get_forward() < -0.1f)
+            else
             {
-                //moving down to bottom
-                if (is_on_wall(v_downward))
+                uint32_t dt = _now - _status_ms;
+                if (dt < 4000)
+                    motors.set_forward(0.7f);
+                else if (dt < 5000)
                 {
-                    _action_ms = 0;
+                    if (_pump != NORMAL)
+                        set_pump(NORMAL);
+                    motors.set_forward(0.7f);
                 }
                 else
                 {
-                    if (_action_ms == 0)
-                    {
-                        _action_ms = now;
-                        hal.shell->printf("Keep Move Down\r\n");
-                    }
-                        //keep backing for 1s
-                    else if (now - _action_ms >= 1000)
-                    {
-                        //MOVING UP
-                        motors.set_forward(1);
-                        _action_ms = now;
-                        hal.shell->printf("Move Up\r\n");
-                        return;
-                    }
+                    v_desire_direction.zero();
+                    set_status(BACKING);
                 }
-                motors.set_forward(-0.5f);
-            }
-            else if (motors.get_forward() > 0.1f)
-            {
-                motors.set_forward(1);
-                if (control_mode == WATERLINE)
-                {
-                    //move lateral
-                    if (_action_ms == 0)
-                        _target_lateral = lateral;
-                    else if (water_detector.read())
-                    {
-                        //arrive at surface
-                        _action_ms = 0;
-                    }
-
-                }
-                else
-                {
-                    if (is_zero(_target_lateral))
-                    {
-                        if (water_detector.read())
-                        {
-                            //arrive at surface
-                            hal.shell->printf("At water line\r\n");
-                            _action_ms = 0;
-                            _stable_ms = now;
-                        }
-
-                        if (_action_ms == 0 && now - _stable_ms > 1000)
-                        {
-                            //wait for 1s and move laterally
-                            _stable_ms = now;
-                            _target_lateral = lateral;
-                            hal.shell->printf("Lateral\r\n");
-                        }
-                    }
-                    else if (now - _stable_ms > 2000)
-                    {
-                        //Prepare to move down
-                        hal.shell->printf("Prepare move down\r\n");
-                        motors.set_forward(0);
-                        _target_lateral = 0;
-                        _stable_ms = now;
-                    }
-                }
-            }
-            else if (_stable_ms != 0 && now - _stable_ms > 1000)
-            {
-                //wait for 1s and moving down
-                hal.shell->printf("Move Down\r\n");
-                motors.set_forward(-0.5f);
-                _target_lateral = 0;
-                _stable_ms = 0;
-                _action_ms = now;
-            }
-        }
-*/
-        {
-            float lateral = _status == WASH_LEFT ? -1 : 1;
-            if (now - _status_ms > 120000)
-            {
-                //on floor or at waterline, stop and go to next status
-                if (!is_on_wall(v_downward) || water_detector.read())
-                {
-                    motors.set_forward(0);
-                    set_lateral(0);
-                    if (_status == WASH_LEFT)
-                    {
-                        set_status(WASH_RIGHT);
-                        motors.set_forward(0.5f);
-                    }
-                    else
-                    {
-                        //Turn to right by 90 deg
-                        Vector3f fwd(v_downward.x, v_downward.y, 0);
-                        fwd.normalize();
-                        Vector3f z(0, 0, 1);
-                        v_desire_direction = z % fwd;
-                        set_status(BACKING);
-                    }
-
-                    return;
-                }
-                if (_action_ms != 0 && now - _action_ms > 15000)
-                {
-                    //wait for floor or waterline detection timeout
-                    motors.set_forward(0);
-                    set_lateral(0);
-                    set_error("WALL TIMEOUT\r\n");
-                    return;
-                }
-            }
-            v_desire_direction = v_downward;
-            if (motors.get_forward() < -0.1f)
-            {
-                //moving down to bottom
-                if (is_on_wall(v_downward))
-                {
-                    _action_ms = 0;
-                }
-                else
-                {
-                    if (_action_ms == 0)
-                    {
-                        _action_ms = now;
-                        hal.shell->printf("Keep Move Down\r\n");
-                    }
-                        //keep backing for 1s
-                    else if (now - _action_ms >= 1000)
-                    {
-                        //MOVING UP
-                        motors.set_forward(0.5f);
-                        _action_ms = now;
-                        hal.shell->printf("Move Up\r\n");
-                        return;
-                    }
-                }
-                motors.set_forward(-0.5f);
-            }
-            else if (motors.get_forward() > 0.1f)
-            {
-                motors.set_forward(0.5f);
-                if (control_mode == WATERLINE)
-                {
-                    //move lateral
-                    if (_action_ms == 0)
-                        set_lateral(lateral);
-                    else if (water_detector.read())
-                    {
-                        //arrive at surface
-                        _action_ms = 0;
-                    }
-
-                }
-                else
-                {
-                    if (is_zero(_target_lateral))
-                    {
-                        if (water_detector.read())
-                        {
-                            //arrive at surface
-                            hal.shell->printf("At water line\r\n");
-                            _action_ms = 0;
-                            _stable_ms = now;
-                        }
-
-                        if (_action_ms == 0 && now - _stable_ms > 1000)
-                        {
-                            //wait for 1s and move laterally
-                            _stable_ms = now;
-                            set_lateral(lateral);
-                            hal.shell->printf("Lateral\r\n");
-                        }
-                    }
-                    else if (now - _stable_ms > 2000)
-                    {
-                        //Prepare to move down
-                        hal.shell->printf("Prepare move down\r\n");
-                        motors.set_forward(0);
-                        set_lateral(0);
-                        _stable_ms = now;
-                    }
-                }
-            }
-            else if (_stable_ms != 0 && now - _stable_ms > 1000)
-            {
-                //wait for 1s and moving down
-                hal.shell->printf("Move Down\r\n");
-                motors.set_forward(-0.5f);
-                set_lateral(0);
-                _stable_ms = 0;
-                _action_ms = now;
             }
         }
             break;
@@ -438,54 +318,85 @@ void Sub::wash_run(void)
 void Sub::set_status(STATUS status)
 {
     _status = status;
-    _status_ms = AP_HAL::millis();
-    _notify_ms = 0;
-    _action_ms = 0;
-    _stable_ms = 0;
-    motors.set_forward(0);
-    motors.set_yaw(0);
-    motors.set_lateral(0);
+    _status_ms = _now;
+    _delay_ms = 0;
     switch (status)
     {
+        case UNKNOWN:
+            hal.shell->printf("UNKNOWN\r\n");
+            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_BLACK);
+            break;
         case BACKING:
+            set_pump(NORMAL);
+            motors.set_yaw(0);
             hal.shell->printf("BACKING\r\n");
+            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_BLUE);
             break;
         case FORWARDING:
             hal.shell->printf("FORWARDING\r\n");
             v_forward_target = v_forward;
             v_forward_target.z = 0;
             v_forward_target.normalize();
+            set_pump(NORMAL);
+            motors.set_yaw(0);
+            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_CYAN);
             break;
-        case WASH_LEFT:
-            hal.shell->printf("LEFT\r\n");
+        case RAISING:
+            hal.shell->printf("RAISING\r\n");
+            set_pump(IDLE);
+            motors.set_yaw(0);
+            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_YELLOW);
             break;
-        case WASH_RIGHT:
-            hal.shell->printf("RIGHT\r\n");
+        case CLIMBING:
+            hal.shell->printf("CLIMBING\r\n");
+            set_pump(STRONG);
+            motors.set_yaw(0);
+            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_WHITE);
+            break;
+        case WASH_LATERAL:
+            if (_step == WALL_LEFT)
+            {
+                set_pump(LEFT);
+                hal.shell->printf("LEFT\r\n");
+            }
+            else
+            {
+                set_pump(RIGHT);
+                hal.shell->printf("RIGHT\r\n");
+            }
+            motors.set_yaw(0);
+            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_CYAN);
             break;
         case TURNING:
             hal.shell->printf("TURNING\r\n");
+            set_pump(NORMAL);
+            motors.set_forward(0);
             if (!v_desire_direction.is_zero())
             {
                 v_desire_direction.z = 0;
                 v_desire_direction.normalize();
             }
+            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_GREEN);
             break;
-        case ERROR:
+        case RELAXING:
+            set_pump(NORMAL);
             motors.set_forward(0);
             motors.set_yaw(0);
+            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_BROWN);
+            break;
+        case ERROR:
+            set_pump(IDLE);
+            motors.set_forward(0);
+            motors.set_yaw(0);
+            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_RED);
             break;
     }
+    hal.rcout->neopixel_send();
 }
 
 void Sub::set_error(const char *msg)
 {
     set_status(ERROR);
-    motors.set_forward(0);
-    motors.set_yaw(0);
-    SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1500);
-    hal.rcout->set_neopixel_rgb_data(6, 1, NEO_RED);
-    hal.rcout->neopixel_send();
-    set_lateral(0);
     hal.shell->printf("ERROR: %s\r\n", msg);
     return;
 }
@@ -536,7 +447,7 @@ bool Sub::should_wash_wall(void)
         case ULTRA:
         case REGULAR:
         case FAST:
-            return _step == WALL;
+            return _step == WALL_LEFT || _step == WALL_RIGHT;
         default:
             return true;
     }
@@ -559,23 +470,36 @@ void Sub::wash_rotate(const Vector3f &fwd, Vector3f &target)
     }
 };
 
-void Sub::set_lateral(float lateral)
+void Sub::set_pump(PUMP_STATE state)
 {
-    _target_lateral = lateral;
-    if (is_zero(lateral))
+    _pump = state;
+    switch (state)
     {
-        SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1500);
-        SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1500);
-    }
-    else if (lateral > 0)
-    {
-        SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1500);
-        SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1500 - lateral*300);
-    }
-    else
-    {
-        SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1500);
-        SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1500 + lateral*300);
+        case IDLE:
+            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1500);
+            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1500);
+            SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1500);
+            break;
+        case NORMAL:
+            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1500);
+            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1500);
+            SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1650);
+            break;
+        case STRONG:
+            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1500);
+            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1500);
+            SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1700);
+            break;
+        case LEFT:
+            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1500);
+            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1400);
+            SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1650);
+            break;
+        case RIGHT:
+            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1400);
+            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1500);
+            SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1650);
+            break;
     }
 }
 

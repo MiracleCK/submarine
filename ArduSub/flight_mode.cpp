@@ -45,7 +45,7 @@ bool Sub::set_mode(control_mode_t mode, ModeReason reason)
         case WATERLINE:
         case SMART:
         case PULLUP:
-            success = wash_init();
+            success = wash_init(mode);
             hal.shell->printf("MODE: %d\r\n", mode);
             break;
 

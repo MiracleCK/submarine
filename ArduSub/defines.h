@@ -52,11 +52,6 @@ enum control_mode_t : uint8_t {
     PULLUP =       66,  // Go to waterline to be retrieved
 };
 
-enum step_t {
-    WALL,
-    BOTTOM
-};
-
 // Acro Trainer types
 #define ACRO_TRAINER_DISABLED   0
 #define ACRO_TRAINER_LEVELING   1
@@ -224,6 +219,7 @@ enum LoggingParameters {
 #define NEO_RED 0xFF, 0, 0
 #define NEO_GREEN 0, 0xFF, 0
 #define NEO_BLUE 0, 0, 0xFF
+#define NEO_BROWN 0x7F, 0x22, 0
 #define NEO_YELLOW 0x7F, 0x7F, 0
 #define NEO_CYAN 0, 0x7F, 0x7F
 #define NEO_PURPLE 0x7F, 0, 0x7F

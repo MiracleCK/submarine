@@ -172,9 +172,13 @@ public:
 
     //TODO revert belows to private. I changed it for shell mode cmd. Yinlanshan 210707
     control_mode_t control_mode;
-    step_t _step;
     bool set_mode(control_mode_t mode, ModeReason reason);
     bool set_mode(const uint8_t mode, const ModeReason reason) override;
+
+    uint16_t pulse_n;
+    uint16_t pulse_thn = 3;
+    float pulse_thr = 0.4f;
+    Vector3f pre_acc;
 
 private:
     static const AP_FWVersion fwver;
@@ -468,18 +472,32 @@ private:
     Vector3f v_desire_direction, v_forward_target;
     Vector3f v_downward, v_forward;
     enum STATUS {
-        TURNING,
+        UNKNOWN,
         FORWARDING,
+        RAISING,
+        CLIMBING,
+        WASH_LATERAL,
         BACKING,
-        WASH_LEFT,
-        WASH_RIGHT,
+        RELAXING,
+        TURNING,
         ERROR
     } _status;
+    enum PUMP_STATE {
+        IDLE,
+        NORMAL,
+        STRONG,
+        LEFT,
+        RIGHT
+    } _pump;
+    enum step_t {
+        WALL_LEFT,
+        WALL_RIGHT,
+        BOTTOM
+    } _step;
     uint32_t _status_ms;
     uint32_t _mode_ms;
-    uint32_t _notify_ms;
-    uint32_t _action_ms;
-    uint32_t _stable_ms;
+    uint32_t _delay_ms;
+    uint32_t _now;
     float _target_lateral;
     float _last_big_yaw_rate;
 
@@ -594,13 +612,13 @@ private:
     bool wiring_init(void);
     void wiring_run();
 
-    bool wash_init(void);
+    bool wash_init(control_mode_t mode);
     void wash_run(void);
     void set_status(STATUS status);
     void set_error(const char *msg);
     bool turning_orientation(const Vector3f &target, const Vector3f &forward);
     bool should_wash_wall(void);
-    void set_lateral(float lateral);
+    void set_pump(PUMP_STATE state);
     void wash_rotate(const Vector3f &fwd, Vector3f &target);
 
     bool stabilize_init(void);
