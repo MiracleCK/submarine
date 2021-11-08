@@ -56,24 +56,6 @@ void Sub::manual_run()
     //motors.set_lateral(channel_lateral->norm_input());
 #endif
 
-#if CONFIG_HAL_BOARD != HAL_BOARD_SITL
-    //Light LED to indicate forward channel input
-    //so that help test App control latency
-    float fwd = channel_forward->norm_input();
-    if (fwd > 0.5f) {
-        palWriteLine(HAL_GPIO_PIN_LED_3, 0);
-        palWriteLine(HAL_GPIO_PIN_LED_4, 1);
-    }
-    else if (fwd < -0.5f){
-        palWriteLine(HAL_GPIO_PIN_LED_3, 1);
-        palWriteLine(HAL_GPIO_PIN_LED_4, 0);
-    }
-    else {
-        palWriteLine(HAL_GPIO_PIN_LED_3, 1);
-        palWriteLine(HAL_GPIO_PIN_LED_4, 1);
-    }
-#endif
-
 //    SRV_Channels::set_output_pwm(SRV_Channel::k_steering, channel_arm->get_radio_in());
 //    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, channel_left_pump->get_radio_in());
 //    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, channel_right_pump->get_radio_in());

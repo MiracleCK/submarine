@@ -23,6 +23,7 @@ extern const AP_HAL::HAL& hal;
 
 thread_t *UartOverCan::uoc_thread_ctx;
 
+#if 0
 #define ENTER_TH_CRITERIAL p->_in_thread = true; \
     if (p->_in_io)\
         palWriteLine(HAL_GPIO_PIN_LED_3, 0);
@@ -34,6 +35,12 @@ thread_t *UartOverCan::uoc_thread_ctx;
         palWriteLine(HAL_GPIO_PIN_LED_4, 0);
 #define EXIT_IO_CRITERIAL _in_io = false; \
     palWriteLine(HAL_GPIO_PIN_LED_4, 1);
+#else
+#define ENTER_TH_CRITERIAL
+#define EXIT_TH_CRITERIAL
+#define ENTER_IO_CRITERIAL
+#define EXIT_IO_CRITERIAL
+#endif
 
 UartOverCan::UartOverCan()
 {
@@ -90,7 +97,7 @@ void UartOverCan::uoc_thread(void *arg)
     CANRxFrame rxmsg;
     CANTxFrame txmsg;
     txmsg.IDE = CAN_IDE_STD;
-    txmsg.SID = 0x02;
+    txmsg.SID = 0x03;
     txmsg.RTR = CAN_RTR_DATA;
     hal.shell->printf("uoc_thread\r\n");
     //chEvtRegister(&canp->rxfull_event, &el, 0);
