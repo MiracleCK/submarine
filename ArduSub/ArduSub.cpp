@@ -97,8 +97,7 @@ void Sub::setup()
 
     // initialise the main loop scheduler
     scheduler.init(&scheduler_tasks[0], ARRAY_SIZE(scheduler_tasks), MASK_LOG_PM);
-    if (control_mode == MANUAL)
-        manual_init();
+    reset();
 }
 
 void Sub::loop()
@@ -107,6 +106,14 @@ void Sub::loop()
     G_Dt = scheduler.get_loop_period_s();
 }
 
+void Sub::reset()
+{
+    if (control_mode == MANUAL)
+        manual_init();
+    else
+        wash_init(control_mode);
+    hal.shell->printf("Reset\r\n");
+}
 
 // Main loop - 400hz
 void Sub::fast_loop()

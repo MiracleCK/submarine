@@ -175,6 +175,7 @@ public:
     control_mode_t control_mode;
     bool set_mode(control_mode_t mode, ModeReason reason);
     bool set_mode(const uint8_t mode, const ModeReason reason) override;
+    void reset();
 
     uint16_t pulse_n;
     uint16_t pulse_thn = 3;

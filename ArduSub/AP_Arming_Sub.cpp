@@ -191,6 +191,7 @@ bool AP_Arming_Sub::disarm()
 
     // reset the mission
     sub.mission.reset();
+    sub.reset();
 
     AP::logger().set_vehicle_armed(false);
 
