@@ -113,7 +113,7 @@ void Sub::init_ardupilot()
     //  If below line is run, mode change back to manual again.
     //init_joystick();            // joystick initialization
     //  TODO: REMOVE below line. Adding it for Stabilize mode test only Yinlanshan 210706
-    motors.armed(true);
+    //motors.armed(true);
 
     relay.init();
 

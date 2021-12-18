@@ -172,7 +172,7 @@ void Sub::handle_battery_failsafe(const char* type_str, const int8_t action)
 void Sub::failsafe_pilot_input_check()
 {
 #if CONFIG_HAL_BOARD != HAL_BOARD_SITL
-    if (g.failsafe_pilot_input == FS_PILOT_INPUT_DISABLED) {
+    if (g.failsafe_pilot_input == FS_PILOT_INPUT_WARN_ONLY) {
         failsafe.pilot_input = false;
         return;
     }

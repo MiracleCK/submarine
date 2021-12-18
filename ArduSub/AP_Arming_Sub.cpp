@@ -47,10 +47,10 @@ bool AP_Arming_Sub::pre_arm_checks(bool display_failure)
         return true;
     }
     // don't allow arming unless there is a disarm button configured
-    if (!has_disarm_function()) {
+    /*if (!has_disarm_function()) {
         check_failed(display_failure, "Must assign a disarm or arm_toggle button");
         return false;
-    }
+    }*/
 
     return AP_Arming::pre_arm_checks(display_failure);
 }

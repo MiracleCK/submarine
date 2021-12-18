@@ -319,13 +319,13 @@ void Sub::one_hz_loop()
         Log_Write_Data(LogDataID::AP_STATE, ap.value);
     }
 
-    if (!motors.armed()) {
+    /*if (!motors.armed()) {
         // make it possible to change ahrs orientation at runtime during initial config
         ahrs.update_orientation();
 
         // set all throttle channel settings
         motors.set_throttle_range(-2200, 2200);
-    }
+    }*/
 
     // update assigned functions and enable auxiliary servos
     SRV_Channels::enable_aux_servos();
