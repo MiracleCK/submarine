@@ -6,24 +6,37 @@
 
 extern const AP_HAL::HAL &hal;
 
-static uint8_t _state = 0;
+CH_WaterDetector::CH_WaterDetector(AP_HAL::AnalogSource *a1, AP_HAL::AnalogSource *a2)
+{
+    analog1 = a1;
+    analog2 = a2;
+}
 
 void CH_WaterDetector::init()
 {
-    _state = 3;
+    state = 3;
+    ain1 = 0;
+    ain2 = 0;
 }
 
 void CH_WaterDetector::update()
 {
 #if CONFIG_HAL_BOARD != HAL_BOARD_SITL
-#if defined(HAL_GPIO_PIN_WATER_DETECTOR1) && defined(HAL_GPIO_PIN_WATER_DETECTOR2)
-    uint8_t s = palReadLine(HAL_GPIO_PIN_WATER_DETECTOR1);
-    _state = s|(palReadLine(HAL_GPIO_PIN_WATER_DETECTOR2)<<1);
-#endif
-#endif
-}
+    uint8_t st;
+    ain1 = analog1->read_average();
+    ain2 = analog2->read_average();
+    if(ain2 < 3500)
+        st = 0;
+    else
+        st = 2;
+    if(ain1 >= 3500)
+        st |= 1;
 
-uint8_t CH_WaterDetector::read(void)
-{
-    return _state;
+    if (state ^ st)
+    {
+        state = st;
+    }
+#else
+    state = 0;
+#endif
 }

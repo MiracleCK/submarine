@@ -262,28 +262,11 @@ void Sub::twentyfive_hz_logging()
 void Sub::three_hz_loop()
 {
     leak_detector.update();
-    water_detector.update();
-    uint8_t state = water_detector.read();
-    if (state ^ water_detector_state)
+    water_detector->update();
+
+    if (water_detector->read() == 3)
     {
-        switch (state)
-        {
-            case 0:
-                hal.rcout->set_neopixel_rgb_data(6, 8, 255, 255, 0);
-                break;
-            case 1:
-                hal.rcout->set_neopixel_rgb_data(6, 8, 0, 255, 0);
-                break;
-            case 2:
-                hal.rcout->set_neopixel_rgb_data(6, 8, 255, 0, 0);
-                break;
-            default:
-                hal.rcout->set_neopixel_rgb_data(6, 8, 0, 0, 0);
-                state = 3;
-                break;
-        }
-        water_detector_state = state;
-        hal.rcout->neopixel_send();
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "Out of water");
     }
 
     failsafe_leak_check();

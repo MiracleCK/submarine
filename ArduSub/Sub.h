@@ -169,7 +169,6 @@ public:
     float ctrl_left = 0;
     float ctrl_right = 0;
     float ctrl_pump = 0;
-    uint8_t water_detector_state;
 
     //TODO revert belows to private. I changed it for shell mode cmd. Yinlanshan 210707
     control_mode_t control_mode;
@@ -183,6 +182,12 @@ public:
     Vector3f pre_acc;
 
     UartOverCan uartOverCan;
+
+    AP_HAL::AnalogSource *AIN1;
+    AP_HAL::AnalogSource *AIN2;
+    AP_HAL::AnalogSource *AIN3;
+    AP_HAL::AnalogSource *AIN4;
+    AP_HAL::AnalogSource *AIN5;
 private:
     static const AP_FWVersion fwver;
 
@@ -212,7 +217,7 @@ private:
     AP_Logger logger;
 
     AP_LeakDetector leak_detector;
-    CH_WaterDetector water_detector;
+    CH_WaterDetector *water_detector;
 
     TSYS01 celsius;
 

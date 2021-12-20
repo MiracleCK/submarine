@@ -37,6 +37,12 @@ void Sub::init_ardupilot()
     
 #if CONFIG_HAL_BOARD != HAL_BOARD_SITL
     factory.aging_check();
+    AIN1 = hal.analogin->channel(4);
+    AIN2 = hal.analogin->channel(10);
+    AIN3 = hal.analogin->channel(11);
+    AIN4 = hal.analogin->channel(14);
+    AIN5 = hal.analogin->channel(15);
+    water_detector = new CH_WaterDetector(AIN4, AIN2);
 #endif
 
     BoardConfig.init();
@@ -188,7 +194,7 @@ void Sub::init_ardupilot()
     }
 
     leak_detector.init();
-    water_detector.init();
+    water_detector->init();
 
     last_pilot_heading = ahrs.yaw_sensor;
 
@@ -239,7 +245,6 @@ void Sub::init_ardupilot()
     // In case of LED_1 is out of order or not available, using LED_2
     palWriteLine(HAL_GPIO_PIN_LED_2, 0);
 #endif
-
 
     hal.console->print("\nInit complete");
     printf("\r\ninit complete \r\n");

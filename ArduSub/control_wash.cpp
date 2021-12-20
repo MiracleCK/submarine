@@ -243,9 +243,11 @@ void Sub::wash_run(void)
                     motors.set_yaw(-0.5f);
                 else
                     motors.set_yaw(0);
+                if ((_now - _status_ms) > 60000)
+                    set_error("No waterline detect");
                 if ((_now - _status_ms) > 15000)
                     set_status(WASH_LATERAL);
-                /*if(water_detector_state&1)
+                if((water_detector->read()&1) != 0)
                 {
                     if (_delay_ms == 0)
                         _delay_ms = _now;
@@ -253,7 +255,7 @@ void Sub::wash_run(void)
                         set_status(WASH_LATERAL);
                 }
                 else
-                    _delay_ms = 0;*/
+                    _delay_ms = 0;
             }
             else
             {
