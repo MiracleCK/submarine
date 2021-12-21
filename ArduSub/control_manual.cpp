@@ -27,10 +27,10 @@ void Sub::manual_run()
         attitude_control.set_throttle_out(0,true,g.throttle_filt);
         attitude_control.relax_attitude_controllers();
 
-        SRV_Channels::set_output_pwm(SRV_Channel::k_steering, channel_arm->get_radio_trim());
-	    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, channel_left_pump->get_radio_trim());
-	    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, channel_right_pump->get_radio_trim());
-	    SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, channel_up_pump->get_radio_trim());
+	    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1500);
+	    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1500);
+	    SRV_Channels::set_output_pwm(SRV_Channel::k_elevon_left, 1500);
+	    SRV_Channels::set_output_pwm(SRV_Channel::k_elevon_right, 1500);
         return;
     }
     motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
@@ -39,18 +39,28 @@ void Sub::manual_run()
     motors.set_yaw(ctrl_yaw);
     motors.set_forward(ctrl_forward);
     _target_lateral = ctrl_lateral;
-    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, ctrl_left*500 + 1500);
-    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, ctrl_right*500 + 1500);
-    SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, ctrl_pump*500 + 1500);
+    SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleLeft, ctrl_left*500 + 1500);
+    SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleRight, ctrl_right*500 + 1500);
+    SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, ctrl_pump*500 + 1500);
+    SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, ctrl_pump*500 + 1500);
 #else
     //motors.set_roll(channel_roll->norm_input());
     //motors.set_pitch(channel_pitch->norm_input());
     motors.set_yaw(channel_yaw->norm_input() /** g.acro_yaw_p / ACRO_YAW_P*/);
     //motors.set_throttle(channel_throttle->norm_input());
     motors.set_forward(channel_forward->norm_input());
-    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, channel_left_pump->get_radio_in());
-    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, channel_right_pump->get_radio_in());
-    SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, channel_up_pump->get_radio_in());
+    SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleLeft, channel_left_pump->get_radio_in());
+    SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleRight, channel_right_pump->get_radio_in());
+    if (channel_pump->get_radio_in() != 1500)
+    {
+        SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, channel_pump->get_radio_in());
+        SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, channel_pump->get_radio_in());
+    }
+    else
+    {
+        SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, channel_pump1->get_radio_in());
+        SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, channel_pump2->get_radio_in());
+    }
     //motors.set_lateral(channel_lateral->norm_input());
 #endif
 

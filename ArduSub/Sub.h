@@ -214,6 +214,10 @@ public:
         ERROR
     } _status;
 
+    uint32_t mode_max_ms;
+    uint32_t mode_sum_ms;
+    uint32_t mode_active_ts;
+    uint32_t step_ms;
 private:
     static const AP_FWVersion fwver;
 
@@ -237,8 +241,9 @@ private:
 
     RC_Channel *channel_left_pump;
     RC_Channel *channel_right_pump;
-    RC_Channel *channel_up_pump;
-    RC_Channel *channel_arm;
+    RC_Channel *channel_pump1;
+    RC_Channel *channel_pump2;
+    RC_Channel *channel_pump;
 
     AP_Logger logger;
 
@@ -510,7 +515,8 @@ private:
         NORMAL,
         STRONG,
         LEFT,
-        RIGHT
+        RIGHT,
+        TINY
     } _pump;
     enum step_t {
         WALL_LEFT,
@@ -518,7 +524,6 @@ private:
         BOTTOM
     } _step;
     uint32_t _status_ms;
-    uint32_t _mode_ms;
     uint32_t _delay_ms;
     uint32_t _now;
     float _target_lateral;

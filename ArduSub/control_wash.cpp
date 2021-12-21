@@ -5,21 +5,39 @@ bool Sub::wash_init(control_mode_t mode)
 {
     v_desire_direction.zero();
     _now = AP_HAL::millis();
-    _mode_ms = _now;
+    mode_sum_ms = 0;
+    mode_active_ts = 0;
+    step_ms = 0;
     if (mode == PULLUP)
     {
-        hal.rcout->set_neopixel_rgb_data(6, 1, NEO_PURPLE);
+        mode_max_ms = 120000; //2min
     }
     else
     {
-        if (mode == FLOOR)
-            hal.rcout->set_neopixel_rgb_data(6, 1, NEO_YELLOW);
-        else if (mode == WATERLINE)
-            hal.rcout->set_neopixel_rgb_data(6, 1, NEO_GREEN);
-        else if (mode == SMART)
-            hal.rcout->set_neopixel_rgb_data(6, 1, NEO_CYAN);
-        else
-            hal.rcout->set_neopixel_rgb_data(6, 1, NEO_BLUE);
+        switch (mode)
+        {
+            case FLOOR:
+                mode_max_ms = 1800000; //30min
+                break;
+            case WATERLINE:
+                mode_max_ms = 1800000; //30min
+                break;
+            case SMART:
+                mode_max_ms = 1800000; //30min
+                break;
+            case REGULAR:
+                mode_max_ms = 3600000; //60min
+                break;
+            case FAST:
+                mode_max_ms = 2400000; //40min
+                break;
+            case ULTRA:
+                mode_max_ms = 7200000; //120min
+                break;
+            default:
+                mode_max_ms = 0;
+                break;
+        }
     }
     set_status(UNKNOWN);
     _step = WALL_RIGHT;
@@ -28,16 +46,69 @@ bool Sub::wash_init(control_mode_t mode)
 
 void Sub::wash_run(void)
 {
+    _now = AP_HAL::millis();
     if (!motors.armed())
     {
         motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::GROUND_IDLE);
         attitude_control.set_throttle_out(0, true, g.throttle_filt);
         attitude_control.relax_attitude_controllers();
-
+        SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1500);
+        SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1500);
+        SRV_Channels::set_output_pwm(SRV_Channel::k_elevon_left, 1500);
+        SRV_Channels::set_output_pwm(SRV_Channel::k_elevon_right, 1500);
+        mode_active_ts = 0;
+        if (!is_zero(channel_forward->norm_input())) {
+            arming.arm(AP_Arming::Method::AUXSWITCH, false);
+        }
         return;
     }
 
     motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
+
+    if (_status == PAUSE)
+    {
+        mode_active_ts = 0;
+        motors.set_yaw(channel_yaw->norm_input());
+        motors.set_forward(channel_forward->norm_input());
+        SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleLeft, channel_left_pump->get_radio_in());
+        SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleRight, channel_right_pump->get_radio_in());
+        if (channel_pump->get_radio_in() != 1500)
+        {
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, channel_pump->get_radio_in());
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, channel_pump->get_radio_in());
+        }
+        else
+        {
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, channel_pump1->get_radio_in());
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, channel_pump2->get_radio_in());
+        }
+        return;
+    }
+    else {
+        if (!is_zero(channel_forward->norm_input())) {
+            set_status(PAUSE);
+        }
+    }
+
+    if (mode_active_ts > 0)
+    {
+        uint32_t dt = _now - mode_active_ts;
+        mode_sum_ms += dt;
+        step_ms += dt;
+    }
+
+    if (mode_sum_ms >= mode_max_ms)
+    {
+        motors.armed(false);
+        mode_sum_ms = mode_max_ms;
+        gcs().send_text(MAV_SEVERITY_INFO, "Task is done");
+        if (control_mode == PULLUP)
+        {
+            set_mode(prev_control_mode, ModeReason::TERMINATE);
+        }
+        return;
+    }
+    mode_active_ts = _now;
 
     const Matrix3f &m = ahrs.get_rotation_body_to_ned();
     v_forward.x = m.a.x;
@@ -46,7 +117,6 @@ void Sub::wash_run(void)
     v_downward.x = m.a.z;
     v_downward.y = m.b.z;
     v_downward.z = m.c.z;
-    _now = AP_HAL::millis();
 
     if (control_mode != FLOOR)
     {
@@ -54,15 +124,11 @@ void Sub::wash_run(void)
             _step = BOTTOM;
     }
 
-    if (_now - _mode_ms > 600000 && _status != ERROR)
-    {
-        set_error("Washing finished");
-        return;
-    }
-
     switch (_status)
     {
         case UNKNOWN:
+            if (_now - _status_ms < 7000)
+                break;
             if (is_on_wall(v_downward))
             {
                 if (control_mode == FLOOR)
@@ -143,6 +209,7 @@ void Sub::wash_run(void)
                 else if (_now - _delay_ms >= 500) //turning is stable for 500ms
                 {
                     v_desire_direction.zero();
+                    step_ms = 0;
                     set_status(FORWARDING);
                 }
             } else
@@ -150,7 +217,7 @@ void Sub::wash_run(void)
             break;
         }
         case FORWARDING:
-            if (_now - _status_ms > 60000)
+            if (_now - _status_ms > 300000)
             {
                 set_error("FORWARDING TIMEOUT");
                 return;
@@ -207,9 +274,23 @@ void Sub::wash_run(void)
                 if (pulse_n)
                 {
                     if(pulse_n <= 300 && pulse_n >= pulse_thn) {
+                        gcs().send_text(MAV_SEVERITY_INFO, "Collision");
+                        pulse_n = 0;
+                        if (!should_wash_wall())
+                        {
+                            //KEEP WASHING BOTTOM
+                            //Rotate right some deg to avoid wall
+                            wash_rotate(v_forward_target, v_desire_direction);
+                            hal.shell->printf("desire:(%.2f %.2f)\r\n",
+                                              v_desire_direction.x,
+                                              v_desire_direction.y);
+                            set_status(BACKING);
+                            return;
+                        }
                         _delay_ms = _now;
                     }
-                    pulse_n = 0;
+                    else
+                        pulse_n--;
                 }
                 pre_acc = acc;
                 if (_delay_ms && (_now - _delay_ms) > 5000)
@@ -222,14 +303,16 @@ void Sub::wash_run(void)
             {
                 set_status(CLIMBING);
             }
-            else if ((_now - _status_ms) > 5000)
+            else if ((_now - _status_ms) > 10000)
             {
                 set_status(FORWARDING);
             }
             break;
         case CLIMBING:
-            motors.set_forward(0.7f);
-            if ((_now - _status_ms) > 100000)
+            motors.set_forward(1.0f);
+            if (control_mode == PULLUP)
+                return;
+            if ((_now - _status_ms) > 180000)
             {
                 set_error("Timeout");
             }
@@ -266,9 +349,9 @@ void Sub::wash_run(void)
             if (control_mode == WATERLINE)
             {
                 uint32_t dt = _now - _status_ms;
-                if (dt < 10000)
+                if (dt < 30000)
                     motors.set_forward(0.7f);
-                else if (dt < 12000)
+                else if (dt < 32000)
                 {
                     if (_pump != NORMAL)
                         set_pump(NORMAL);
@@ -295,9 +378,9 @@ void Sub::wash_run(void)
             else
             {
                 uint32_t dt = _now - _status_ms;
-                if (dt < 4000)
+                if (dt < 10000)
                     motors.set_forward(0.7f);
-                else if (dt < 5000)
+                else if (dt < 12000)
                 {
                     if (_pump != NORMAL)
                         set_pump(NORMAL);
@@ -305,13 +388,19 @@ void Sub::wash_run(void)
                 }
                 else
                 {
-                    v_desire_direction.zero();
+                    if (step_ms > 120000)
+                    {
+                        wash_rotate(v_forward_target, v_desire_direction);
+                    }
+                    else
+                        v_desire_direction.zero();
                     set_status(BACKING);
                 }
             }
         }
             break;
         case ERROR:
+        default:
             break;
     }
 }
@@ -326,9 +415,10 @@ void Sub::set_status(STATUS status)
         case UNKNOWN:
             hal.shell->printf("UNKNOWN\r\n");
             gcs().send_text(MAV_SEVERITY_INFO, "UNKNOWN");
+            set_pump(NORMAL);
             break;
         case BACKING:
-            set_pump(NORMAL);
+            set_pump(TINY);
             motors.set_yaw(0);
             hal.shell->printf("BACKING\r\n");
             gcs().send_text(MAV_SEVERITY_INFO, "BACKING");
@@ -387,6 +477,10 @@ void Sub::set_status(STATUS status)
             break;
         case ERROR:
             set_pump(IDLE);
+            motors.set_forward(0);
+            motors.set_yaw(0);
+            break;
+        case PAUSE:
             motors.set_forward(0);
             motors.set_yaw(0);
             break;
@@ -476,29 +570,40 @@ void Sub::set_pump(PUMP_STATE state)
     switch (state)
     {
         case IDLE:
-            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1500);
-            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1500);
-            SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1500);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleLeft, 1500);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleRight, 1500);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, 1500);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, 1500);
             break;
         case NORMAL:
-            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1500);
-            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1500);
-            SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1650);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleLeft, 1580);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleRight, 1580);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, 1550);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, 1550);
             break;
         case STRONG:
-            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1500);
-            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1500);
-            SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1700);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleLeft, 1600);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleRight, 1600);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, 1800);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, 1800);
             break;
         case LEFT:
-            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1500);
-            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1400);
-            SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1650);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleLeft, 1500);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleRight, 1800);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, 1600);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, 1600);
             break;
         case RIGHT:
-            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1400);
-            SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1500);
-            SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1650);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleLeft, 1800);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleRight, 1500);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, 1600);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, 1600);
+            break;
+        case TINY:
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleLeft, 1500);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleRight, 1500);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, 1540);
+            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, 1540);
             break;
     }
 }

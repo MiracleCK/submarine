@@ -11,8 +11,9 @@ void Sub::init_rc_in()
 
     channel_left_pump = RC_Channels::rc_channel(RC_IN_CHANNEL_LEFT_PUMP);
     channel_right_pump = RC_Channels::rc_channel(RC_IN_CHANNEL_RIGHT_PUMP);
-    channel_up_pump = RC_Channels::rc_channel(RC_IN_CHANNEL_UP_PUMP);
-    channel_arm = RC_Channels::rc_channel(RC_IN_CHANNEL_ARM);
+    channel_pump1 = RC_Channels::rc_channel(RC_IN_CHANNEL_PUMP1);
+    channel_pump2 = RC_Channels::rc_channel(RC_IN_CHANNEL_PUMP2);
+    channel_pump = RC_Channels::rc_channel(RC_IN_CHANNEL_PUMP);
 
     // set rc channel ranges
     //channel_roll->set_angle(ROLL_PITCH_INPUT_MAX);
@@ -23,7 +24,7 @@ void Sub::init_rc_in()
     //channel_lateral->set_angle(ROLL_PITCH_INPUT_MAX);
 
     for (int i = 0; i < 16; i++) {
-        RC_Channels::set_override(i, 1500);
+        RC_Channels::rc_channel(i)->set_radio_in(1500);
     }
     
 #if 0
@@ -74,15 +75,24 @@ void Sub::init_rc_out()
     // refresh auxiliary channel to function map
     SRV_Channels::update_aux_servo_function();
 
-    SRV_Channels::set_aux_channel_default(SRV_Channel::k_throttleLeft, AP_MOTORS_MOT_6);
-    SRV_Channels::set_aux_channel_default(SRV_Channel::k_throttleRight, AP_MOTORS_MOT_4);
-    SRV_Channels::set_aux_channel_default(SRV_Channel::k_boost_throttle, AP_MOTORS_MOT_5);
+    SRV_Channels::set_aux_channel_default(SRV_Channel::k_throttleLeft, AP_MOTORS_MOT_4); //- AP_MOTORS_MOT_4
+    SRV_Channels::set_aux_channel_default(SRV_Channel::k_throttleRight, AP_MOTORS_MOT_5);//+ AP_MOTORS_MOT_5
+    SRV_Channels::set_aux_channel_default(SRV_Channel::k_elevon_left, AP_MOTORS_MOT_3); //- AP_MOTORS_MOT_3
+    SRV_Channels::set_aux_channel_default(SRV_Channel::k_elevon_right, AP_MOTORS_MOT_6);//+ AP_MOTORS_MOT_5
+
+//    SRV_Channels::get_channel_for(SRV_Channel::k_throttleLeft)->set_reversed(true);
+    SRV_Channels::get_channel_for(SRV_Channel::k_elevon_left)->set_reversed(true);
+//    SRV_Channels::get_channel_for(SRV_Channel::k_elevon_right)->set_reversed(true);
+
     SRV_Channels::set_rc_frequency(SRV_Channel::k_throttleLeft, g.rc_speed);
     SRV_Channels::set_rc_frequency(SRV_Channel::k_throttleRight, g.rc_speed);
-    SRV_Channels::set_rc_frequency(SRV_Channel::k_boost_throttle, g.rc_speed);
+    SRV_Channels::set_rc_frequency(SRV_Channel::k_elevon_left, g.rc_speed);
+    SRV_Channels::set_rc_frequency(SRV_Channel::k_elevon_right, g.rc_speed);
+
     SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1500);
     SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1500);
-    SRV_Channels::set_output_pwm(SRV_Channel::k_boost_throttle, 1500);
+    SRV_Channels::set_output_pwm(SRV_Channel::k_elevon_left, 1500);
+    SRV_Channels::set_output_pwm(SRV_Channel::k_elevon_right, 1500);
 
     /*SRV_Channels::set_aux_channel_default(SRV_Channel::k_steering, AP_MOTORS_MOT_3);
     SRV_Channels::set_aux_channel_default(SRV_Channel::k_throttleLeft, AP_MOTORS_MOT_4);
