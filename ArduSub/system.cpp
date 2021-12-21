@@ -123,6 +123,21 @@ void Sub::init_ardupilot()
     hal.rcout->set_neopixel_rgb_data(6, 0xF, 0x40, 0x40, 0x40);
     hal.rcout->neopixel_send();
 
+#ifdef HAL_GPIO_PIN_LED_1
+    // Light LEDs on to indicate the pilot program is running
+    palWriteLine(HAL_GPIO_PIN_LED_1, 0);
+#endif
+#ifdef HAL_GPIO_PIN_LED_2
+    // In case of LED_1 is out of order or not available, using LED_2
+    palWriteLine(HAL_GPIO_PIN_LED_2, 0);
+#endif
+#ifdef HAL_GPIO_PIN_LED_3
+    palWriteLine(HAL_GPIO_PIN_LED_3, 0);
+#endif
+#ifdef HAL_GPIO_PIN_LED_4
+    palWriteLine(HAL_GPIO_PIN_LED_4, 0);
+#endif
+
     //  TODO: Restore below line. Removing it for Stabilize mode test only Yinlanshan 210706
     //  If below line is run, mode change back to manual again.
     //init_joystick();            // joystick initialization
@@ -223,8 +238,15 @@ void Sub::init_ardupilot()
 #if LOGGING_ENABLED == ENABLED
     logger.setVehicle_Startup_Writer(FUNCTOR_BIND(&sub, &Sub::Log_Write_Vehicle_Startup_Messages, void));
 #endif
+#ifdef HAL_GPIO_PIN_BUZZER
+    // In case of LED_1 is out of order or not available, using LED_2
+    palWriteLine(HAL_GPIO_PIN_BUZZER, 1);
+#endif
 
     startup_INS_ground();
+#ifdef HAL_GPIO_PIN_BUZZER
+    palWriteLine(HAL_GPIO_PIN_BUZZER, 0);
+#endif
 
 #ifdef ENABLE_SCRIPTING
     g2.scripting.init();
@@ -244,15 +266,6 @@ void Sub::init_ardupilot()
     BoardConfig.init_safety();
 
     hal.shell->register_commands(shell_commands);
-
-#ifdef HAL_GPIO_PIN_LED_1
-    // Light LEDs on to indicate the pilot program is running
-    palWriteLine(HAL_GPIO_PIN_LED_1, 0);
-#endif
-#ifdef HAL_GPIO_PIN_LED_2
-    // In case of LED_1 is out of order or not available, using LED_2
-    palWriteLine(HAL_GPIO_PIN_LED_2, 0);
-#endif
 
     hal.console->print("\nInit complete");
     printf("\r\ninit complete \r\n");
