@@ -145,7 +145,7 @@ I2C_ORDER I2C1 I2C2
 # 6) SERIAL5: extra UART (usually RTOS debug console)
 
 # order of UARTs (and USB)
-UART_ORDER EMPTY USART2 EMPTY UART4 EMPTY USART3 USART1
+UART_ORDER OTG1 USART2 EMPTY EMPTY EMPTY USART3 USART1
 
 # If the board has an IOMCU connected via a UART then this defines the
 # UART to talk to that MCU. Leave it out for boards with no IOMCU.
@@ -193,8 +193,8 @@ UART_ORDER EMPTY USART2 EMPTY UART4 EMPTY USART3 USART1
 #PG9 USART6_RX USART6
 
 # USART2 serial GPS
-PD5 USART2_TX USART2
-PD6 USART2_RX USART2
+PD5 USART2_TX USART2 NODMA
+PD6 USART2_RX USART2 NODMA
 
 # Now define the primary battery connectors. The labels we choose here
 # are used to create defines for pins in the various drivers, so
@@ -233,8 +233,8 @@ PA7 SPI1_MOSI SPI1
 # PA10 IO-debug-console
 
 # Now we define the pins that USB is connected on.
-#PA11 OTG_FS_DM OTG1
-#PA12 OTG_FS_DP OTG1
+PA11 OTG_FS_DM OTG1
+PA12 OTG_FS_DP OTG1
 
 # These are the pins for SWD debugging with a STlinkv2 or black-magic probe.
 #PA13 JTMS-SWDIO SWD
@@ -334,8 +334,8 @@ PC5 ADC_IN4 ADC1 SCALE(1)
 #PE4 MPU_EXT_CS CS
 
 # the first CAN bus
-PA11 CAN1_RX CAN1
-PA12 CAN1_TX CAN1
+PD0 CAN1_RX CAN1
+PD1 CAN1_TX CAN1
 
 # Another USART, this one for telem1. This one has RTS and CTS lines.
 # USART2 serial2 telem1
@@ -352,8 +352,8 @@ PD9 USART3_RX USART3
 #PD12 USART3_RTS USART3
 
 # UART4 maps to uartD
-PC10 UART4_TX UART4
-PC11 UART4_RX UART4
+#PC10 UART4_TX UART4
+#PC11 UART4_RX UART4
 
 # The CS pin for FRAM (ramtron). This one is marked as using
 # SPEED_VERYLOW, which matches the HAL_PX4 setup.
@@ -393,8 +393,8 @@ define BOARD_PWM_COUNT_DEFAULT 7
 #PE1 UART8_TX UART8
 
 # UART1 - MAVLINK - FACTORY
-PB6 USART1_TX USART1
-PB7 USART1_RX USART1
+PB6 USART1_TX USART1 NODMA
+PB7 USART1_RX USART1 NODMA
 
 # Now setup SPI bus4.
 #PE2 SPI4_SCK  SPI4
