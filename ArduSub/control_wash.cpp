@@ -505,3 +505,16 @@ void Sub::set_pump(PUMP_STATE state)
     }
 }
 
+bool Sub::handle_do_pause_continue(mavlink_command_long_t command) {
+    if (is_zero(command.param1))
+    {
+        set_status(PAUSE);
+    }
+    else if(_status == PAUSE)
+    {
+        set_status(UNKNOWN);
+    }
+
+    return true;
+}
+

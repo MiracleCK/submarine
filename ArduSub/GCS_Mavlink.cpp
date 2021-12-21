@@ -535,6 +535,13 @@ MAV_RESULT GCS_MAVLINK_Sub::handle_command_long_packet(const mavlink_command_lon
         }
         return MAV_RESULT_ACCEPTED;
 
+    case MAV_CMD_DO_PAUSE_CONTINUE:
+        // param1: 0=pause, 1=continue
+        if (!sub.handle_do_pause_continue(packet)) {
+            return MAV_RESULT_FAILED;
+        }
+        return MAV_RESULT_ACCEPTED;
+
     default:
         return GCS_MAVLINK::handle_command_long_packet(packet);
     }

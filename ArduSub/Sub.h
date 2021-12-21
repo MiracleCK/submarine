@@ -749,6 +749,7 @@ private:
     void backup_parameters(void);
     void recover_parameters(void);
     bool handle_do_motor_test(mavlink_command_long_t command);
+    bool handle_do_pause_continue(mavlink_command_long_t command);
     bool init_motor_test();
     bool verify_motor_test();
 
