@@ -318,12 +318,12 @@ PC5 ADC_IN4 ADC1 SCALE(1)
 #PC7 USART6_RX USART6
 
 # Now setup the pins for the microSD card, if available.
-#PC8 SDIO_D0 SDIO
-#PC9 SDIO_D1 SDIO
-#PC10 SDIO_D2 SDIO
-#PC11 SDIO_D3 SDIO
-#PC12 SDIO_CK SDIO
-#PD2 SDIO_CMD SDIO
+PC8 SDIO_D0 SDIO
+PC9 SDIO_D1 SDIO
+PC10 SDIO_D2 SDIO
+PC11 SDIO_D3 SDIO
+PC12 SDIO_CK SDIO
+PD2 SDIO_CMD SDIO
 
 # More CS pins for more sensors. The labels for all CS pins need to
 # match the SPI device table later in this file.
@@ -503,7 +503,7 @@ define HAL_WITH_RAMTRON 1
 #define HAL_HAVE_IMU_HEATER 1
 
 # Enable FAT filesystem support (needs a microSD defined via SDIO).
-#define HAL_OS_FATFS_IO 1
+define HAL_OS_FATFS_IO 1
 
 define HAL_SUPPORT_RCOUT_SERIAL 1
 
