@@ -179,6 +179,10 @@ public:
         return reversed?true:false;
     }
 
+    void set_reversed(bool r) {
+        reversed.set(r ? 1 : 0);
+    }
+
     // set MIN/MAX parameters
     void set_output_min(uint16_t pwm) {
         servo_min.set(pwm);
