@@ -385,7 +385,7 @@ int16_t AP_Motors6DOF::calc_thrust_to_pwm(int motor, float thrust_in) const
 void AP_Motors6DOF::output_to_motors()
 {
     int8_t i;
-    //int16_t motor_out[AP_MOTORS_MAX_NUM_MOTORS];    // final pwm values sent to the motor
+    int16_t motor_out[AP_MOTORS_MAX_NUM_MOTORS];    // final pwm values sent to the motor
 
     switch (_spool_state) {
     case SpoolState::SHUT_DOWN:
@@ -451,7 +451,7 @@ void AP_Motors6DOF::output_to_motors()
 #endif
 
         	//hal.shell->printf("%d:%d\r\n", _motor_mapping[i] - 1, motor_out[i]);
-            rc_write(_motor_mapping[i] - 1, abs(motor_out[i]));
+            rc_write(_motor_mapping[i] - 1, motor_out[i]);
 
 			if(0) {
 		        static uint32_t _startup_ms = 0;

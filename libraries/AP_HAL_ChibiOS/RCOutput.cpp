@@ -372,6 +372,11 @@ void RCOutput::push_local(void)
             }
             if (outmask & (1UL<<chan)) {
                 uint32_t period_us = period[chan];
+                //some negative periods is used for motor direction,
+                //convert them to positive values Yinlanshan
+                if (period_us >= 0x8000) {
+                    period_us = 0x10000 - period_us;
+                }
 
                 if (safety_on && !(safety_mask & (1U<<(chan+chan_offset)))) {
                     // safety is on, overwride pwm
