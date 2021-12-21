@@ -309,6 +309,7 @@ void Sub::one_hz_loop()
         // set all throttle channel settings
         motors.set_throttle_range(-2200, 2200);
     }*/
+    update_neo_led();
 
     // update assigned functions and enable auxiliary servos
     SRV_Channels::enable_aux_servos();
@@ -433,6 +434,139 @@ bool Sub::control_check_barometer()
     }
 #endif
     return true;
+}
+
+void Sub::update_neo_led(void)
+{
+    uint32_t ns;
+    if (motors.armed())
+    {
+        if (_status == PAUSE)
+        {
+            switch (water_detector->read())
+            {
+                case 0:
+                    ns = NEO_LED(NEO_PATTERN_BLINK, NEO_GREEN);
+                    break;
+                case 1:
+                    ns = NEO_LED(NEO_PATTERN_BLINK, NEO_PINK);
+                    break;
+                case 2:
+                    ns = NEO_LED(NEO_PATTERN_BLINK, NEO_BROWN);
+                    break;
+                default:
+                    ns = NEO_LED(NEO_PATTERN_BLINK, NEO_PURPLE);
+                    break;
+            }
+        }
+        else if (_status == ERROR)
+            ns = NEO_LED(NEO_PATTERN_BLINK, NEO_PURPLE);
+        else
+            ns = NEO_LED(NEO_PATTERN_LOOP, NEO_GREEN);
+    }
+    else
+    {
+        switch (water_detector->read())
+        {
+            case 0:
+                ns = NEO_LED(NEO_PATTERN_KEEP, NEO_YELLOW);
+                break;
+            case 1:
+                ns = NEO_LED(NEO_PATTERN_KEEP, NEO_PINK);
+                break;
+            case 2:
+                ns = NEO_LED(NEO_PATTERN_KEEP, NEO_BROWN);
+                break;
+            default:
+                ns = NEO_LED(NEO_PATTERN_KEEP, NEO_PURPLE);
+                break;
+        }
+    }
+
+    uint32_t pattern = (ns>>24)&7;
+    if (ns == (neo_led_state&0xFFFFFFF))
+    {
+        if (pattern == NEO_PATTERN_KEEP)
+            return;
+    }
+    else
+    {
+        neo_led_state = ns;
+    }
+    uint8_t *state = (uint8_t *)&neo_led_state;
+
+    uint32_t led_mask, except, step;
+    switch (pattern)
+    {
+        //set
+        case NEO_PATTERN_KEEP:
+            hal.rcout->set_neopixel_rgb_data(6, 0xF,
+                    state[2], state[1], state[0]);
+            state[3] = NEO_PATTERN_KEEP;
+            break;
+        //blink
+        case NEO_PATTERN_BLINK:
+            if (state[3]&0x10)
+            {
+                state[3] = NEO_PATTERN_BLINK;
+                hal.rcout->set_neopixel_rgb_data(
+                        6, 0xF,
+                        0, 0, 0);
+            }
+            else
+            {
+                state[3] = (0x10|NEO_PATTERN_BLINK);
+                hal.rcout->set_neopixel_rgb_data(
+                        6, 0xF,
+                        state[2], state[1], state[0]);
+            }
+            break;
+        //blink on
+        case NEO_PATTERN_BLINK1:
+        case NEO_PATTERN_BLINK2:
+        case NEO_PATTERN_BLINK3:
+        case NEO_PATTERN_BLINK4:
+            if (state[3]&0x10)
+            {
+                state[3] = pattern;
+                except = 1<<(pattern - NEO_PATTERN_BLINK1);
+                led_mask = 0xF&(~except);
+                hal.rcout->set_neopixel_rgb_data(
+                        6, led_mask,
+                        0, 0, 0);
+            }
+            else
+            {
+                state[3] = (0x10|pattern);
+                hal.rcout->set_neopixel_rgb_data(
+                        6, 0xF,
+                        state[2], state[1], state[0]);
+            }
+            break;
+        //loop
+        case NEO_PATTERN_LOOP:
+            step = state[3]>>4;
+            if (step > 2)
+            {
+                state[3] = NEO_PATTERN_LOOP;
+                hal.rcout->set_neopixel_rgb_data(6, 8,
+                        state[2], state[1], state[0]);
+                hal.rcout->set_neopixel_rgb_data(6, 7, 0, 0, 0);
+            }
+            else
+            {
+                uint32_t n = 1<<step;
+                hal.rcout->set_neopixel_rgb_data(6, n,
+                        state[2], state[1], state[0]);
+                hal.rcout->set_neopixel_rgb_data(6, (0xF^n), 0, 0, 0);
+                state[3] = NEO_PATTERN_LOOP|(step + 1)<<4;
+            }
+            break;
+        default:
+            return;
+    }
+
+    hal.rcout->neopixel_send();
 }
 
 AP_HAL_MAIN_CALLBACKS(&sub);

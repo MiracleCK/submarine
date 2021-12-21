@@ -10,8 +10,6 @@ bool Sub::manual_init()
     // attitude hold inputs become thrust inputs in manual mode
     // set to neutral to prevent chaotic behavior (esp. roll/pitch)
     set_neutral_controls();
-    hal.rcout->set_neopixel_rgb_data(6, 1, NEO_WHITE);
-    hal.rcout->neopixel_send();
     return true;
 }
 

@@ -112,6 +112,7 @@ static void cmd_led(int argc, char *argv[]);
 static void cmd_mode(int argc, char *argv[]);
 static void cmd_ctrl(int argc, char *argv[]);
 static void cmd_thr(int argc, char *argv[]);
+static void cmd_neo(int argc, char *argv[]);
 
 static int radian_to_degree(float value);
 static float degree_to_radian(int value);
@@ -125,6 +126,7 @@ AP_HAL::Shell::ShellCommand shell_commands[] = {
     {"mode", cmd_mode},
     {"ctrl", cmd_ctrl},
     {"thr", cmd_thr},
+    {"neo", cmd_neo},
     {NULL, NULL} // this is the end of commands
 };
 
@@ -230,6 +232,30 @@ void cmd_thr(int argc, char *argv[])
     {
         hal.shell->printf("Usage thr [threshold] [n]");
     }
+}
+
+void cmd_neo(int argc, char *argv[])
+{
+    if (argc == 2)
+    {
+        char *ptr;
+        int32_t led = strtol(argv[0], &ptr, 10);
+        if (led >= 1 && led <= 5)
+        {
+            int32_t color = strtol(argv[1], &ptr, 16);
+            if (ptr != argv[1])
+            {
+                hal.rcout->set_neopixel_rgb_data(6, 1<<(led - 1),
+                                                 (color>>16)&0xFF,
+                                                 (color>>8)&0xFF,
+                                                 (color)&0xFF);
+                hal.rcout->neopixel_send();
+                return;
+            }
+        }
+    }
+
+    hal.shell->printf("Usage neo (1 ~ 5) (RGB)");
 }
 
 void cmd_reset(int argc, char *argv[]) {

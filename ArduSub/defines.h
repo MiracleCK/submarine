@@ -216,12 +216,13 @@ enum LoggingParameters {
 #define MAVLINK_SET_POS_TYPE_MASK_YAW_IGNORE      (1<<10)
 #define MAVLINK_SET_POS_TYPE_MASK_YAW_RATE_IGNORE (1<<11)
 
-#define NEO_RED 0xFF, 0, 0
-#define NEO_GREEN 0, 0xFF, 0
-#define NEO_BLUE 0, 0, 0xFF
-#define NEO_BROWN 0x7F, 0x22, 0
-#define NEO_YELLOW 0x7F, 0x7F, 0
-#define NEO_CYAN 0, 0x7F, 0x7F
-#define NEO_PURPLE 0x7F, 0, 0x7F
-#define NEO_WHITE 0x55, 0x55, 0x55
+#define NEO_RED 0x7F0000
+#define NEO_GREEN 0x7F00
+#define NEO_BLUE  0x7F
+#define NEO_BROWN 0x7F2200
+#define NEO_PINK 0x7F0022
+#define NEO_YELLOW 0x7F7F00
+#define NEO_CYAN 0x7F7F
+#define NEO_PURPLE 0x7F007F
+#define NEO_WHITE 0x555555
 #define NEO_BLACK 0, 0, 0

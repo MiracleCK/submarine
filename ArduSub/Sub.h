@@ -146,6 +146,16 @@
     #define RC_IN_CHANNEL_LATERAL 5
 #endif
 
+#define NEO_PATTERN_KEEP 0
+#define NEO_PATTERN_BLINK 1
+#define NEO_PATTERN_BLINK1 2
+#define NEO_PATTERN_BLINK2 3
+#define NEO_PATTERN_BLINK3 4
+#define NEO_PATTERN_BLINK4 5
+#define NEO_PATTERN_BLINK5 6
+#define NEO_PATTERN_LOOP  7
+#define NEO_LED(pattern, color) (((pattern)&7)<<24)|(color)
+
 class Sub : public AP_Vehicle {
 public:
     friend class GCS_MAVLINK_Sub;
@@ -175,6 +185,8 @@ public:
     bool set_mode(control_mode_t mode, ModeReason reason);
     bool set_mode(const uint8_t mode, const ModeReason reason) override;
     void reset();
+    void update_neo_led();
+    uint32_t neo_led_state = 0;
 
     uint16_t pulse_n;
     uint16_t pulse_thn = 3;

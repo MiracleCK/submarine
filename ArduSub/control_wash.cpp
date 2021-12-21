@@ -22,8 +22,7 @@ bool Sub::wash_init(control_mode_t mode)
             hal.rcout->set_neopixel_rgb_data(6, 1, NEO_BLUE);
     }
     set_status(UNKNOWN);
-    hal.rcout->neopixel_send();
-    _step = WALL_LEFT;
+    _step = WALL_RIGHT;
     return true;
 }
 
@@ -51,7 +50,7 @@ void Sub::wash_run(void)
 
     if (control_mode != FLOOR)
     {
-        if (_step == WALL_LEFT && _now -_mode_ms > 300000)
+        if (_step == WALL_RIGHT && mode_sum_ms > mode_max_ms/2)
             _step = BOTTOM;
     }
 
@@ -326,51 +325,53 @@ void Sub::set_status(STATUS status)
     {
         case UNKNOWN:
             hal.shell->printf("UNKNOWN\r\n");
-            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_BLACK);
+            gcs().send_text(MAV_SEVERITY_INFO, "UNKNOWN");
             break;
         case BACKING:
             set_pump(NORMAL);
             motors.set_yaw(0);
             hal.shell->printf("BACKING\r\n");
-            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_BLUE);
+            gcs().send_text(MAV_SEVERITY_INFO, "BACKING");
             break;
         case FORWARDING:
             hal.shell->printf("FORWARDING\r\n");
+            gcs().send_text(MAV_SEVERITY_INFO, "FORWARDING");
             v_forward_target = v_forward;
             v_forward_target.z = 0;
             v_forward_target.normalize();
             set_pump(NORMAL);
             motors.set_yaw(0);
-            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_CYAN);
             break;
         case RAISING:
             hal.shell->printf("RAISING\r\n");
+            gcs().send_text(MAV_SEVERITY_INFO, "RAISING");
             set_pump(IDLE);
             motors.set_yaw(0);
-            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_YELLOW);
             break;
         case CLIMBING:
             hal.shell->printf("CLIMBING\r\n");
+            gcs().send_text(MAV_SEVERITY_INFO, "CLIMBING");
             set_pump(STRONG);
             motors.set_yaw(0);
-            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_WHITE);
             break;
         case WASH_LATERAL:
             if (_step == WALL_LEFT)
             {
                 set_pump(LEFT);
                 hal.shell->printf("LEFT\r\n");
+                gcs().send_text(MAV_SEVERITY_INFO, "LEFT");
             }
             else
             {
                 set_pump(RIGHT);
                 hal.shell->printf("RIGHT\r\n");
+                gcs().send_text(MAV_SEVERITY_INFO, "RIGHT");
             }
             motors.set_yaw(0);
-            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_CYAN);
             break;
         case TURNING:
             hal.shell->printf("TURNING\r\n");
+            gcs().send_text(MAV_SEVERITY_INFO, "TURNING");
             set_pump(NORMAL);
             motors.set_forward(0);
             if (!v_desire_direction.is_zero())
@@ -378,28 +379,25 @@ void Sub::set_status(STATUS status)
                 v_desire_direction.z = 0;
                 v_desire_direction.normalize();
             }
-            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_GREEN);
             break;
         case RELAXING:
             set_pump(NORMAL);
             motors.set_forward(0);
             motors.set_yaw(0);
-            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_BROWN);
             break;
         case ERROR:
             set_pump(IDLE);
             motors.set_forward(0);
             motors.set_yaw(0);
-            hal.rcout->set_neopixel_rgb_data(6, 4, NEO_RED);
             break;
     }
-    hal.rcout->neopixel_send();
 }
 
 void Sub::set_error(const char *msg)
 {
     set_status(ERROR);
     hal.shell->printf("ERROR: %s\r\n", msg);
+    gcs().send_text(MAV_SEVERITY_INFO, msg);
     return;
 }
 
