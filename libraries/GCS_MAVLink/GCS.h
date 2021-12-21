@@ -29,7 +29,7 @@
 //CR500 Override timesync message to send remain and total time.
 //Therefore we don't handle receiving timesync, just send this
 //message periodically
-#define OVERRIDE_TIMESYNC_FOR_CR500 0
+#define OVERRIDE_TIMESYNC_FOR_CR500 1
 
 // check if a message will fit in the payload space available
 #define PAYLOAD_SIZE(chan, id) (unsigned(GCS_MAVLINK::packet_overhead_chan(chan)+MAVLINK_MSG_ID_ ## id ## _LEN))
@@ -206,7 +206,7 @@ public:
     void send_raw_imu();
 
     void send_scaled_pressure_instance(uint8_t instance, void (*send_fn)(mavlink_channel_t chan, uint32_t time_boot_ms, float press_abs, float press_diff, int16_t temperature));
-    void send_scaled_pressure();
+    virtual void send_scaled_pressure();
     void send_scaled_pressure2();
     virtual void send_scaled_pressure3(); // allow sub to override this
     void send_sensor_offsets();
@@ -398,7 +398,7 @@ protected:
     void handle_device_op_read(const mavlink_message_t &msg);
     void handle_device_op_write(const mavlink_message_t &msg);
 
-    void send_timesync();
+    virtual void send_timesync();
     // returns the time a timesync message was most likely received:
     uint64_t timesync_receive_timestamp_ns() const;
     // returns a timestamp suitable for packing into the ts1 field of TIMESYNC:
@@ -407,7 +407,11 @@ protected:
     struct {
         int64_t sent_ts1;
         uint32_t last_sent_ms;
+#if OVERRIDE_TIMESYNC_FOR_CR500
+        const uint16_t interval_ms = 1000;
+#else
         const uint16_t interval_ms = 10000;
+#endif
     }  _timesync_request;
 
     void handle_statustext(const mavlink_message_t &msg);

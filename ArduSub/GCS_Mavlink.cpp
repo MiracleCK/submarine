@@ -39,6 +39,16 @@ MAV_MODE GCS_MAVLINK_Sub::base_mode() const
         // APM does in any mode, as that is defined as "system finds its own goal
         // positions", which APM does not currently do
         break;
+    case WATERLINE:
+    case FLOOR:
+    case ULTRA:
+    case FAST:
+    case REGULAR:
+    case PULLUP:
+    case SMART:
+        if(sub._status == Sub::PAUSE)
+            _base_mode |= MAV_MODE_FLAG_AUTO_ENABLED;
+        break;
     default:
         break;
     }
@@ -103,18 +113,28 @@ int16_t GCS_MAVLINK_Sub::vfr_hud_throttle() const
 }
 
 // Work around to get temperature sensor data out
-void GCS_MAVLINK_Sub::send_scaled_pressure3()
+void GCS_MAVLINK_Sub::send_scaled_pressure()
 {
-    if (!sub.celsius.healthy()) {
+    /*if (!sub.celsius.healthy()) {
         return;
-    }
-    mavlink_msg_scaled_pressure3_send(
+    }*/
+    mavlink_msg_scaled_pressure_send(
         chan,
         AP_HAL::millis(),
         0,
         0,
-        sub.celsius.temperature() * 100);
+        sub.temp_sensor.read(0)*100);
 }
+#if OVERRIDE_TIMESYNC_FOR_CR500
+void GCS_MAVLINK_Sub::send_timesync()
+{
+    mavlink_msg_timesync_send(
+                chan,
+                sub.mode_max_ms <= sub.mode_sum_ms ? 0 : (sub.mode_max_ms - sub.mode_sum_ms)/60000,  //Remained Time
+                sub.mode_max_ms/60000   //Total time
+        );
+}
+#endif
 
 bool GCS_MAVLINK_Sub::send_info()
 {

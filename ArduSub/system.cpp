@@ -100,6 +100,15 @@ void Sub::init_ardupilot()
 
     // setup telem slots with serial ports
     gcs().setup_uarts();
+    //Positive sending MSGS, MAV
+    for (uint8_t i=0; i<gcs().num_gcs(); i++) {
+        GCS_MAVLINK &c = *gcs().chan(i);
+        if (!c.is_active()) {
+            continue;
+        }
+        gcs().set_message_interval(i, MSG_SCALED_PRESSURE, 1000000);
+        gcs().set_message_interval(i, MSG_RC_CHANNELS, 500000);
+    }
 
 #if LOGGING_ENABLED == ENABLED
     log_init();

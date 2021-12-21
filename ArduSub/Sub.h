@@ -188,6 +188,20 @@ public:
     AP_HAL::AnalogSource *AIN3;
     AP_HAL::AnalogSource *AIN4;
     AP_HAL::AnalogSource *AIN5;
+
+    enum STATUS {
+        UNKNOWN,
+        FORWARDING,
+        RAISING,
+        CLIMBING,
+        WASH_LATERAL,
+        BACKING,
+        RELAXING,
+        TURNING,
+        PAUSE,
+        ERROR
+    } _status;
+
 private:
     static const AP_FWVersion fwver;
 
@@ -479,17 +493,6 @@ private:
     uint32_t _rotate_degree = 110;
     Vector3f v_desire_direction, v_forward_target;
     Vector3f v_downward, v_forward;
-    enum STATUS {
-        UNKNOWN,
-        FORWARDING,
-        RAISING,
-        CLIMBING,
-        WASH_LATERAL,
-        BACKING,
-        RELAXING,
-        TURNING,
-        ERROR
-    } _status;
     enum PUMP_STATE {
         IDLE,
         NORMAL,
