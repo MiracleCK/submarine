@@ -81,9 +81,18 @@ public:
 
     bool  _in_thread, _in_io;
 
+    uint8_t _test_data[41];
+    static uint8_t rx_ch;
+    static uint8_t rx_len;
+//    static uint16_t rx_count, rx_bad, rx_empty;
+//    void test(void);
+//    void test_send(void);
 private:
-    static thread_t *uoc_thread_ctx;
-    static void uoc_thread(void *);
+    static thread_t *rx_thread_ctx;
+    static thread_t *tx_thread_ctx;
+    static void rx_thread(void *);
+    static void tx_thread(void *);
+
 
     uint32_t _baudrate;
 

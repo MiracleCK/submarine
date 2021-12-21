@@ -21,7 +21,8 @@
 
 extern const AP_HAL::HAL& hal;
 
-thread_t *UartOverCan::uoc_thread_ctx;
+thread_t *UartOverCan::rx_thread_ctx;
+thread_t *UartOverCan::tx_thread_ctx;
 
 #if 0
 #define ENTER_TH_CRITERIAL p->_in_thread = true; \
@@ -42,22 +43,47 @@ thread_t *UartOverCan::uoc_thread_ctx;
 #define EXIT_IO_CRITERIAL
 #endif
 
+uint8_t UartOverCan::rx_ch;
+uint8_t UartOverCan::rx_len;
+//uint16_t UartOverCan::rx_count;
+//uint16_t UartOverCan::rx_bad;
+//uint16_t UartOverCan::rx_empty;
+
 UartOverCan::UartOverCan()
 {
     _baudrate = 500000;
     _in_thread = false;
     _in_io = false;
+    for (int i = 0; i < 4; ++i)
+        _test_data[i] = '0';
+    for (int i = 0; i < 26; ++i)
+        _test_data[i + 4] = 'A' + i;
+    for (int i = 0; i < 10; ++i)
+        _test_data[i + 30] = '0' + i;
+    _test_data[40] = '\n';
+
+    rx_ch = 0xFF;
+    rx_len = 0;
+    //rx_count = 0, rx_bad = 0, rx_empty = 0;
 }
 
 void UartOverCan::begin(uint32_t baud, uint16_t rxSpace, uint16_t txSpace)
 {
-    if (uoc_thread_ctx == nullptr)
+    if (rx_thread_ctx == nullptr)
     {
-        uoc_thread_ctx = thread_create_alloc(THD_WORKING_AREA_SIZE(256),
-                                              "apm_can",
-                                              178,
-                                              uoc_thread,
-                                              this);
+        rx_thread_ctx = thread_create_alloc(THD_WORKING_AREA_SIZE(128),
+                  "apm_can_rx",
+                  182,
+                  rx_thread,
+                  this);
+    }
+    if (tx_thread_ctx == nullptr)
+    {
+        tx_thread_ctx = thread_create_alloc(THD_WORKING_AREA_SIZE(128),
+                "apm_can_tx",
+                178,
+                tx_thread,
+                this);
     }
     if (CAND1.state == CAN_STOP)
     {
@@ -88,39 +114,168 @@ void UartOverCan::begin(uint32_t baud, uint16_t rxSpace, uint16_t txSpace)
     }
 
     _initialised = true;
-    hal.shell->printf("begin %d\r\n", baud);
+    hal.shell->printf("uoc begin %d\r\n", baud);
 }
 
-void UartOverCan::uoc_thread(void *arg)
+void UartOverCan::rx_thread(void *arg)
 {
     UartOverCan *p = (UartOverCan *)arg;
     CANRxFrame rxmsg;
-    CANTxFrame txmsg;
-    txmsg.IDE = CAN_IDE_STD;
-    txmsg.SID = 0x03;
-    txmsg.RTR = CAN_RTR_DATA;
-    hal.shell->printf("uoc_thread\r\n");
     //chEvtRegister(&canp->rxfull_event, &el, 0);
     while (true) {
-        while (canReceive(&CAND1, CAN_ANY_MAILBOX, &rxmsg, TIME_US2I(300)) == MSG_OK) {
+        while (canReceive(&CAND1, CAN_ANY_MAILBOX, &rxmsg, TIME_MS2I(100)) == MSG_OK) {
             ENTER_TH_CRITERIAL
             p->_readbuf.write(rxmsg.data8, rxmsg.DLC);
             EXIT_TH_CRITERIAL
-        }
-        int32_t len = p->_writebuf.available();
-        while (len > 0)
-        {
-            ENTER_TH_CRITERIAL
-            int32_t n = p->_writebuf.read(txmsg.data8, MIN(len, 8));
-            EXIT_TH_CRITERIAL
-            txmsg.DLC = n;
-            len -= n;
-            msg_t m = canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, TIME_MS2I(200));
-            (void)m;
+            /*
+            if (rxmsg.DLC == 0)
+            {
+                rx_empty++;
+                return;
+            }
+
+            for (int i = 0; i < rxmsg.DLC; ++i)
+            {
+                uint8_t c = rxmsg.data8[i];
+                if (c == 0xFE)
+                {
+                    if (rx_len > 0)
+                    {
+                        if (rx_len != 41)
+                            rx_bad++;
+                        rx_count++;
+                    }
+                    rx_len = 1;
+                }
+                else
+                {
+                    if (rx_len == 1)
+                    {
+                        rx_ch += 1;
+                        if (rx_ch == 0)
+                            rx_ch = c;
+                        else if (rx_ch == 0xC8)
+                            rx_ch = 0;
+                    }
+
+                    if (rx_ch > c)
+                    {
+                        if (rx_ch < 0xC8)
+                        {
+                            uint8_t skip = 0xC8 - rx_ch + c;
+                            rx_bad += skip;
+                            rx_count += skip;
+                            rx_empty += skip;
+                            rx_len = 1;
+                        }
+                        rx_ch = c;
+                    }
+                    else if (rx_ch < c)
+                    {
+                        uint8_t skip =  c - rx_ch;
+                        rx_bad += skip;
+                        rx_count += skip;
+                        rx_empty += skip;
+                        rx_len = 1;
+                        rx_ch = c;
+                    }
+
+                    rx_len++;
+                }
+            }*/
         }
     }
     //chEvtUnregister(&canp->rxfull_event, &el);
 }
+
+void UartOverCan::tx_thread(void *arg)
+{
+    UartOverCan *p = (UartOverCan *)arg;
+    CANTxFrame txmsg;
+    txmsg.IDE = CAN_IDE_STD;
+    txmsg.SID = 0x03;
+    txmsg.RTR = CAN_RTR_DATA;
+    while (true) {
+        int32_t len = p->_writebuf.available();
+        while (len > 0)
+        {
+            ENTER_TH_CRITERIAL
+            int32_t n = p->_writebuf.peekbytes(txmsg.data8, MIN(len, 8));
+            EXIT_TH_CRITERIAL
+            txmsg.DLC = n;
+
+            if (MSG_OK == canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, TIME_US2I(100)))
+            {
+                len -= n;
+                p->_writebuf.advance(n);
+            }
+        }
+        osalThreadSleep(TIME_US2I(1000));
+    }
+}
+
+/*void UartOverCan::test(void)
+{
+    CANTxFrame txmsg;
+    txmsg.IDE = CAN_IDE_STD;
+    txmsg.SID = 0x03;
+    txmsg.RTR = CAN_RTR_DATA;
+    uint8_t *data = _test_data;
+    uint32_t ts = AP_HAL::millis();
+    for (int a = 0; a < 1; ++a)
+    {
+        data[0] = '0' + a;
+        for (int b = 0; b < 10; ++b)
+        {
+            data[1] = '0' + b;
+            for (int c = 0; c < 10; ++c)
+            {
+                data[2] = '0' + c;
+                for (int d = 0; d < 10; ++d)
+                {
+                    data[3] = '0' + d;
+                    uint32_t len = 41;
+                    while (len > 0)
+                    {
+                        uint32_t n = MIN(8, len);
+                        txmsg.DLC = n;
+                        memcpy(txmsg.data8, &data[41 - len], n);
+                        while(MSG_OK != canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, TIME_IMMEDIATE));
+                        len -= n;
+                    }
+                    osalThreadSleep(TIME_US2I(2300));
+                }
+            }
+        }
+    }
+    hal.shell->printf("time cost: %d\r\n", AP_HAL::millis() - ts);
+}
+
+void UartOverCan::test_send(void)
+{
+    CANTxFrame txmsg;
+    txmsg.IDE = CAN_IDE_STD;
+    txmsg.SID = 0x03;
+    txmsg.RTR = CAN_RTR_DATA;
+    uint8_t *data = _test_data;
+
+    uint32_t len = 41;
+    while (len > 0)
+    {
+        uint32_t n = MIN(8, len);
+        txmsg.DLC = n;
+        memcpy(txmsg.data8, &data[41 - len], n);
+        while(MSG_OK != canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, TIME_IMMEDIATE));
+        len -= n;
+    }
+    for (int i = 3; i >= 0; --i)
+    {
+        if(++data[i] > '9')
+            data[i] = '0';
+        else
+            break;
+    }
+}*/
 
 void UartOverCan::end()
 {
