@@ -35,6 +35,12 @@ extern AP_IOMCU iomcu;
 
 #define RCOU_SERIAL_TIMING_DEBUG 0
 
+#if BIDIR_DSHOT
+#define DSHOT_TM_LEN 100
+static uint16_t dshot_dma_telemetry[DSHOT_TM_LEN] __attribute__ ((aligned (4)));
+static uint32_t _rpm_sum[4] = {0};
+static uint16_t _rpm_sa[4] = {0};
+#endif
 struct RCOutput::pwm_group RCOutput::pwm_group_list[] = { HAL_PWM_GROUPS };
 struct RCOutput::irq_state RCOutput::irq;
 
@@ -653,7 +659,11 @@ void RCOutput::set_group_mode(pwm_group &group)
         const uint32_t bit_period = 20;
 
         // configure timer driver for DMAR at requested rate
+#if BIDIR_DSHOT
+        if (!setup_group_DMA(group, rate, bit_period, false, dshot_buffer_length, false)) {
+#else
         if (!setup_group_DMA(group, rate, bit_period, true, dshot_buffer_length, false)) {
+#endif
             group.current_mode = MODE_PWM_NONE;
             break;
         }
@@ -919,6 +929,9 @@ uint16_t RCOutput::create_dshot_packet(const uint16_t value, bool telem_request)
         csum ^= csum_data;
         csum_data >>= 4;
     }
+#if BIDIR_DSHOT
+    csum = ~csum;
+#endif
     csum &= 0xf;
     // append checksum
     packet = (packet << 4) | csum;
@@ -967,6 +980,29 @@ void RCOutput::dshot_send(pwm_group &group, bool blocking)
         }
     }
 
+#if BIDIR_DSHOT
+    if(!group.pwm_started)
+    {
+        //pwmStop(group.pwm_drv);
+        pwmStart(group.pwm_drv, &group.pwm_cfg);
+        group.pwm_started = true;
+    }
+    /*if(group.pwm_drv->tim->ARR != group.pwm_drv->period - 1)
+    {
+        //恢复定时器配置
+        group.pwm_drv->tim->CR1 = STM32_TIM_CR1_ARPE | STM32_TIM_CR1_URS | STM32_TIM_CR1_UDIS;
+        group.pwm_drv->tim->ARR = group.pwm_drv->period - 1;
+        const uint32_t CCxE = STM32_TIM_CCER_CC1E|STM32_TIM_CCER_CC2E|STM32_TIM_CCER_CC3E|STM32_TIM_CCER_CC4E;
+        group.pwm_drv->tim->CCER &= ~CCxE;
+        group.pwm_drv->tim->CCMR1 = STM32_TIM_CCMR1_OC1M(6) | STM32_TIM_CCMR1_OC1PE |
+                       STM32_TIM_CCMR1_OC2M(6) | STM32_TIM_CCMR1_OC2PE;
+        group.pwm_drv->tim->CCMR2 = STM32_TIM_CCMR2_OC3M(6) | STM32_TIM_CCMR2_OC3PE |
+                       STM32_TIM_CCMR2_OC4M(6) | STM32_TIM_CCMR2_OC4PE;
+        group.pwm_drv->tim->CCER |= CCxE;
+        group.pwm_drv->tim->SR = 0;
+        group.pwm_drv->tim->CR1 = STM32_TIM_CR1_ARPE | STM32_TIM_CR1_URS | STM32_TIM_CR1_CEN;
+    }*/
+#endif
     bool safety_on = hal.util->safety_switch_state() == AP_HAL::Util::SAFETY_DISARMED;
 
     memset((uint8_t *)group.dma_buffer, 0, dshot_buffer_length);
@@ -1017,8 +1053,12 @@ void RCOutput::dshot_send(pwm_group &group, bool blocking)
                 // dshot values are from 48 to 2047. Zero means off.
                 value += 47;
             }
-            
+
+#if BIDIR_DSHOT
+            bool request_telemetry = true;
+#else
             bool request_telemetry = (telem_request_mask & chan_mask)?true:false;
+#endif
             uint16_t packet = create_dshot_packet(value, request_telemetry);
             if (request_telemetry) {
                 telem_request_mask &= ~chan_mask;
@@ -1034,6 +1074,55 @@ void RCOutput::dshot_send(pwm_group &group, bool blocking)
 #endif //#ifndef DISABLE_DSHOT
 }
 
+#if BIDIR_DSHOT
+void RCOutput::dshot_receive(void *p)
+{
+    pwm_group *group = (pwm_group *)p;
+    stm32_tim_t *timer = group->pwm_drv->tim;
+    uint32_t psc = timer->PSC;
+    pwmStop(group->pwm_drv);
+    group->pwm_started = false;
+
+    rccEnableTIM1(true);
+    rccResetTIM1();
+
+    timer->CR1 = 0;//STM32_TIM_CR1_ARPE | STM32_TIM_CR1_URS | STM32_TIM_CR1_UDIS;
+    timer->PSC = psc;
+    timer->ARR = group->pwm_cfg.period/4 - 1;
+    const uint32_t CCxE = STM32_TIM_CCER_CC1E|STM32_TIM_CCER_CC2E|STM32_TIM_CCER_CC3E|STM32_TIM_CCER_CC4E;
+    timer->CCER = 0;
+    timer->CCMR1 = STM32_TIM_CCMR1_CC1S_MASK | STM32_TIM_CCMR1_CC2S_MASK;
+    timer->CCMR2 = STM32_TIM_CCMR2_CC3S_MASK | STM32_TIM_CCMR2_CC4S_MASK;
+    timer->CCER |= CCxE;
+    timer->SR = 0;
+    timer->CNT = 0;
+    // setup for 4 burst strided transfers. 0x0D is the register
+    // address offset of the CCR registers in the timer peripheral
+    group->pwm_drv->tim->DCR = 0x0D | STM32_TIM_DCR_DBL(0);
+    timer->DIER  = TIM_DIER_UDE;
+    timer->EGR   = STM32_TIM_EGR_UG;
+    timer->CR1 = STM32_TIM_CR1_ARPE | STM32_TIM_CR1_URS | STM32_TIM_CR1_CEN;
+
+//    timer->EGR   = STM32_TIM_EGR_UG;      /* Update event.                */
+//    timer->SR    = 0;                     /* Clear pending IRQs.          */
+//    timer->DIER  = TIM_DIER_UDE;          /* DMA-related DIER settings.   */
+//    if(group->advanced_timer)
+//        timer->BDTR = STM32_TIM_BDTR_MOE;
+    // Timer configured and started.
+
+    dmaStreamSetPeripheral(group->dma, &(GPIOE->IDR));
+    dmaStreamSetMemory0(group->dma, dshot_dma_telemetry);
+    dmaStreamSetTransactionSize(group->dma, DSHOT_TM_LEN);
+    dmaStreamSetFIFO(group->dma, STM32_DMA_FCR_DMDIS | STM32_DMA_FCR_FTH_FULL);
+    dmaStreamSetMode(group->dma,
+                     STM32_DMA_CR_CHSEL(group->dma_up_channel) |
+                     STM32_DMA_CR_DIR_P2M | STM32_DMA_CR_PSIZE_HWORD | STM32_DMA_CR_MSIZE_HWORD |
+                     STM32_DMA_CR_MINC | STM32_DMA_CR_PL(3) |
+                     STM32_DMA_CR_TEIE | STM32_DMA_CR_TCIE);
+
+    dmaStreamEnable(group->dma);
+}
+#endif
 
 /*
   send a set of Neopixel packets for a channel group
@@ -1117,7 +1206,26 @@ void RCOutput::dma_irq_callback(void *p, uint32_t flags)
     if (group->in_serial_dma && irq.waiter) {
         // tell the waiting process we've done the DMA
         chEvtSignalI(irq.waiter, serial_event_mask);
-    } else {
+    }
+#if BIDIR_DSHOT
+    else if(is_dshot_protocol(group->current_mode)) {
+        if(group->pwm_drv->tim->ARR == group->pwm_drv->period - 1)
+        {
+            //chVTSetI(&group->dma_timeout, chTimeUS2I(dshot_min_gap_us), dma_unlock, p);
+            chVTSetI(&group->dma_timeout, chTimeUS2I(5), dshot_receive, p);
+        }
+        else
+        {
+            //chVTSetI(&group->dma_timeout, chTimeUS2I(dshot_min_gap_us), dma_unlock, p);
+            //pwmStart(group->pwm_drv, &group->pwm_cfg);
+            //group->pwm_started = true;
+            group->dma_handle->unlock_from_IRQ();
+            stm32_cacheBufferFlush(dshot_dma_telemetry, sizeof(dshot_dma_telemetry));
+            update_rpm(dshot_dma_telemetry);
+        }
+    }
+#endif
+    else {
         // this prevents us ever having two dshot pulses too close together
         chVTSetI(&group->dma_timeout, chTimeUS2I(dshot_min_gap_us), dma_unlock, p);
     }
@@ -1592,7 +1700,7 @@ void RCOutput::set_failsafe_pwm(uint32_t chmask, uint16_t period_us)
 /*
   true when the output mode is of type dshot
 */
-bool RCOutput::is_dshot_protocol(const enum output_mode mode) const
+bool RCOutput::is_dshot_protocol(const enum output_mode mode)
 {
     switch (mode) {
     case MODE_PWM_DSHOT150:
@@ -1608,7 +1716,7 @@ bool RCOutput::is_dshot_protocol(const enum output_mode mode) const
 /*
     returns the bitrate in Hz of the given output_mode
 */
-uint32_t RCOutput::protocol_bitrate(const enum output_mode mode) const
+uint32_t RCOutput::protocol_bitrate(const enum output_mode mode)
 {
     switch (mode) {
     case MODE_PWM_DSHOT150:
@@ -1689,5 +1797,176 @@ void RCOutput::neopixel_send(void)
 {
     neopixel_pending = true;
 }
+
+#if BIDIR_DSHOT
+void RCOutput::get_dshot_telemetry(int32_t *rpm)
+{
+    for (int i = 0; i < 4; ++i)
+    {
+        if(_rpm_sa[i] == 0)
+            rpm[i] = -1;
+        else
+            rpm[i] = _rpm_sum[i]/_rpm_sa[i];
+        _rpm_sa[i] = 0;
+        _rpm_sum[i] = 0;
+    }
+}
+
+void RCOutput::update_rpm(uint16_t *ptr)
+{
+    int8_t bits[4][25];
+    uint8_t bit_len[4] = {0};
+    int8_t count[4];
+    uint32_t bit[4];
+
+    bit[0] = (ptr[0]>>14)&1;
+    bit[1] = (ptr[0]>>13)&1;
+    bit[2] = (ptr[0]>>11)&1;
+    bit[3] = (ptr[0]>>9)&1;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        if (bit[i])
+            count[i] = 1;
+        else
+            count[i] = -1;
+    }
+
+    for (int i = 1; i < DSHOT_TM_LEN; ++i)
+    {
+        bit[0] = (ptr[i]>>14)&1;
+        bit[1] = (ptr[i]>>13)&1;
+        bit[2] = (ptr[i]>>11)&1;
+        bit[3] = (ptr[i]>>9)&1;
+        for (int j = 0; j < 4; ++j)
+        {
+            if(bit[j] > 0)
+            {
+                if (count[j] > 0)
+                    count[j]++;
+                else
+                {
+                    uint8_t n = bit_len[j];
+                    if (n < 25)
+                    {
+                        bits[j][n] = count[j];
+                        bit_len[j]++;
+                    }
+                    count[j] = 1;
+                }
+            }
+            else
+            {
+                if (count[j] < 0)
+                    count[j]--;
+                else
+                {
+                    uint8_t n = bit_len[j];
+                    if (n < 25)
+                    {
+                        bits[j][n] = count[j];
+                        bit_len[j]++;
+                    }
+                    count[j] = -1;
+                }
+            }
+        }
+    }
+
+    /*for (int i = 0; i < 3; ++i)
+    {
+        printf("[%d]", i + 1);
+        for (int j = 0; j < bit_len[i]; ++j)
+        {
+            int8_t n = bits[i][j];
+            if (n < 0)
+                printf("%d", n);
+            else
+                printf("+%d", n);
+        }
+        printf("\r\n");
+    }*/
+    static const uint8_t decode_map[] = {
+            0, 0, 8, 1, 0, 4, 12, 0
+    };
+
+    for (int i = 0; i < 4; ++i)
+    {
+        if (bit_len[i] < 5 || bits[i][0] < 0)
+            continue;
+        uint32_t c = 0;
+        uint32_t bl = 0;
+        for (int j = 1; j < bit_len[i]; ++j)
+        {
+            int n = bits[i][j];
+            uint32_t v;
+            if (n < 0)
+            {
+                n = (n - 1)/-3;
+                v = 0;
+            }
+            else
+            {
+                n = (n + 1)/3;
+                v = 1;
+            }
+            if (n == 0)
+                n = 1;
+            for (int k = 0; k < n; ++k)
+            {
+                c = c << 1;
+                c |= v;
+            }
+            bl += n;
+        }
+        if (bl > 21)
+            continue;
+        while (bl < 21)
+        {
+            c = (c<<1)|1;
+            bl++;
+        }
+
+        uint32_t pre_bit = 0, decode = 0;
+        for (int j = 0; j < 4; ++j)
+        {
+            uint32_t seg = 0;
+            for (int k = 0; k < 5; ++k)
+            {
+                uint32_t b = (c>>(19 -5*j -k))&1;
+                seg = seg<<1;
+                seg |= (b^pre_bit);
+                pre_bit = b;
+            }
+            decode = decode << 4;
+            if (seg > 24)
+            {
+                decode |= decode_map[seg&7];
+            }
+            else
+            {
+                decode |= (seg&0xF);
+            }
+        }
+        uint32_t chk = (decode>>8) ^ decode;
+        chk = ((chk>>4)^chk)&0xF;
+        if (chk == 0xF)
+        {
+            uint32_t e = (decode >> 13) & 7;
+            uint32_t base = (decode >> 4) & 0x1FF;
+            if (e == 7 && base == 0x1FF)
+            {
+                _rpm_sa[i]++;
+            }
+            else
+            {
+                uint32_t period = base << e;
+                _rpm_sum[i] += 60000000/14/period;
+                _rpm_sa[i]++;
+            }
+        }
+    }
+}
+#endif
 
 #endif // HAL_USE_PWM

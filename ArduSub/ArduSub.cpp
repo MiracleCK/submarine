@@ -16,6 +16,7 @@
 // ArduSub scheduling, originally copied from ArduCopter
 
 #include "Sub.h"
+#include <AP_HAL_ChibiOS/RCOutput.h>
 
 extern void param_debug_tick(void);
 
@@ -351,11 +352,30 @@ void Sub::one_hz_loop()
     hal.rcout->set_neopixel_rgb_data(6, 2, red, green, blue);
     hal.rcout->neopixel_send();
 
-    hal.shell->printf("[%d %d %d][%d %d %d]<%d>%d %d %d %d %d\r\n",
-                      (int)(m.a.x*100), (int)(m.b.x*100), (int)(m.c.x*100),
-                      (int)(m.a.z*100), (int)(m.b.z*100), (int)(m.c.z*100),
-                      water_detector.read(),
-                      left, right, lp, rp, p);
+    int32_t rpm[6];
+    int32_t cnt = STM32_TIM9->CNT;
+    if (cnt)
+        STM32_TIM9->CNT = 0;
+    rpm[0] = cnt;
+    cnt = STM32_TIM8->CNT;
+    if (cnt)
+        STM32_TIM8->CNT = 0;
+    rpm[1] = cnt;
+
+#if BIDIR_DSHOT
+    ChibiOS::RCOutput * rco = (ChibiOS::RCOutput *)hal.rcout;
+    rco->get_dshot_telemetry(rpm + 2);
+#else
+    rpm[2] = 0;
+    rpm[3] = 0;
+    rpm[4] = 0;
+    rpm[5] = 0;
+#endif
+    char buf[100];
+    snprintf(buf, 100, "RPM %d %d %d %d %d %d", (int)rpm[0], (int)rpm[1], (int)rpm[2], (int)rpm[3], (int)rpm[4], (int)rpm[5]);
+    printf("%s\r\n", buf);
+    gcs().send_text(MAV_SEVERITY_INFO, buf);
+
     /*const Vector3f &mag = ahrs.get_compass()->get_field();
     const Vector3f &gyr = ahrs.get_gyro_latest();
     hal.shell->printf("%.1f %.1f %.1f %.5f %.5f %.5f\r\n",

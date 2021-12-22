@@ -27,6 +27,8 @@
 #define DISABLE_DSHOT
 #endif
 
+#define BIDIR_DSHOT 1
+
 class ChibiOS::RCOutput : public AP_HAL::RCOutput {
 public:
     void     init() override;
@@ -171,6 +173,9 @@ public:
       trigger send of neopixel data
      */
     void neopixel_send(void) override;
+#if BIDIR_DSHOT
+    void get_dshot_telemetry(int32_t *rpm);
+#endif
 
 private:
     struct pwm_group {
@@ -351,8 +356,12 @@ private:
     bool setup_group_DMA(pwm_group &group, uint32_t bitrate, uint32_t bit_width, bool active_high, const uint16_t buffer_length, bool choose_high);
     void send_pulses_DMAR(pwm_group &group, uint32_t buffer_length);
     void set_group_mode(pwm_group &group);
-    bool is_dshot_protocol(const enum output_mode mode) const;
-    uint32_t protocol_bitrate(const enum output_mode mode) const;
+    static bool is_dshot_protocol(const enum output_mode mode);
+    static uint32_t protocol_bitrate(const enum output_mode mode);
+#if BIDIR_DSHOT
+    static void dshot_receive(void *p);
+    static void update_rpm(uint16_t *ptr);
+#endif
 
     // serial output support
     static const eventmask_t serial_event_mask = EVENT_MASK(1);

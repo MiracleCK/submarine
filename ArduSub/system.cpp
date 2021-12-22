@@ -267,6 +267,29 @@ void Sub::init_ardupilot()
 
     hal.shell->register_commands(shell_commands);
 
+    //TIM9 CH1 HALL
+    rccEnableTIM9(true);
+    rccResetTIM9();
+    /* Selected input 1.
+       CCMR1_CC1S = 01 = CH1 Input on TI1.
+       CCMR1_CC2S = 01 = CH2 Input on TI2.*/
+    STM32_TIM9->CCMR1 = STM32_TIM_CCMR1_CC1S(1) | STM32_TIM_CCMR1_CC2S(1);
+    /* SMCR_TS  = 101, input is TI1FP1.
+       SMCR_TS  = 110, input is TI2FP2.
+       SMCR_SMS = 111, external clock.*/
+    STM32_TIM9->SMCR  = STM32_TIM_SMCR_TS(5) | STM32_TIM_SMCR_SMS(7);
+    STM32_TIM9->CNT = 0;                           // Reset counter.
+    STM32_TIM9->SR = 0;                            // Clear pending IRQs.
+    STM32_TIM9->CR1 = STM32_TIM_CR1_CEN;
+
+    rccEnableTIM8(true);
+    rccResetTIM8();
+    STM32_TIM8->CCMR1 = STM32_TIM_CCMR1_CC1S(1) | STM32_TIM_CCMR1_CC2S(1);
+    STM32_TIM8->SMCR  = STM32_TIM_SMCR_TS(6) | STM32_TIM_SMCR_SMS(7);
+    STM32_TIM8->CNT = 0;                           // Reset counter.
+    STM32_TIM8->SR = 0;                            // Clear pending IRQs.
+    STM32_TIM8->CR1 = STM32_TIM_CR1_CEN;
+
     hal.console->print("\nInit complete");
     printf("\r\ninit complete \r\n");
     // flag that initialisation has completed
