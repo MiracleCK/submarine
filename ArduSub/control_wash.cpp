@@ -52,10 +52,7 @@ void Sub::wash_run(void)
         motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::GROUND_IDLE);
         attitude_control.set_throttle_out(0, true, g.throttle_filt);
         attitude_control.relax_attitude_controllers();
-        SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1500);
-        SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1500);
-        SRV_Channels::set_output_pwm(SRV_Channel::k_elevon_left, 1500);
-        SRV_Channels::set_output_pwm(SRV_Channel::k_elevon_right, 1500);
+        set_pump(IDLE);
         mode_active_ts = 0;
         if (!is_zero(channel_forward->norm_input())) {
             arming.arm(AP_Arming::Method::AUXSWITCH, false);
@@ -70,17 +67,34 @@ void Sub::wash_run(void)
         mode_active_ts = 0;
         motors.set_yaw(channel_yaw->norm_input());
         motors.set_forward(channel_forward->norm_input());
-        SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleLeft, channel_left_pump->get_radio_in());
-        SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleRight, channel_right_pump->get_radio_in());
-        if (channel_pump->get_radio_in() != 1500)
+        pump3 = channel_left_pump->get_radio_in();
+        pump4 = channel_right_pump->get_radio_in();
+        if (_is_pause_break)
         {
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, channel_pump->get_radio_in());
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, channel_pump->get_radio_in());
+            if (channel_pump->get_radio_in() != 1500)
+            {
+                pump1 = channel_pump->get_radio_in();
+                pump2 = channel_pump->get_radio_in();
+            }
+            else
+            {
+                pump1 = channel_pump1->get_radio_in();
+                pump2 = channel_pump2->get_radio_in();
+            }
         }
         else
         {
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, channel_pump1->get_radio_in());
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, channel_pump2->get_radio_in());
+            if (channel_pump1->get_radio_in() != 1500)
+            {
+                pump1 = channel_pump1->get_radio_in();
+                _is_pause_break = true;
+            }
+
+            if (channel_pump2->get_radio_in() != 1500)
+            {
+               pump2 = channel_pump2->get_radio_in();
+                _is_pause_break = true;
+            }
         }
         return;
     }
@@ -483,6 +497,8 @@ void Sub::set_status(STATUS status)
         case PAUSE:
             motors.set_forward(0);
             motors.set_yaw(0);
+            _is_pause_break = false;
+            set_pump(NORMAL);
             break;
     }
 }
@@ -567,45 +583,65 @@ void Sub::wash_rotate(const Vector3f &fwd, Vector3f &target)
 void Sub::set_pump(PUMP_STATE state)
 {
     _pump = state;
+    pump3 = 1500;
+    pump4 = 1500;
     switch (state)
     {
         case IDLE:
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleLeft, 1500);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleRight, 1500);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, 1500);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, 1500);
+            pump1 = 1500;
+            pump2 = 1500;
             break;
         case NORMAL:
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleLeft, 1580);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleRight, 1580);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, 1550);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, 1550);
+            pump1 = 1700;
+            pump2 = 1700;
             break;
         case STRONG:
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleLeft, 1600);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleRight, 1600);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, 1800);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, 1800);
+            pump1 = 1750;
+            pump2 = 1750;
             break;
         case LEFT:
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleLeft, 1500);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleRight, 1800);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, 1600);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, 1600);
+            pump1 = 1560;
+            pump2 = 1680;
             break;
         case RIGHT:
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleLeft, 1800);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleRight, 1500);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, 1600);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, 1600);
+            pump1 = 1680;
+            pump2 = 1560;
             break;
         case TINY:
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleLeft, 1500);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_throttleRight, 1500);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_left, 1540);
-            SRV_Channels::set_output_pwm_trimmed(SRV_Channel::k_elevon_right, 1540);
+            pump1 = 1560;
+            pump2 = 1560;
             break;
     }
+}
+
+static void set_ch_pwm(SRV_Channel *chan, int16_t pwm)
+{
+    uint16_t p = chan->get_output_pwm();
+    int16_t t = chan->get_reversed() ? 3000 - pwm : pwm;
+    int16_t d = t - p;
+    const int16_t DELTA = 20;
+    if (d > 0)
+    {
+        if (d > DELTA)
+            chan->set_output_pwm(p + DELTA);
+        else
+            chan->set_output_pwm(t);
+    }
+    else if (d < 0)
+    {
+        if (d < -DELTA)
+            chan->set_output_pwm(p - DELTA);
+        else
+            chan->set_output_pwm(t);
+    }
+}
+
+void Sub::smoothly_control_pump(void)
+{
+    set_ch_pwm(ch1, pump1);
+    set_ch_pwm(ch2, pump2);
+    set_ch_pwm(ch3, pump3);
+    set_ch_pwm(ch4, pump4);
 }
 
 bool Sub::handle_do_pause_continue(mavlink_command_long_t command) {

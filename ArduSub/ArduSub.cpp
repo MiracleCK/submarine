@@ -243,6 +243,7 @@ void Sub::ten_hz_logging_loop()
 // should be run at 25hz
 void Sub::twentyfive_hz_logging()
 {
+    smoothly_control_pump();
     if (should_log(MASK_LOG_ATTITUDE_FAST)) {
         Log_Write_Attitude();
         logger.Write_Rate(&ahrs_view, motors, attitude_control, pos_control);

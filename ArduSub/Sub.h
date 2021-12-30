@@ -218,6 +218,9 @@ public:
     uint32_t mode_sum_ms;
     uint32_t mode_active_ts;
     uint32_t step_ms;
+    SRV_Channel *ch1, *ch2, *ch3, *ch4;;
+    int16_t pump1, pump2, pump3, pump4;
+    bool _is_pause_break;
 private:
     static const AP_FWVersion fwver;
 
@@ -647,6 +650,7 @@ private:
     bool turning_orientation(const Vector3f &target, const Vector3f &forward);
     bool should_wash_wall(void);
     void set_pump(PUMP_STATE state);
+    void smoothly_control_pump(void);
     void wash_rotate(const Vector3f &fwd, Vector3f &target);
 
     bool stabilize_init(void);

@@ -81,18 +81,23 @@ void Sub::init_rc_out()
     SRV_Channels::set_aux_channel_default(SRV_Channel::k_elevon_right, AP_MOTORS_MOT_6);//+ AP_MOTORS_MOT_5
 
 //    SRV_Channels::get_channel_for(SRV_Channel::k_throttleLeft)->set_reversed(true);
-    SRV_Channels::get_channel_for(SRV_Channel::k_elevon_left)->set_reversed(true);
+//    SRV_Channels::get_channel_for(SRV_Channel::k_elevon_left)->set_reversed(true);
 //    SRV_Channels::get_channel_for(SRV_Channel::k_elevon_right)->set_reversed(true);
+    ch1 = SRV_Channels::get_channel_for(SRV_Channel::k_elevon_left);
+    ch2 = SRV_Channels::get_channel_for(SRV_Channel::k_elevon_right);
+    ch2->set_reversed(true);
+    ch3 = SRV_Channels::get_channel_for(SRV_Channel::k_throttleLeft);
+    ch4 = SRV_Channels::get_channel_for(SRV_Channel::k_throttleRight);
 
     SRV_Channels::set_rc_frequency(SRV_Channel::k_throttleLeft, g.rc_speed);
     SRV_Channels::set_rc_frequency(SRV_Channel::k_throttleRight, g.rc_speed);
     SRV_Channels::set_rc_frequency(SRV_Channel::k_elevon_left, g.rc_speed);
     SRV_Channels::set_rc_frequency(SRV_Channel::k_elevon_right, g.rc_speed);
 
-    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, 1500);
-    SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, 1500);
-    SRV_Channels::set_output_pwm(SRV_Channel::k_elevon_left, 1500);
-    SRV_Channels::set_output_pwm(SRV_Channel::k_elevon_right, 1500);
+    ch1->set_output_pwm(1500);
+    ch2->set_output_pwm(1500);
+    ch3->set_output_pwm(1500);
+    ch4->set_output_pwm(1500);
 
     /*SRV_Channels::set_aux_channel_default(SRV_Channel::k_steering, AP_MOTORS_MOT_3);
     SRV_Channels::set_aux_channel_default(SRV_Channel::k_throttleLeft, AP_MOTORS_MOT_4);
