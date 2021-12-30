@@ -95,6 +95,7 @@ void Sub::setup()
     AP_Param::setup_sketch_defaults();
 
     init_ardupilot();
+    control_mode = (control_mode_t)g.cr_default_mode.get();
 
     // initialise the main loop scheduler
     scheduler.init(&scheduler_tasks[0], ARRAY_SIZE(scheduler_tasks), MASK_LOG_PM);

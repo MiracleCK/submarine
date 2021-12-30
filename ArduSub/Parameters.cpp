@@ -412,6 +412,36 @@ const AP_Param::Info Sub::var_info[] = {
     // @User: Advanced
     GSCALAR(acro_expo,  "ACRO_EXPO",    ACRO_EXPO_DEFAULT),
 
+    // @Param: CR_SHAPE
+    // @DisplayName: CR SHAPE
+    // @Description: Pool shape
+    // @Values: 0:Square,1:Circle
+    // @User: Standard
+    GSCALAR(cr_shape,  "CR_SHAPE",    CR_SHAPE_SQUARE),
+
+    // @Param: CR_REGION
+    // @DisplayName: CR REGION
+    // @Description: Washing regions
+    // @Values: 0:None,1:bottom,2:wall,4:waterline
+    // @Bitmask: 0:bottom,1:wall,2:waterline
+    // @User: Standard
+    GSCALAR(cr_region,  "CR_REGION",    CR_REGION_FLOOR),
+
+    // @Param: CR_TIME
+    // @DisplayName: CR TIME
+    // @Description: Washing time
+    // @Range: 0 720
+    // @Units: minute
+    // @User: Standard
+    GSCALAR(cr_time,  "CR_TIME",    120),
+
+    // @Param: CR_DEFAULT_MODE
+    // @DisplayName: CR DEFAULT MODE
+    // @Description: DEFAULT WASHING MODE
+    // @Values: 60:ULTRA,61:FAST,62:REGULAR,63:FLOOR,64:WATERLINE,65:SMART
+    // @User: Standard
+    GSCALAR(cr_default_mode,  "CR_DEFAULT_MODE",    62),
+
     // variables not in the g class which contain EEPROM saved variables
 
 #if CAMERA == ENABLED
@@ -774,11 +804,6 @@ void Sub::load_parameters()
 
     AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", WP_YAW_BEHAVIOR_LOOK_AT_NEXT_WP); // look at next wp
     //AP_Param::set_default_by_name("WP_YAW_BEHAVIOR", WP_YAW_BEHAVIOR_CORRECT_XTRACK);
-
-    //For CR500 SMART mode parameters
-    AP_Param::set_default_by_name(CR_PARAM_SHAPE, CR_SHAPE_SQUARE);
-    AP_Param::set_default_by_name(CR_PARAM_REGION, CR_REGION_FLOOR);
-    AP_Param::set_default_by_name(CR_PARAM_TIME, 120);
 
     // mapping logic motor to physical
     #ifdef MOT_1_MAPPING

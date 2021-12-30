@@ -212,6 +212,13 @@ public:
 
         k_param_vehicle = 257, // vehicle common block of parameters
         k_param_factory, // factory parameters
+
+        //CR500 SMART mode parameters
+        k_param_cr_shape,
+        k_param_cr_region,
+        k_param_cr_time,
+        //CR500 defaults
+        k_param_cr_default_mode,
     };
 
     AP_Int16        format_version;
@@ -299,6 +306,12 @@ public:
 
     AP_Float                surface_depth;
     AP_Int8                 frame_configuration;
+    //For CR500 SMART mode parameters
+    AP_Int8 cr_shape;
+    AP_Int8 cr_region;
+    AP_Int16 cr_time;
+    //For CR500 defaults
+    AP_Int8 cr_default_mode;
 
     // Note: keep initializers here in the same order as they are declared
     // above.
