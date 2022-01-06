@@ -1,5 +1,6 @@
 #include "AP_Arming_Sub.h"
 #include "Sub.h"
+#include <CH_Libs/History_Records.h>
 
 bool AP_Arming_Sub::rc_calibration_checks(bool display_failure)
 {
@@ -140,6 +141,19 @@ bool AP_Arming_Sub::arm(AP_Arming::Method method, bool do_arming_checks)
     sub.motors.armed(true);
 
     AP::logger().Write_Event(LogEvent::ARMED);
+    switch (sub.control_mode)
+    {
+        case ULTRA:
+        case FAST:
+        case REGULAR:
+        case FLOOR:
+        case WATERLINE:
+        case SMART:
+            History_Records::start_washing_task(sub.control_mode);
+            break;
+        default:
+            break;
+    }
 
     // log flight mode in case it was changed while vehicle was disarmed
     AP::logger().Write_Mode(sub.control_mode, sub.control_mode_reason);
@@ -194,6 +208,25 @@ bool AP_Arming_Sub::disarm()
     sub.reset();
 
     AP::logger().set_vehicle_armed(false);
+    switch (sub.control_mode)
+    {
+        case ULTRA:
+        case FAST:
+        case REGULAR:
+        case FLOOR:
+        case WATERLINE:
+        case SMART:
+        {
+            uint8_t state = HISTORY_RECORD_STATE_INCOMPLETE;
+            if (sub.mode_sum_ms >= sub.mode_max_ms)
+                state = HISTORY_RECORD_STATE_DONE;
+            History_Records::update_washing_task(state,
+                    (uint8_t)((sub.mode_sum_ms + 180000)/360000));
+        }
+            break;
+        default:
+            break;
+    }
 
     // disable gps velocity based centrefugal force compensation
     ahrs.set_correct_centrifugal(false);

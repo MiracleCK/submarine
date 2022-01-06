@@ -42,6 +42,7 @@ protected:
     void send_pid_tuning() override;
 
     uint64_t capabilities() const override;
+    void handle_statustext(const mavlink_message_t &msg) override;
 
 private:
 

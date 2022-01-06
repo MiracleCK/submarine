@@ -141,6 +141,10 @@ void Storage::_mark_dirty(uint16_t loc, uint16_t length)
 
 void Storage::read_block(void *dst, uint16_t loc, size_t n)
 {
+    if (loc >= CH_STORAGE_SIZE && using_fram) {
+        fram.read(loc, (uint8_t *)dst, n);
+        return;
+    }
     if (loc >= sizeof(_buffer)-(n-1)) {
         return;
     }
@@ -150,6 +154,10 @@ void Storage::read_block(void *dst, uint16_t loc, size_t n)
 
 void Storage::write_block(uint16_t loc, const void *src, size_t n)
 {
+    if (loc >= CH_STORAGE_SIZE && using_fram) {
+        fram.write(loc, (const uint8_t *)src, n);
+        return;
+    }
     if (loc >= sizeof(_buffer)-(n-1)) {
         return;
     }

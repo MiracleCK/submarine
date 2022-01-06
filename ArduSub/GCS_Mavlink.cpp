@@ -1,7 +1,7 @@
 #include "Sub.h"
 
 #include "GCS_Mavlink.h"
-
+#include <CH_Libs/History_Records.h>
 /*
  *  !!NOTE!!
  *
@@ -871,4 +871,39 @@ int32_t GCS_MAVLINK_Sub::global_position_int_relative_alt() const {
         return 0;
     }
     return GCS_MAVLINK::global_position_int_relative_alt();
+}
+
+void GCS_MAVLINK_Sub::handle_statustext(const mavlink_message_t &msg)
+{
+    mavlink_statustext_t packet;
+    mavlink_msg_statustext_decode(&msg, &packet);
+    if (strncmp(packet.text, "data://history", 14) == 0)
+    {
+        uint16_t len = strlen(packet.text);
+        uint16_t offset = 0;
+        if (len > (14 + 3)
+            && packet.text[14] == '?'
+            && packet.text[15] == 'o'
+            && packet.text[16] == '=')
+        {
+            char *p = nullptr;
+            uint16_t n = strtol(&(packet.text[17]), &p, 10);
+            if ((p > (packet.text + 17)) && n < 150)
+                offset = n;
+            printf("param p=%X t=%X n=%d\n", p, packet.text + 17, n);
+        }
+        printf("history %d, len=%d\n", offset, len);
+
+        uint8_t buf[96] = {0};
+        len = 96 - 8;
+        History_Records::read_washing_records(offset, (uint16_t *)(buf + 2), &len, buf + 8);
+        *(uint16_t *)(buf) = offset;
+
+        mavlink_msg_data96_send(chan ,
+                0 , len , buf);
+    }
+    else
+    {
+        GCS_MAVLINK::handle_statustext(msg);
+    }
 }

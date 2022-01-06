@@ -22,6 +22,7 @@ def build(bld):
             'AP_RCMapper',
             'AP_OSD',
             'CH_Drivers',
+            'CH_Libs',
         ],
     )
 

@@ -26,7 +26,7 @@ const AP_Param::GroupInfo AP_RTC::var_info[] = {
     // @Description: Specifies which sources of UTC time will be accepted
     // @Bitmask: 0:GPS,1:MAVLINK_SYSTEM_TIME,2:HW
     // @User: Advanced
-    AP_GROUPINFO("_TYPES",  1, AP_RTC, allowed_types, 1),
+    AP_GROUPINFO("_TYPES",  1, AP_RTC, allowed_types, 7),
 
     // @Param: _TZ_MIN
     // @DisplayName: Timezone offset from UTC
