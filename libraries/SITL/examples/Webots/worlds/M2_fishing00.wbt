@@ -50,6 +50,7 @@ Fluid {
       isPickable FALSE
     }
   ]
+  density 1300
   boundingObject Transform {
     children [
       Box {
@@ -983,5 +984,4 @@ DEF ROV Robot {
   ]
   supervisor TRUE
   selfCollision TRUE
-  linearVelocity 0 -0.019611904918939653 0
 }
