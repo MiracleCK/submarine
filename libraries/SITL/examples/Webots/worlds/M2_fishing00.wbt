@@ -15,8 +15,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 0.401214376678589 0.9157889773309682 0.0189095992953529 5.66033163849864
-  position -9.209804046135185 5.679116621886825 15.44901633374718
+  orientation 0.493810613326332 0.8694449242477357 0.014717400114183992 5.2513502900936695
+  position -14.54633280000786 11.072357362016684 11.213313632759219
   followType "Mounted Shot"
 }
 TexturedBackground {
@@ -50,7 +50,7 @@ Fluid {
       isPickable FALSE
     }
   ]
-  density 1300
+  density 1700
   boundingObject Transform {
     children [
       Box {
@@ -60,7 +60,8 @@ Fluid {
   }
 }
 DEF ROV Robot {
-  translation 0 1.29996076 0.136787
+  translation 2.6832912713978645e-10 1.2999215196354772 0.1367869995323204
+  rotation 0.7133834806774723 0.6883347212898002 -0.13145083097260268 2.1097738475392172e-10
   children [
     DEF 后壳 Transform {
       translation 0 0 -0.15
@@ -240,6 +241,7 @@ DEF ROV Robot {
                         appearance Appearance {
                           material Material {
                             diffuseColor 1 0 0.1
+                            emissiveColor 0.101961 0.101961 0.101961
                           }
                         }
                         geometry Cylinder {
@@ -250,7 +252,7 @@ DEF ROV Robot {
                     ]
                   }
                   slowHelix Solid {
-                    rotation 0 1 0 3.9964059897773
+                    rotation 0 -1 0 2.5970810057469427
                     children [
                       Shape {
                         appearance Appearance {
@@ -277,13 +279,17 @@ DEF ROV Robot {
                   0 0 0
                 ]
               }
+              recognitionColors [
+                1 0 0.101961
+              ]
             }
             DEF 电机4 Shape {
               appearance Appearance {
                 material Material {
                   diffuseColor 0.9 0.9 0.9
+                  emissiveColor 0.203922 0.396078 0.643137
                   shininess 0.5
-                  specularColor 0.1 0.1 0.1
+                  specularColor 0.8 0 0
                 }
               }
               geometry IndexedFaceSet {
@@ -338,7 +344,7 @@ DEF ROV Robot {
                     ]
                   }
                   slowHelix Solid {
-                    rotation 0 1 0 3.2744059897779594
+                    rotation 0 1 0 1.7974991461838394
                     children [
                       Shape {
                         appearance Appearance {
@@ -427,7 +433,7 @@ DEF ROV Robot {
                     ]
                   }
                   slowHelix Solid {
-                    rotation 0 1 0 1.0862532256336102
+                    rotation 0 1 0 4.4437045399271895
                     children [
                       Shape {
                         appearance Appearance {
@@ -516,7 +522,7 @@ DEF ROV Robot {
                     ]
                   }
                   slowHelix Solid {
-                    rotation 0 1 0 0.3642532256342702
+                    rotation 0 -1 0 6.182689380841403
                     children [
                       Shape {
                         appearance Appearance {
@@ -605,7 +611,7 @@ DEF ROV Robot {
                     ]
                   }
                   slowHelix Solid {
-                    rotation 0 -1 0 1.6931859897772576
+                    rotation 0 1 0 1.2321526964846587
                     children [
                       Shape {
                         appearance Appearance {
@@ -694,7 +700,7 @@ DEF ROV Robot {
                     ]
                   }
                   slowHelix Solid {
-                    rotation 0 -1 0 0.971185989777917
+                    rotation 0 -1 0 5.11093003880774
                     children [
                       Shape {
                         appearance Appearance {
@@ -783,7 +789,7 @@ DEF ROV Robot {
                     ]
                   }
                   slowHelix Solid {
-                    rotation 0 1 0 1.2169667743664319
+                    rotation 0 1 0 5.934740719593536
                     children [
                       Shape {
                         appearance Appearance {
@@ -872,7 +878,7 @@ DEF ROV Robot {
                     ]
                   }
                   slowHelix Solid {
-                    rotation 0 1 0 1.9389667743657724
+                    rotation 0 -1 0 2.944427293302366
                     children [
                       Shape {
                         appearance Appearance {
@@ -933,8 +939,9 @@ DEF ROV Robot {
       fluidName "fluid"
       referenceArea "xyz-projection"
       dragForceCoefficients 1 0 0
-      dragTorqueCoefficients 0.001 0 0
-      viscousResistanceTorqueCoefficient 0.005
+      dragTorqueCoefficients 0.1 0 0
+      viscousResistanceForceCoefficient 0.3
+      viscousResistanceTorqueCoefficient 0.5
     }
   ]
   boundingObject Group {
@@ -970,7 +977,7 @@ DEF ROV Robot {
   physics Physics {
     mass 3.8
     centerOfMass [
-      0 0 0.021
+      0 0 0
     ]
     damping Damping {
     }
@@ -984,4 +991,6 @@ DEF ROV Robot {
   ]
   supervisor TRUE
   selfCollision TRUE
+  linearVelocity 1.3494579451586031e-07 -0.019612087972224877 -2.3374331651262676e-07
+  angularVelocity 7.522284128698289e-08 7.25815706339741e-08 -1.3860855014337817e-08
 }
