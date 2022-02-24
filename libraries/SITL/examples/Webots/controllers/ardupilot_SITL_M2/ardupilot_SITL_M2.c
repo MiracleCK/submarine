@@ -61,7 +61,7 @@ bool print_flag = false;
 
 // #define DEBUG_USE_KB
 #define DEBUG_SENSORS
-#define DEBUG_MOTORS
+// #define DEBUG_MOTORS
 
 #ifdef DEBUG_USE_KB
 /*
@@ -232,12 +232,12 @@ void update_controls()
   v[7] = sqrt(state.motors.d) * factor + offset;
 #else
   v[0] = -1 * (state.motors.w) * factor + offset;
-  v[1] = 1 * (state.motors.x) * factor + offset;
+  v[1] =  1 * (state.motors.x) * factor + offset;
   v[2] = -1 * (state.motors.y) * factor + offset;
-  v[3] = 1 * (state.motors.z) * factor + offset;
+  v[3] =  1 * (state.motors.z) * factor + offset;
   v[4] = -1 * (state.motors.a) * factor + offset;
-  v[5] = 1 * (state.motors.b) * factor + offset;
-  v[6] = 1 * (state.motors.c) * factor + offset;
+  v[5] =  1 * (state.motors.b) * factor + offset;
+  v[6] =  1 * (state.motors.c) * factor + offset;
   v[7] = -1 * (state.motors.d) * factor + offset;
 
   // motor test 0831
@@ -263,6 +263,24 @@ void update_controls()
   printf("Motors FRU:%f  FLU:%f  FLD:%f  FRD:%f  BRU:%f  BLU:%f  BLD:%f  BRD:%f\n", v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
 #endif
 
+// 3 forward：
+// RAW    FRU:1000.000000  FLU:-1000.000000  FLD:-1000.000000  FRD:1000.000000  BRU:-1000.000000  BLU:-1000.000000  BLD:1000.000000  BRD:1000.000000
+// Motors FRU:-0.454545  FLU:-0.454545  FLD:0.454545  FRD:0.454545  BRU:0.454545  BLU:-0.454545  BLD:0.454545  BRD:-0.454545
+// 5 lateral(Right):
+// RAW    FRU:-1000.000000  FLU:1000.000000  FLD:-1000.000000  FRD:-1000.000000  BRU:1000.000000  BLU:-1000.000000  BLD:1000.000000  BRD:1000.000000
+// Motors FRU:0.454545  FLU:0.454545  FLD:0.454545  FRD:-0.454545  BRU:-0.454545  BLU:-0.454545  BLD:0.454545  BRD:-0.454545
+// 1 throttle(UP)
+// RAW    FRU:1000.000000  FLU:1000.000000  FLD:-1000.000000  FRD:1000.000000  BRU:1000.000000  BLU:-1000.000000  BLD:-1000.000000  BRD:-1000.000000
+// Motors FRU:-0.454545  FLU:0.454545  FLD:0.454545  FRD:0.454545  BRU:-0.454545  BLU:-0.454545  BLD:-0.454545  BRD:0.454545
+// 2 Pitch(-俯)
+// RAW    FRU:1000.000000  FLU:1000.000000  FLD:1000.000000  FRD:-1000.000000  BRU:-1000.000000  BLU:-1000.000000  BLD:1000.000000  BRD:-1000.000000
+// Motors FRU:-0.454545  FLU:0.454545  FLD:-0.454545  FRD:-0.454545  BRU:0.454545  BLU:-0.454545  BLD:0.454545  BRD:0.454545
+// 7 Roll(-)
+// RAW    FRU:-1000.000000  FLU:-1000.000000  FLD:1000.000000  FRD:1000.000000  BRU:1000.000000  BLU:-1000.000000  BLD:1000.000000  BRD:-1000.000000
+// Motors FRU:0.454545  FLU:-0.454545  FLD:-0.454545  FRD:0.454545  BRU:-0.454545  BLU:-0.454545  BLD:0.454545  BRD:0.454545
+// 4 Yaw(+)
+// RAW    FRU:1000.000000  FLU:-1000.000000  FLD:-1000.000000  FRD:-1000.000000  BRU:1000.000000  BLU:1000.000000  BLD:1000.000000  BRD:-1000.000000
+// Motors FRU:-0.454545  FLU:-0.454545  FLD:0.454545  FRD:-0.454545  BRU:-0.454545  BLU:0.454545  BLD:0.454545  BRD:0.454545
 #ifdef WIND_SIMULATION
   /*
     Drag: Fd = ½ ρ Cd A v²
@@ -275,15 +293,15 @@ void update_controls()
   */
   if (northDirection[0] == 1)
   {
-    wind_webots_axis.x = state.wind.x - linear_velocity[0];
+    wind_webots_axis.x =  state.wind.x - linear_velocity[0];
     wind_webots_axis.z = -state.wind.y - linear_velocity[2]; // "-state.wind.y" as angle 90 wind is from EAST.
-    wind_webots_axis.y = state.wind.z - linear_velocity[1];
+    wind_webots_axis.y =  state.wind.z - linear_velocity[1];
   }
   else
   {                                                         // as in pyramids and any open map street world.
-    wind_webots_axis.x = state.wind.y - linear_velocity[0]; // always add "linear_velocity" as there is no axis transformation here.
+    wind_webots_axis.x =  state.wind.y - linear_velocity[0]; // always add "linear_velocity" as there is no axis transformation here.
     wind_webots_axis.z = -state.wind.x - linear_velocity[2];
-    wind_webots_axis.y = state.wind.z - linear_velocity[1];
+    wind_webots_axis.y =  state.wind.z - linear_velocity[1];
   }
 
   wind_webots_axis.x = drafFactor * wind_webots_axis.x * abs(wind_webots_axis.x);
