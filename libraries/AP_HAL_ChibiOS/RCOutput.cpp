@@ -36,10 +36,14 @@ extern AP_IOMCU iomcu;
 #define RCOU_SERIAL_TIMING_DEBUG 0
 
 #if BIDIR_DSHOT
-#define DSHOT_TM_LEN 100
+#define DSHOT_TM_LEN 128
 static uint16_t dshot_dma_telemetry[DSHOT_TM_LEN] __attribute__ ((aligned (4)));
 static uint32_t _rpm_sum[4] = {0};
 static uint16_t _rpm_sa[4] = {0};
+#if BIDIR_DSHOT_PROFILE
+static uint16_t _rpm_sae[4] = {0};
+static uint16_t _rpm_che[4] = {0};
+#endif
 #endif
 struct RCOutput::pwm_group RCOutput::pwm_group_list[] = { HAL_PWM_GROUPS };
 struct RCOutput::irq_state RCOutput::irq;
@@ -1212,7 +1216,7 @@ void RCOutput::dma_irq_callback(void *p, uint32_t flags)
         if(group->pwm_drv->tim->ARR == group->pwm_drv->period - 1)
         {
             //chVTSetI(&group->dma_timeout, chTimeUS2I(dshot_min_gap_us), dma_unlock, p);
-            chVTSetI(&group->dma_timeout, chTimeUS2I(5), dshot_receive, p);
+            chVTSetI(&group->dma_timeout, chTimeUS2I(8), dshot_receive, p);
         }
         else
         {
@@ -1809,162 +1813,175 @@ void RCOutput::get_dshot_telemetry(int32_t *rpm)
             rpm[i] = _rpm_sum[i]/_rpm_sa[i];
         _rpm_sa[i] = 0;
         _rpm_sum[i] = 0;
+#if BIDIR_DSHOT_PROFILE
+        _rpm_sae[i] = 0;
+        _rpm_che[i] = 0;
+#endif
     }
 }
 
-void RCOutput::update_rpm(uint16_t *ptr)
+#if BIDIR_DSHOT_PROFILE
+void RCOutput::get_dshot_telemetry_errors(int32_t *err1, int32_t *err2, int32_t *fine)
 {
-    int8_t bits[4][25];
-    uint8_t bit_len[4] = {0};
-    int8_t count[4];
-    uint32_t bit[4];
-
-    bit[0] = (ptr[0]>>14)&1;
-    bit[1] = (ptr[0]>>13)&1;
-    bit[2] = (ptr[0]>>11)&1;
-    bit[3] = (ptr[0]>>9)&1;
-
     for (int i = 0; i < 4; ++i)
     {
-        if (bit[i])
-            count[i] = 1;
+        err1[i] = _rpm_sae[i];
+        err2[i] = _rpm_che[i];
+        fine[i] = _rpm_sa[i];
+    }
+}
+#endif
+
+static int32_t parse_from_samples(uint16_t *samples, uint8_t bit_offset)
+{
+    uint32_t value = 0;
+    uint32_t bits = 0;
+    uint32_t width = 0;
+    uint32_t pre_bit = 0;
+    int i = 0;
+    while (i < DSHOT_TM_LEN)
+    {
+        if (samples[i]&(1<<bit_offset))
+            i++;
         else
-            count[i] = -1;
+            break;
+    }
+    if (i == DSHOT_TM_LEN)
+        return -1;
+
+    for (; i < DSHOT_TM_LEN; ++i)
+    {
+        uint32_t bit = (samples[i]>>bit_offset)&1;
+        if (bit == pre_bit)
+        {
+            width++;
+            if (width < 5)
+                continue;
+            width = 2;
+        }
+        else
+        {
+            width = 1;
+        }
+        value = value << 1;
+        value |= pre_bit;
+        pre_bit = bit;
+        bits++;
+        if (bits == 21)
+            return value;
     }
 
-    for (int i = 1; i < DSHOT_TM_LEN; ++i)
+    while (bits < 21)
     {
-        bit[0] = (ptr[i]>>14)&1;
-        bit[1] = (ptr[i]>>13)&1;
-        bit[2] = (ptr[i]>>11)&1;
-        bit[3] = (ptr[i]>>9)&1;
-        for (int j = 0; j < 4; ++j)
-        {
-            if(bit[j] > 0)
-            {
-                if (count[j] > 0)
-                    count[j]++;
-                else
-                {
-                    uint8_t n = bit_len[j];
-                    if (n < 25)
-                    {
-                        bits[j][n] = count[j];
-                        bit_len[j]++;
-                    }
-                    count[j] = 1;
-                }
-            }
-            else
-            {
-                if (count[j] < 0)
-                    count[j]--;
-                else
-                {
-                    uint8_t n = bit_len[j];
-                    if (n < 25)
-                    {
-                        bits[j][n] = count[j];
-                        bit_len[j]++;
-                    }
-                    count[j] = -1;
-                }
-            }
-        }
+        value = (value<<1)|1;
+        bits++;
     }
 
-    /*for (int i = 0; i < 3; ++i)
-    {
-        printf("[%d]", i + 1);
-        for (int j = 0; j < bit_len[i]; ++j)
-        {
-            int8_t n = bits[i][j];
-            if (n < 0)
-                printf("%d", n);
-            else
-                printf("+%d", n);
-        }
-        printf("\r\n");
-    }*/
+    return value;
+}
+
+static int32_t decode_grc(uint32_t code)
+{
     static const uint8_t decode_map[] = {
             0, 0, 8, 1, 0, 4, 12, 0
     };
-
+    uint32_t gcr = code ^ (code>>1);
+    uint32_t decode = 0;
+    uint32_t chk = 0;
     for (int i = 0; i < 4; ++i)
     {
-        if (bit_len[i] < 5 || bits[i][0] < 0)
-            continue;
-        uint32_t c = 0;
-        uint32_t bl = 0;
-        for (int j = 1; j < bit_len[i]; ++j)
+        uint32_t seg = (gcr>>(i*5))&0x1F;
+        uint32_t dec;
+        if (seg > 24)
+            dec = decode_map[seg & 7];
+        else
+            dec = (seg & 0xF);
+        chk = chk^dec;
+        decode |= dec<<(i*4);
+    }
+
+    if (chk == 0xF)
+        return decode;
+    else
+        return -decode;
+}
+
+static uint32_t decode_rpm(uint32_t code)
+{
+    uint32_t e = (code >> 13) & 7;
+    uint32_t base = (code >> 4) & 0x1FF;
+    if (e == 7 && base == 0x1FF)
+    {
+        return 0;
+    }
+    else
+    {
+        uint32_t period = base << e;
+        return 60000000 / 14 / period;
+    }
+}
+static uint32_t pre_rpm[4];
+void RCOutput::update_rpm(uint16_t *ptr)
+{
+    const uint32_t bit_offsets[] = {11, 13, 9, 14};
+    for (int i = 0; i < 4; ++i)
+    {
+        int32_t gcr = parse_from_samples(ptr, bit_offsets[i]);
+        if (gcr < 0)
         {
-            int n = bits[i][j];
-            uint32_t v;
-            if (n < 0)
-            {
-                n = (n - 1)/-3;
-                v = 0;
-            }
-            else
-            {
-                n = (n + 1)/3;
-                v = 1;
-            }
-            if (n == 0)
-                n = 1;
-            for (int k = 0; k < n; ++k)
-            {
-                c = c << 1;
-                c |= v;
-            }
-            bl += n;
-        }
-        if (bl > 21)
+#if BIDIR_DSHOT_PROFILE
+            _rpm_sae[i]++;
+#endif
             continue;
-        while (bl < 21)
-        {
-            c = (c<<1)|1;
-            bl++;
         }
 
-        uint32_t pre_bit = 0, decode = 0;
-        for (int j = 0; j < 4; ++j)
+        int32_t raw = decode_grc(gcr);
+        if (raw < 0)
         {
-            uint32_t seg = 0;
-            for (int k = 0; k < 5; ++k)
+#if BIDIR_DSHOT_PROFILE
+            _rpm_che[i]++;
+            //Below code is for Profiling bdshot telemetry error rate
+            /*if (i == 1)
             {
-                uint32_t b = (c>>(19 -5*j -k))&1;
-                seg = seg<<1;
-                seg |= (b^pre_bit);
-                pre_bit = b;
-            }
-            decode = decode << 4;
-            if (seg > 24)
+                hal.shell->printf("%X, %d %d\r\n", gcr, decode_rpm(-raw),
+                        pre_rpm[i]);
+            }*/
+            /*if (i == 1)
             {
-                decode |= decode_map[seg&7];
-            }
-            else
-            {
-                decode |= (seg&0xF);
-            }
+                uint32_t pre_bit = 1;
+                uint8_t w = 0;
+                for(int j = 0; j < DSHOT_TM_LEN; j++)
+                {
+                    uint32_t bit = (ptr[j]>>13)&1;
+                    if(bit != pre_bit)
+                    {
+                        if(w > 0)
+                        {
+                            if(pre_bit == 0)
+                                hal.shell->printf("-%d", w);
+                            else
+                                hal.shell->printf("+%d", w);
+                        }
+                        pre_bit = bit;
+                        w = 1;
+                    }
+                    else
+                        w++;
+                }
+
+
+                if(pre_bit == 0)
+                    hal.shell->printf("-%d\r\n", w);
+                else
+                    hal.shell->printf("+%d\r\n", w);
+            }*/
+#endif
+            continue;
         }
-        uint32_t chk = (decode>>8) ^ decode;
-        chk = ((chk>>4)^chk)&0xF;
-        if (chk == 0xF)
-        {
-            uint32_t e = (decode >> 13) & 7;
-            uint32_t base = (decode >> 4) & 0x1FF;
-            if (e == 7 && base == 0x1FF)
-            {
-                _rpm_sa[i]++;
-            }
-            else
-            {
-                uint32_t period = base << e;
-                _rpm_sum[i] += 60000000/14/period;
-                _rpm_sa[i]++;
-            }
-        }
+        uint32_t rpm = decode_rpm(raw);
+        pre_rpm[i] = rpm;
+        _rpm_sum[i] += rpm;
+        _rpm_sa[i]++;
     }
 }
 #endif

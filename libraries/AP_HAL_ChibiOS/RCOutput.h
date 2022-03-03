@@ -28,6 +28,7 @@
 #endif
 
 #define BIDIR_DSHOT 1
+#define BIDIR_DSHOT_PROFILE 0
 
 class ChibiOS::RCOutput : public AP_HAL::RCOutput {
 public:
@@ -175,6 +176,9 @@ public:
     void neopixel_send(void) override;
 #if BIDIR_DSHOT
     void get_dshot_telemetry(int32_t *rpm);
+#if BIDIR_DSHOT_PROFILE
+    void get_dshot_telemetry_errors(int32_t *err1, int32_t *err2, int32_t *fine);
+#endif
 #endif
 
 private:

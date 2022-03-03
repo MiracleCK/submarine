@@ -354,18 +354,25 @@ void Sub::one_hz_loop()
     hal.rcout->set_neopixel_rgb_data(6, 2, red, green, blue);
     hal.rcout->neopixel_send();
 
-    int32_t rpm[6];
-    int32_t cnt = STM32_TIM9->CNT;
-    if (cnt)
-        STM32_TIM9->CNT = 0;
-    rpm[0] = cnt;
-    cnt = STM32_TIM8->CNT;
+    int32_t cnt = STM32_TIM8->CNT;
     if (cnt)
         STM32_TIM8->CNT = 0;
+    rpm[0] = cnt;
+    cnt = STM32_TIM9->CNT;
+    if (cnt)
+        STM32_TIM9->CNT = 0;
     rpm[1] = cnt;
 
 #if BIDIR_DSHOT
     ChibiOS::RCOutput * rco = (ChibiOS::RCOutput *)hal.rcout;
+#if BIDIR_DSHOT_PROFILE
+    int32_t err1[4], err2[4], fine[4];
+    rco->get_dshot_telemetry_errors(err1, err2, fine);
+    int32_t err = err1[1] + err2[1];
+    int32_t all = err + fine[1];
+    hal.shell->printf("%d %d %d %d%%\r\n", err1[1], err2[1], fine[1],
+            (err*100 + all/2)/all);
+#endif
     rco->get_dshot_telemetry(rpm + 2);
 #else
     rpm[2] = 0;
