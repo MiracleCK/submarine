@@ -8,9 +8,9 @@
  * Create by Yinlanshan 21-8-12
  */
 
-#define INVALID_TEMPERATURE 1000.0f
+#define INVALID_TEMPERATURE -100.0f
 
-#define MAX_CHANNEL 2
+#define MAX_CHANNEL 4
 #define CHANNEL_BUF_SIZE 8
 
 #define STATE_IDLE          0

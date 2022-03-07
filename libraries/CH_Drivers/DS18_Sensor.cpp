@@ -1,4 +1,5 @@
 #include "DS18_Sensor.h"
+#include <AP_Math/AP_Math.h>
 
 #define DS18_DEGUG 0
 
@@ -61,7 +62,7 @@ DS18_Sensor::DS18_Sensor(uint32_t ch_cnt, const ioline_t *channels)
     for (int i = 0; i < ch_cnt; ++i)
     {
         pins[i] = channels[i];
-        PIN_MODE(pins[i], PAL_MODE_OUTPUT_PUSHPULL);
+        PIN_MODE(pins[i], PAL_MODE_OUTPUT_OPENDRAIN);
         PIN_HIGH(pins[i]);
         buf_bit_bands[i] = BIT_BAND_ADDR(channel_bufs[i]);
     }
@@ -78,8 +79,8 @@ void DS18_Sensor::update()
         bit_index = 0;
         state = STATE_RESET_1;
         tick1 = 0;
-        for (int i = 0; i < channel_count; ++i)
-            temperature[i] = INVALID_TEMPERATURE;
+        //for (int i = 0; i < channel_count; ++i)
+            //temperature[i] = INVALID_TEMPERATURE;
 
         gptStopTimer(&GPTD6);
         gptStartOneShot(&GPTD6, 20); //20us
@@ -222,7 +223,25 @@ void DS18_Sensor::timer_cb(GPTDriver *gptp)
                     for (int i = 0; i < channel_count; ++i)
                     {
                         int16_t *p = (int16_t *)channel_bufs[i];
-                        temperature[i] = (*p)/16.0f;
+                        float t = (*p)/16.0f;
+                        if (t < -30 || t > 80)
+                            return;
+                        if (temperature[i] > INVALID_TEMPERATURE) {
+                            float dt = fabsf(temperature[i] - t);
+                            if (is_equal(t, -0.0625f) && dt > 1)
+                                return;
+                            if (dt < 3)
+                                temperature[i] = t;
+                            else {
+                                temperature[i] = 0.05f*t + 0.95f*temperature[i];
+                                hal.shell->printf("Bad temp: %f\r\n", t);
+                            }
+                            // else reject
+                        }
+                        else if(t < 85 && t > -30)
+                        {
+                            temperature[i] = t;
+                        }
 #if DS18_DEGUG
                         for (int j = 0; j < 5; ++j)
                         {
