@@ -459,7 +459,7 @@ void run()
     // printf("3333333\n");
     if (print_flag)
     {
-      printf ("%s\n", send_buf1);
+      printf ("%s\n", send_buf);
     }
 #endif
 

@@ -1,6 +1,6 @@
-// #define DEBUG_MOTORS 
+#define DEBUG_MOTORS 
 // #define DEBUG_WIND    
-// #define DEBUG_SENSORS   
+#define DEBUG_SENSORS   
 // #define DEBUG_USE_KB 
 // #define DEBUG_INPUT_DATA
 // #define LINEAR_THRUST
