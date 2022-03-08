@@ -903,6 +903,7 @@ public:
     void update_passthru();
 
     void get_sensor_status_flags(uint32_t &present, uint32_t &enabled, uint32_t &health);
+    virtual uint16_t get_vehicle_errors(void) {return 0;}
     virtual bool vehicle_initialised() const { return true; }
 
     virtual bool simple_input_active() const { return false; }

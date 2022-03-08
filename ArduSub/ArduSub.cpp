@@ -270,7 +270,19 @@ void Sub::three_hz_loop()
     if (water_detector->read() == 3)
     {
         gcs().send_text(MAV_SEVERITY_CRITICAL, "Out of water");
+        sub_errors |= SUB_ERROR_WATER;
+        if ((g.cr_failsafe_disables & CR_FAILSAFE_DISABLE_WATER_DETECT) == 0
+            && motors.armed()) {
+            arming.disarm();
+        }
     }
+    else
+    {
+        sub_errors &= ~SUB_ERROR_WATER;
+    }
+    gcs().send_text(MAV_SEVERITY_INFO, "ADC %d %d",
+            (int)water_detector->get_analog1(),
+            (int)water_detector->get_analog2());
 
     failsafe_leak_check();
 
@@ -384,6 +396,48 @@ void Sub::one_hz_loop()
     snprintf(buf, 100, "RPM %d %d %d %d %d %d", (int)rpm[0], (int)rpm[1], (int)rpm[2], (int)rpm[3], (int)rpm[4], (int)rpm[5]);
     printf("%s\r\n", buf);
     gcs().send_text(MAV_SEVERITY_INFO, buf);
+
+    int16_t left, right;
+    SRV_Channels::get_output_pwm(SRV_Channel::k_motor1, (uint16_t &)left);
+    SRV_Channels::get_output_pwm(SRV_Channel::k_motor2, (uint16_t &)right);
+
+    if((g.cr_failsafe_disables & CR_FAILSAFE_DISABLE_MOTOR_STALL) == 0)
+    {
+        if ((left != 0 && rpm[0] < 20) || (right != 0 && rpm[1] < 20))
+        {
+            if (motor_error_count >= 3)
+            {
+                if (motors.armed())
+                {
+                    sub_errors |= SUB_ERROR_MOTORS;
+                    arming.disarm();
+                }
+            }
+            else
+            {
+                motor_error_count++;
+            }
+        }
+        else
+            motor_error_count = 0;
+
+        if (rpm[2] == -1 || rpm[3] == -1)
+        {
+            hal.shell->printf("%d %d %d\n", rpm[2], rpm[3], pump_error_count);
+            if (pump_error_count >= 3)
+            {
+                if (motors.armed())
+                {
+                    sub_errors |= SUB_ERROR_PUMPS;
+                    arming.disarm();
+                }
+            }
+            else
+                pump_error_count++;
+        }
+        else
+            pump_error_count = 0;
+    }
 
     /*const Vector3f &mag = ahrs.get_compass()->get_field();
     const Vector3f &gyr = ahrs.get_gyro_latest();

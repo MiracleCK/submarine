@@ -4139,6 +4139,7 @@ void GCS_MAVLINK::send_sys_status()
     const uint16_t errors1 = errors & 0xffff;
     const uint16_t errors2 = (errors>>16) & 0xffff;
     const uint16_t errors4 = AP::internalerror().count() & 0xffff;
+    const uint16_t errors3 = gcs().get_vehicle_errors();
 
     mavlink_msg_sys_status_send(
         chan,
@@ -4153,7 +4154,7 @@ void GCS_MAVLINK::send_sys_status()
         0,  // comm drops in pkts,
         errors1,
         errors2,
-        0,  // errors3
+        errors3,  // errors3 (Extended)
         errors4); // errors4
 }
 

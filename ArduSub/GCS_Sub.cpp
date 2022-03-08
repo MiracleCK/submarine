@@ -19,6 +19,11 @@ void GCS_Sub::update_vehicle_sensor_status_flags()
         MAV_SYS_STATUS_SENSOR_ATTITUDE_STABILIZATION |
         MAV_SYS_STATUS_SENSOR_YAW_POSITION;
 
+    float volt = sub.battery.voltage();
+    if (volt < 20 || volt > 30) {
+        control_sensors_health &= ~MAV_SYS_STATUS_SENSOR_BATTERY;
+    }
+
     // first what sensors/controllers we have
     if (sub.ap.depth_sensor_present) {
         control_sensors_present |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
@@ -89,6 +94,11 @@ void GCS_Sub::update_vehicle_sensor_status_flags()
         }
     }
 #endif
+}
+
+uint16_t GCS_Sub::get_vehicle_errors(void)
+{
+    return sub.sub_errors;
 }
 
 // avoid building/linking LTM:

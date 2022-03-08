@@ -26,6 +26,7 @@ public:
     }
 
     void update_vehicle_sensor_status_flags() override;
+    uint16_t get_vehicle_errors(void) override;
 
     uint32_t custom_mode() const override;
     MAV_TYPE frame_type() const override;

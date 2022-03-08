@@ -188,6 +188,14 @@ public:
     void update_neo_led();
     uint32_t neo_led_state = 0;
 
+#define SUB_ERROR_MOTORS    8
+#define SUB_ERROR_PUMPS     4
+#define SUB_ERROR_WATER     2
+#define SUB_ERROR_LEAKING   1
+    uint16_t sub_errors = 0;
+    uint8_t motor_error_count = 0;
+    uint8_t pump_error_count = 0;
+
     uint16_t pulse_n;
     uint16_t pulse_thn = 3;
     float pulse_thr = 0.4f;
