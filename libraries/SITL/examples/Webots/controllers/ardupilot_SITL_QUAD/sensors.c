@@ -179,7 +179,6 @@ void getAllSensors (char *buf, const double *northDirection, WbDeviceTag gyro, W
 
         char szTime[21];
         double time = wb_robot_get_time(); // current simulation time in [s]
-        sprintf(szTime,"%f", time);
         
         getGyro(gyro, northDirection, gyro_buf);
         getAcc(accelerometer, northDirection, acc_buf);

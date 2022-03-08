@@ -438,8 +438,10 @@ void Aircraft::update_model(const struct sitl_input &input)
         Location loc;
         loc.lat = sitl->opos.lat.get() * 1.0e7;
         loc.lng = sitl->opos.lng.get() * 1.0e7;
-        loc.alt = sitl->opos.alt.get() * 1.0e2;
+        loc.alt = 0 * sitl->opos.alt.get() * 1.0e2;
+        loc.alt = 0.5;
         set_start_location(loc, sitl->opos.hdg.get());
+        printf("RAW loc.alt:%d\n", loc.alt);
     }
     update(input);
 }

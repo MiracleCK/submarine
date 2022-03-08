@@ -59,9 +59,6 @@ static int timestep;
 
 bool print_flag = false;
 
-// #define DEBUG_USE_KB
-#define DEBUG_SENSORS
-// #define DEBUG_MOTORS
 
 #ifdef DEBUG_USE_KB
 /*
@@ -281,6 +278,7 @@ void update_controls()
 // 4 Yaw(+)
 // RAW    FRU:1000.000000  FLU:-1000.000000  FLD:-1000.000000  FRD:-1000.000000  BRU:1000.000000  BLU:1000.000000  BLD:1000.000000  BRD:-1000.000000
 // Motors FRU:-0.454545  FLU:-0.454545  FLD:0.454545  FRD:-0.454545  BRU:-0.454545  BLU:0.454545  BLD:0.454545  BRD:0.454545
+
 #ifdef WIND_SIMULATION
   /*
     Drag: Fd = ½ ρ Cd A v²
@@ -437,30 +435,32 @@ void run()
 #ifdef DEBUG_SENSORS
     // printf("%s\n", send_buf);
 
-    // printf("11111\n");
     if (1)
     {
       static int _startup_ms = 0;
 
-      if (_startup_ms == 0)
+      if (_startup_ms < 500)
       {
         _startup_ms ++;
       }
-    // printf("122222\n");
-
-      if (_startup_ms > 5000)
+      if (_startup_ms >= 500)
+      {
+        _startup_ms ++;
+        print_flag = true;
+      }
+      if (_startup_ms > 505)
       {
         _startup_ms = 0;
-
-        print_flag = 1;
+        print_flag = 0;
       }
-    }
+
+      if (print_flag)
+      {
+        printf ("%s\n", send_buf);
+      }
+	  }
     
-    // printf("3333333\n");
-    if (print_flag)
-    {
-      printf ("%s\n", send_buf);
-    }
+    
 #endif
 
     if (write(fd, send_buf, strlen(send_buf)) <= 0)

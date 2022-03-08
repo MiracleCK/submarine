@@ -188,6 +188,11 @@ void getAllSensors (char *buf, const double *northDirection, WbDeviceTag gyro, W
         getInertia (inertial_unit, northDirection, inertial_buf);
         getLinearVelocity(self_node, northDirection, linear_velocity_buf);
 
+        // printf("inertial_buf()");
+        // printf("%s\n", inertial_buf);
+        // printf("gps_buf()");
+        // printf("%s\n", gps_buf);
+
         sprintf (buf,"{\"ts\": %s,\"vehicle.imu\": {\"av\": %s,\"la\": %s,\"mf\": %s,\"vehicle.gps\":{%s},\"vehicle.velocity\":{\"wlv\": %s},\"vehicle.pose\":{%s,%s}}\r\n"
                                   , szTime,                                  gyro_buf,                    acc_buf,                 compass_buf,               gps_buf,                                  linear_velocity_buf,               gps_buf, inertial_buf );
 

@@ -450,7 +450,7 @@ void Webots::output_m2(const struct sitl_input &input)
     }
     //printf("\n");
 
-    if(0) {
+    if(1) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {
@@ -461,7 +461,7 @@ void Webots::output_m2(const struct sitl_input &input)
 			_startup_ms = AP_HAL::millis();
 
 			for (uint8_t i=0; i<8; i++) {
-				//printf("motors %d: %.02f\n", i, motors[i]);
+				// printf("motors %d: %.02f\n", i, motors[i]);
                 printf("motors %d: %d\n", i, input.servos[i]);
 			}
 			printf("\n");

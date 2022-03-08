@@ -16,7 +16,7 @@ WorldInfo {
 }
 Viewpoint {
   orientation 0.493810613326332 0.8694449242477357 0.014717400114183992 5.2513502900936695
-  position -14.54633280000786 11.072357362016684 11.213313632759219
+  position -8.856763591174733 7.777795432728089 7.280485283342507
   followType "Mounted Shot"
 }
 TexturedBackground {
@@ -63,6 +63,25 @@ DEF ROV Robot {
   translation 2.6832912713978645e-10 1.2999215196354772 0.1367869995323204
   rotation 0.7133834806774723 0.6883347212898002 -0.13145083097260268 2.1097738475392172e-10
   children [
+    DEF IMU_Transform Transform {
+      rotation 0 1 0 -1.5708
+      children [
+        Transform {
+          rotation 1 0 0 0
+          children [
+            Accelerometer {
+              name "accelerometer1"
+            }
+            Gyro {
+              name "gyro1"
+            }
+            InertialUnit {
+              name "inertial_unit"
+            }
+          ]
+        }
+      ]
+    }
     DEF 后壳 Transform {
       translation 0 0 -0.15
       scale 0.001 0.001 0.001
@@ -90,16 +109,6 @@ DEF ROV Robot {
           }
         }
       ]
-    }
-    InertialUnit {
-      rotation 1 0 0 3.1415926
-      name "inertial_unit"
-    }
-    Gyro {
-      name "gyro1"
-    }
-    Accelerometer {
-      name "accelerometer1"
     }
     GPS {
       name "gps1"
@@ -977,7 +986,7 @@ DEF ROV Robot {
   physics Physics {
     mass 3.8
     centerOfMass [
-      0 0 0
+      0 0 0.012
     ]
     damping Damping {
     }
@@ -991,6 +1000,4 @@ DEF ROV Robot {
   ]
   supervisor TRUE
   selfCollision TRUE
-  linearVelocity 1.3494579451586031e-07 -0.019612087972224877 -2.3374331651262676e-07
-  angularVelocity 7.522284128698289e-08 7.25815706339741e-08 -1.3860855014337817e-08
 }
