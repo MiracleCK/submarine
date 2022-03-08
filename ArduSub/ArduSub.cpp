@@ -521,84 +521,105 @@ bool Sub::control_check_barometer()
 
 void Sub::update_neo_led(void)
 {
-    uint32_t ns;
+    uint8_t pattern;
+    uint32_t color;
     if (motors.armed())
-    {
-        if (_status == PAUSE)
-        {
-            switch (water_detector->read())
-            {
-                case 0:
-                    ns = NEO_LED(NEO_PATTERN_BLINK, NEO_GREEN);
-                    break;
-                case 1:
-                    ns = NEO_LED(NEO_PATTERN_BLINK, NEO_PINK);
-                    break;
-                case 2:
-                    ns = NEO_LED(NEO_PATTERN_BLINK, NEO_BROWN);
-                    break;
-                default:
-                    ns = NEO_LED(NEO_PATTERN_BLINK, NEO_PURPLE);
-                    break;
-            }
-        }
-        else if (_status == ERROR)
-            ns = NEO_LED(NEO_PATTERN_BLINK, NEO_PURPLE);
-        else
-            ns = NEO_LED(NEO_PATTERN_LOOP, NEO_GREEN);
-    }
-    else
     {
         switch (water_detector->read())
         {
             case 0:
-                ns = NEO_LED(NEO_PATTERN_KEEP, NEO_YELLOW);
+                color = NEO_GREEN;
                 break;
             case 1:
-                ns = NEO_LED(NEO_PATTERN_KEEP, NEO_PINK);
+                color = NEO_PINK;
                 break;
             case 2:
-                ns = NEO_LED(NEO_PATTERN_KEEP, NEO_BROWN);
+                color = NEO_BROWN;
                 break;
             default:
-                ns = NEO_LED(NEO_PATTERN_KEEP, NEO_PURPLE);
+                color = NEO_PURPLE;
+                break;
+        }
+        switch (_status)
+        {
+            case PAUSE:
+                pattern = NEO_PATTERN_BLINK;
+                break;
+            case ERROR:
+                color = NEO_RED;
+                pattern = NEO_PATTERN_LOOP;
+                break;
+            default:
+                pattern = NEO_PATTERN_LOOP;
                 break;
         }
     }
-
-    uint32_t pattern = (ns>>24)&7;
-    if (ns == (neo_led_state&0xFFFFFFF))
+    else
     {
-        if (pattern == NEO_PATTERN_KEEP)
-            return;
+        if (sub_errors & (SUB_ERROR_PUMPS | SUB_ERROR_MOTORS))
+        {
+            color = NEO_RED;
+            pattern = NEO_PATTERN_BLINK3;
+        }
+        else
+        {
+            switch (water_detector->read())
+            {
+                case 0:
+                    color = NEO_YELLOW;
+                    break;
+                case 1:
+                    color = NEO_PINK;
+                    break;
+                case 2:
+                    color = NEO_BROWN;
+                    break;
+                default:
+                    color = NEO_PURPLE;
+                    break;
+            }
+            pattern = NEO_PATTERN_KEEP;
+        }
+    }
+
+    if (pattern == neo_led.pattern)
+    {
+        if (color == neo_led.color)
+        {
+            if (pattern == NEO_PATTERN_KEEP)
+                return;
+        }
+        else
+            neo_led.color = color;
     }
     else
     {
-        neo_led_state = ns;
+        neo_led.pattern = pattern;
+        neo_led.color = color;
+        neo_led.state = 0;
     }
-    uint8_t *state = (uint8_t *)&neo_led_state;
 
-    uint32_t led_mask, except, step;
+    uint32_t led_mask, except;
+    uint8_t *state = (uint8_t *)&color;
     switch (pattern)
     {
         //set
         case NEO_PATTERN_KEEP:
             hal.rcout->set_neopixel_rgb_data(6, 0xF,
                     state[2], state[1], state[0]);
-            state[3] = NEO_PATTERN_KEEP;
             break;
         //blink
         case NEO_PATTERN_BLINK:
-            if (state[3]&0x10)
+            if (neo_led.state)
             {
-                state[3] = NEO_PATTERN_BLINK;
+                neo_led.state = 0;
                 hal.rcout->set_neopixel_rgb_data(
                         6, 0xF,
                         0, 0, 0);
             }
             else
             {
-                state[3] = (0x10|NEO_PATTERN_BLINK);
+                neo_led.state = 1;
                 hal.rcout->set_neopixel_rgb_data(
                         6, 0xF,
                         state[2], state[1], state[0]);
@@ -609,9 +630,9 @@ void Sub::update_neo_led(void)
         case NEO_PATTERN_BLINK2:
         case NEO_PATTERN_BLINK3:
         case NEO_PATTERN_BLINK4:
-            if (state[3]&0x10)
+            if (neo_led.state)
             {
-                state[3] = pattern;
+                neo_led.state = 0;
                 except = 1<<(pattern - NEO_PATTERN_BLINK1);
                 led_mask = 0xF&(~except);
                 hal.rcout->set_neopixel_rgb_data(
@@ -620,7 +641,7 @@ void Sub::update_neo_led(void)
             }
             else
             {
-                state[3] = (0x10|pattern);
+                neo_led.state = 1;
                 hal.rcout->set_neopixel_rgb_data(
                         6, 0xF,
                         state[2], state[1], state[0]);
@@ -628,21 +649,20 @@ void Sub::update_neo_led(void)
             break;
         //loop
         case NEO_PATTERN_LOOP:
-            step = state[3]>>4;
-            if (step > 2)
+            if (neo_led.state > 2)
             {
-                state[3] = NEO_PATTERN_LOOP;
+                neo_led.state = 0;
                 hal.rcout->set_neopixel_rgb_data(6, 8,
                         state[2], state[1], state[0]);
                 hal.rcout->set_neopixel_rgb_data(6, 7, 0, 0, 0);
             }
             else
             {
-                uint32_t n = 1<<step;
+                uint32_t n = 1<<(neo_led.state);
                 hal.rcout->set_neopixel_rgb_data(6, n,
                         state[2], state[1], state[0]);
                 hal.rcout->set_neopixel_rgb_data(6, (0xF^n), 0, 0, 0);
-                state[3] = NEO_PATTERN_LOOP|(step + 1)<<4;
+                neo_led.state = neo_led.state + 1;
             }
             break;
         default:

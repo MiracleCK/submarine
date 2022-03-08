@@ -186,7 +186,11 @@ public:
     bool set_mode(const uint8_t mode, const ModeReason reason) override;
     void reset();
     void update_neo_led();
-    uint32_t neo_led_state = 0;
+    struct {
+        uint32_t color:24;
+        uint8_t pattern;
+        uint8_t state;
+    } neo_led = {0};
 
 #define SUB_ERROR_MOTORS    8
 #define SUB_ERROR_PUMPS     4
