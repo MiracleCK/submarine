@@ -200,10 +200,13 @@ public:
     uint8_t motor_error_count = 0;
     uint8_t pump_error_count = 0;
 
-    uint16_t pulse_n;
-    uint16_t pulse_thn = 3;
-    float pulse_thr = 0.4f;
+    uint8_t pulse_n;
+    uint8_t pulse_thn = 3;
+    float pulse_thr = 0.2f;
     Vector3f pre_acc;
+    float average_cos, turning_cos;
+    uint8_t vib_n;
+    float max_dx_acc, max_dy_acc;
 
     UartOverCan uartOverCan;
 
@@ -213,26 +216,35 @@ public:
     AP_HAL::AnalogSource *AIN4;
     AP_HAL::AnalogSource *AIN5;
 
-    enum STATUS {
-        UNKNOWN,
+    enum STATUS : uint8_t{
+        PENDING,
         FORWARDING,
         RAISING,
         CLIMBING,
-        WASH_LATERAL,
+        LATERAL,
         BACKING,
-        RELAXING,
         TURNING,
         PAUSE,
         ERROR
     } _status;
 
+    uint8_t _step;
+    uint32_t _step_ts;
+    struct
+    {
+        Vector3f wall_0;
+        Vector3f wall_last;
+        uint32_t time_0;
+        uint8_t num;
+    } lateral_control;
+    uint16_t lateral_ms;
+
     uint32_t mode_max_ms;
     uint32_t mode_sum_ms;
     uint32_t mode_active_ts;
-    uint32_t step_ms;
     SRV_Channel *ch1, *ch2, *ch3, *ch4;;
     int16_t pump1, pump2, pump3, pump4;
-    bool _is_pause_break;
+    bool _is_manual_pump;
 private:
     static const AP_FWVersion fwver;
 
@@ -523,26 +535,26 @@ private:
 
     const Quaternion UP_STRAIGHT = Quaternion(0.7071f, 0, 0.7071f, 0);
     uint32_t _rotate_degree = 110;
-    Vector3f v_desire_direction, v_forward_target;
+    Vector3f target_direction;
     Vector3f v_downward, v_forward;
     enum PUMP_STATE {
         IDLE,
         NORMAL,
         STRONG,
         LEFT,
+        LEFT_STRONG,
         RIGHT,
+        RIGHT_STRONG,
         TINY
     } _pump;
-    enum step_t {
+    enum phase_t {
         WALL_LEFT,
         WALL_RIGHT,
         BOTTOM
-    } _step;
-    uint32_t _status_ms;
-    uint32_t _delay_ms;
+    } _phase;
+    uint32_t _status_ts;
     uint32_t _now;
     float _target_lateral;
-    float _last_big_yaw_rate;
 
     void fast_loop();
     void fifty_hz_loop();
@@ -659,11 +671,12 @@ private:
     void wash_run(void);
     void set_status(STATUS status);
     void set_error(const char *msg);
-    bool turning_orientation(const Vector3f &target, const Vector3f &forward);
+    bool fix_direction(const Vector3f &target, const Vector3f &forward, const Vector3f &downward);
     bool should_wash_wall(void);
     void set_pump(PUMP_STATE state);
     void smoothly_control_pump(void);
     void wash_rotate(const Vector3f &fwd, Vector3f &target);
+    int8_t detect_vibration(void);
 
     bool stabilize_init(void);
     void stabilize_run();
@@ -826,9 +839,19 @@ static inline void yaw_vector_to_quat(float x, float y, Quaternion &q)
         q.q4 = sqrtf(1 - cos_square);
 }
 
-static inline bool is_standing_straight(Vector3f &downward)
+#define COS_10 0.985
+#define COS_15 0.966
+#define COS_20 0.940
+
+#define SIN_5 0.087
+#define SIN_10 0.174
+#define SIN_15 0.259
+#define SIN_45 0.707
+#define SIN_60 0.866
+
+static inline bool is_on_ground(Vector3f &downward)
 {
-    return (downward.z*downward.z) > 0.97; // < 10deg
+    return downward.z > COS_10; // < 10deg
 }
 static inline bool is_flip_over(Vector3f &downward)
 {
@@ -837,7 +860,7 @@ static inline bool is_flip_over(Vector3f &downward)
 
 static inline bool is_on_wall(Vector3f &downward)
 {
-    return downward.z >= -0.7f && downward.z <= 0.7f;
+    return downward.z >= -0.5f && downward.z <= 0.5f; // >60 deg raise head
 }
 
 static inline bool is_climbing(Vector3f &forward)
