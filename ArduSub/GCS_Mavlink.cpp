@@ -890,9 +890,7 @@ void GCS_MAVLINK_Sub::handle_statustext(const mavlink_message_t &msg)
             uint16_t n = strtol(&(packet.text[17]), &p, 10);
             if ((p > (packet.text + 17)) && n < 150)
                 offset = n;
-            printf("param p=%X t=%X n=%d\n", p, packet.text + 17, n);
         }
-        printf("history %d, len=%d\n", offset, len);
 
         uint8_t buf[96] = {0};
         len = 96 - 8;
@@ -900,7 +898,7 @@ void GCS_MAVLINK_Sub::handle_statustext(const mavlink_message_t &msg)
         *(uint16_t *)(buf) = offset;
 
         mavlink_msg_data96_send(chan ,
-                0 , len , buf);
+                /*type*/ 0, len + 8, buf);
     }
     else
     {
