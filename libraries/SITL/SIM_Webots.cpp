@@ -499,9 +499,9 @@ void Webots::output_m2(const struct sitl_input &input)
              m_back_right_up, m_back_left_up, m_back_left_down, m_back_right_down,
              input.wind.speed, wind_ef.x, wind_ef.y, wind_ef.z);
     buf[len] = 0;
-    printf("motor: %s\n", buf);
+    // printf("motor: %s\n", buf);
 
-    if(0) {
+    if(1) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {

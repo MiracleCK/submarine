@@ -1,4 +1,4 @@
-// #define DEBUG_MOTORS 
+#define DEBUG_MOTORS 
 // #define DEBUG_WIND    
 #define DEBUG_SENSORS   
 // #define DEBUG_USE_KB 

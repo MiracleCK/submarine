@@ -256,8 +256,32 @@ void update_controls()
   }
 
 #ifdef DEBUG_MOTORS
-  printf("RAW    FRU:%f  FLU:%f  FLD:%f  FRD:%f  BRU:%f  BLU:%f  BLD:%f  BRD:%f\n", state.motors.w, state.motors.x, state.motors.y, state.motors.z, state.motors.a, state.motors.b, state.motors.c, state.motors.d);
-  printf("Motors FRU:%f  FLU:%f  FLD:%f  FRD:%f  BRU:%f  BLU:%f  BLD:%f  BRD:%f\n", v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
+  if (1)
+    {
+      static int _startup_ms = 0;
+
+      if (_startup_ms < 500)
+      {
+        _startup_ms ++;
+      }
+      if (_startup_ms >= 500)
+      {
+        _startup_ms ++;
+        print_flag = true;
+      }
+      if (_startup_ms > 505)
+      {
+        _startup_ms = 0;
+        print_flag = 0;
+      }
+	}
+  
+  if (print_flag)
+  {
+    printf("RAW    FRU:%f  FLU:%f  FLD:%f  FRD:%f  BRU:%f  BLU:%f  BLD:%f  BRD:%f\n", state.motors.w, state.motors.x, state.motors.y, state.motors.z, state.motors.a, state.motors.b, state.motors.c, state.motors.d);
+    printf("Motors FRU:%f  FLU:%f  FLD:%f  FRD:%f  BRU:%f  BLU:%f  BLD:%f  BRD:%f\n", v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
+  }
+
 #endif
 
 // 3 forward：
@@ -434,7 +458,6 @@ void run()
 
 #ifdef DEBUG_SENSORS
     // printf("%s\n", send_buf);
-
     if (1)
     {
       static int _startup_ms = 0;
@@ -453,13 +476,12 @@ void run()
         _startup_ms = 0;
         print_flag = 0;
       }
-
-      if (print_flag)
-      {
-        printf ("%s\n", send_buf);
-      }
 	  }
-    
+
+    if (print_flag)
+    {
+      printf ("%s\n", send_buf1);
+    }
     
 #endif
 
@@ -667,7 +689,8 @@ int main(int argc, char **argv)
   /*
      * Enter here functions to send actuator commands, like:
      * wb_differential_wheels_set_speed(100.0,100.0);
-     */
+     */  
+
   run();
 
   /* Enter your cleanup code here */
