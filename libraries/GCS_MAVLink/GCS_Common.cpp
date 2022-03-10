@@ -2454,7 +2454,7 @@ void GCS_MAVLINK::send_gps_global_origin() const
         chan,
         ekf_origin.lat,
         ekf_origin.lng,
-        ekf_origin.alt * 0,
+        ekf_origin.alt * 0*10,
         AP_HAL::micros64());
 }
 
@@ -2715,8 +2715,8 @@ void GCS_MAVLINK::send_vfr_hud()
         ahrs.groundspeed(),
         (ahrs.yaw_sensor / 100) % 360,
         abs(vfr_hud_throttle()),
-        vfr_hud_alt(),
-        vfr_hud_climbrate());
+        0*vfr_hud_alt(),
+        0*vfr_hud_climbrate());
     printf("global_position_current_loc.alt111: %f\n", vfr_hud_alt());    
     printf("global_position_current_loc.vfr_hud_climbrate: %f\n", vfr_hud_climbrate());    
 
@@ -3865,7 +3865,7 @@ MAV_RESULT GCS_MAVLINK::handle_command_do_set_home(const mavlink_command_long_t 
     Location new_home_loc;
     new_home_loc.lat = (int32_t)(packet.param5 * 1.0e7f);
     new_home_loc.lng = (int32_t)(packet.param6 * 1.0e7f);
-    new_home_loc.alt = (int32_t)(packet.param7 * 100.0f);
+    new_home_loc.alt = (int32_t)(packet.param7 * 000.0f);
     if (!set_home(new_home_loc, true)) {
         return MAV_RESULT_FAILED;
     }
@@ -4397,7 +4397,7 @@ int32_t GCS_MAVLINK::global_position_int_alt() const {
 int32_t GCS_MAVLINK::global_position_int_relative_alt() const {
     float posD;
     AP::ahrs().get_relative_position_D_home(posD);
-    posD *= 0*100000.0f; // change from down to up and metres to millimeters
+    posD *= 100000.0f; // change from down to up and metres to millimeters
     return posD;
 }
 void GCS_MAVLINK::send_global_position_int()
@@ -4422,6 +4422,8 @@ void GCS_MAVLINK::send_global_position_int()
         vel.y * 100,                     // Y speed cm/s (+ve East)
         vel.z * 100,                     // Z speed cm/s (+ve Down)
         ahrs.yaw_sensor);                // compass heading in 1/100 degree
+    printf("global_position_int_relative_alt(): %d\n", global_position_int_relative_alt());
+
 }
 
 void GCS_MAVLINK::send_gimbal_report() const
