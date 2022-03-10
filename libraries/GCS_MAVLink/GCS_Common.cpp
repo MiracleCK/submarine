@@ -2435,11 +2435,13 @@ void GCS_MAVLINK::send_home_position() const
         chan,
         home.lat,
         home.lng,
-        home.alt * 10,
+        home.alt * 0,
         0.0f, 0.0f, 0.0f,
         q,
         0.0f, 0.0f, 0.0f,
         AP_HAL::micros64());
+    printf("home.alt: %d\n", home.alt);
+
 }
 
 void GCS_MAVLINK::send_gps_global_origin() const
