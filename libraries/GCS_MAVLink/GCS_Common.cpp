@@ -2696,7 +2696,8 @@ float GCS_MAVLINK::vfr_hud_climbrate() const
 
 float GCS_MAVLINK::vfr_hud_alt() const
 {
-    return global_position_current_loc.alt * 0.01f; // cm -> m
+    printf("global_position_current_loc.alt: %d\n", global_position_current_loc.alt);
+    return global_position_current_loc.alt * 0.00f; // cm -> m
 }
 
 void GCS_MAVLINK::send_vfr_hud()
@@ -2714,6 +2715,7 @@ void GCS_MAVLINK::send_vfr_hud()
         abs(vfr_hud_throttle()),
         vfr_hud_alt(),
         vfr_hud_climbrate());
+    printf("global_position_current_loc.alt111: %f\n", vfr_hud_alt());    
 }
 
 void GCS_MAVLINK::zero_rc_outputs()
@@ -4386,7 +4388,7 @@ void GCS_MAVLINK::send_attitude() const
 }
 
 int32_t GCS_MAVLINK::global_position_int_alt() const {
-    return global_position_current_loc.alt * 10UL;
+    return global_position_current_loc.alt * 0 * 10UL;
 }
 int32_t GCS_MAVLINK::global_position_int_relative_alt() const {
     float posD;

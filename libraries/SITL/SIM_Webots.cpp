@@ -450,7 +450,7 @@ void Webots::output_m2(const struct sitl_input &input)
     }
     //printf("\n");
 
-    if(1) {
+    if(0) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {
@@ -501,7 +501,7 @@ void Webots::output_m2(const struct sitl_input &input)
     buf[len] = 0;
     // printf("motor: %s\n", buf);
 
-    if(1) {
+    if(0) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {

@@ -141,6 +141,7 @@ void Sub::althold_run()
         }
 
         pos_control.update_z_controller();
+		printf("motor:");// %s\n", buf);
     }
 
     motors.set_forward(channel_forward->norm_input());
@@ -345,7 +346,8 @@ void Sub::althold_run_rate()
 			        	distance_control.relax_z_controller((float)distance_target.z);
 		        	}
 			    	distance_control.update_z_controller((float)distance);
-		        } else {
+		        }
+ else {
 					motors.set_throttle_pilot(0);
 					attitude_control.set_throttle_out(motors.get_throttle_hover(), false, g.throttle_filt); 
 		        }
@@ -480,7 +482,8 @@ void Sub::althold_run_rate()
 			        	distance_control.relax_x_controller((float)distance_target.x);
 		        	}
 			    	distance_control.update_x_controller((float)distance);
-		        } else {
+		        }
+ else {
 					motors.set_forward(0);
 		        }  
 		    }
@@ -528,7 +531,8 @@ void Sub::althold_run_rate()
 			        	distance_control.relax_y_controller((float)distance_target.y);
 		        	}
 			    	distance_control.update_y_controller((float)distance);
-		        } else {
+		        }
+ else {
 					motors.set_lateral(0);
 		        }  
 		    }

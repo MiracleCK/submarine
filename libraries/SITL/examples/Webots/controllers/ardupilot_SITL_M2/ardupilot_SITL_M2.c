@@ -453,8 +453,8 @@ void run()
     }
 
     getAllSensors((char *)send_buf, northDirection, gyro, accelerometer, compass, gps, inertialUnit);
-    // getGPS(gps, northDirection, (char *)send_buf1);
-    getInertia(inertialUnit, northDirection, (char *)send_buf1);
+    getGPS(gps, northDirection, (char *)send_buf1);
+    // getInertia(inertialUnit, northDirection, (char *)send_buf1);
 
 #ifdef DEBUG_SENSORS
     // printf("%s\n", send_buf);

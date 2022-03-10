@@ -326,7 +326,8 @@ void Aircraft::fill_fdm(struct sitl_fdm &fdm)
     }
     fdm.latitude  = location.lat * 1.0e-7;
     fdm.longitude = location.lng * 1.0e-7;
-    fdm.altitude  = location.alt * 1.0e-2;
+    fdm.altitude  = 1 * location.alt * 1.0e-2;
+
     fdm.heading   = degrees(atan2f(velocity_ef.y, velocity_ef.x));
     fdm.speedN    = velocity_ef.x;
     fdm.speedE    = velocity_ef.y;
