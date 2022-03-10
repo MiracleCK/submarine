@@ -422,7 +422,7 @@ void GCS_MAVLINK::send_ahrs2()
                                euler.x,
                                euler.y,
                                euler.z,
-                               loc.alt*1.0e-2f,
+                               0*loc.alt*1.0e-2f,
                                loc.lat,
                                loc.lng);
     }
@@ -443,7 +443,7 @@ void GCS_MAVLINK::send_ahrs3()
                                euler.x,
                                euler.y,
                                euler.z,
-                               loc.alt*1.0e-2f,
+                               0*loc.alt*1.0e-2f,
                                loc.lat,
                                loc.lng,
                                0, 0, 0, 0);
@@ -2454,7 +2454,7 @@ void GCS_MAVLINK::send_gps_global_origin() const
         chan,
         ekf_origin.lat,
         ekf_origin.lng,
-        ekf_origin.alt * 10,
+        ekf_origin.alt * 0,
         AP_HAL::micros64());
 }
 
@@ -2693,7 +2693,7 @@ float GCS_MAVLINK::vfr_hud_climbrate() const
     if (!AP::ahrs().get_velocity_NED(velned)) {
       velned.zero();
     }
-    return -velned.z;
+    return -velned.z*0;
 }
 
 float GCS_MAVLINK::vfr_hud_alt() const
@@ -2718,6 +2718,8 @@ void GCS_MAVLINK::send_vfr_hud()
         vfr_hud_alt(),
         vfr_hud_climbrate());
     printf("global_position_current_loc.alt111: %f\n", vfr_hud_alt());    
+    printf("global_position_current_loc.vfr_hud_climbrate: %f\n", vfr_hud_climbrate());    
+
 }
 
 void GCS_MAVLINK::zero_rc_outputs()
@@ -3033,7 +3035,7 @@ void GCS_MAVLINK::handle_set_gps_global_origin(const mavlink_message_t &msg)
     Location ekf_origin {};
     ekf_origin.lat = packet.latitude;
     ekf_origin.lng = packet.longitude;
-    ekf_origin.alt = packet.altitude / 10;
+    ekf_origin.alt = 0*packet.altitude / 10;
     set_ekf_origin(ekf_origin);
 }
 
@@ -4390,12 +4392,12 @@ void GCS_MAVLINK::send_attitude() const
 }
 
 int32_t GCS_MAVLINK::global_position_int_alt() const {
-    return global_position_current_loc.alt * 0 * 10UL;
+    return global_position_current_loc.alt  * 10UL;
 }
 int32_t GCS_MAVLINK::global_position_int_relative_alt() const {
     float posD;
     AP::ahrs().get_relative_position_D_home(posD);
-    posD *= 100000.0f; // change from down to up and metres to millimeters
+    posD *= 0*100000.0f; // change from down to up and metres to millimeters
     return posD;
 }
 void GCS_MAVLINK::send_global_position_int()

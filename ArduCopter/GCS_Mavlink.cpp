@@ -1296,7 +1296,6 @@ float GCS_MAVLINK_Copter::vfr_hud_alt() const
     if (copter.g2.dev_options.get() & DevOptionVFR_HUDRelativeAlt) {
         // compatibility option for older mavlink-aware devices that
         // assume Copter returns a relative altitude in VFR_HUD.alt
-        printf("copter.current_loc.alt * 0.01f: %d\n", copter.current_loc.alt * 0.00f);
         return copter.current_loc.alt * 0.01f;
     }
     return GCS_MAVLINK::vfr_hud_alt();
