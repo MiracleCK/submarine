@@ -125,6 +125,8 @@ void getGyro (const WbDeviceTag gyro, const double *northDirection, char *buf)
     else
     {
       sprintf(buf,"[%f, %f, %f]",g[0], g[2], g[1]);
+      printf("===========getGyro============\n");
+      printf("%s\n", buf);
     }
     
     return ;
@@ -195,5 +197,4 @@ void getAllSensors (char *buf, const double *northDirection, WbDeviceTag gyro, W
 
         sprintf (buf,"{\"ts\": %s,\"vehicle.imu\": {\"av\": %s,\"la\": %s,\"mf\": %s,\"vehicle.gps\":{%s},\"vehicle.velocity\":{\"wlv\": %s},\"vehicle.pose\":{%s,%s}}\r\n"
                                   , szTime,                                  gyro_buf,                    acc_buf,                 compass_buf,               gps_buf,                                  linear_velocity_buf,               gps_buf, inertial_buf );
-
 }

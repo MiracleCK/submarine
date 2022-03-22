@@ -432,7 +432,6 @@ void run()
 {
 
   char send_buf[1000];  //1000 just a safe margin
-  char send_buf1[1000]; //1000 just a safe margin
   char command_buffer[200];
   fd_set rfds;
   while (wb_robot_step(timestep) != -1)
@@ -453,46 +452,14 @@ void run()
     }
 
     getAllSensors((char *)send_buf, northDirection, gyro, accelerometer, compass, gps, inertialUnit);
-    getGPS(gps, northDirection, (char *)send_buf1);
-    // getInertia(inertialUnit, northDirection, (char *)send_buf1);
 
 #ifdef DEBUG_SENSORS
-    // printf("%s\n", send_buf);
-    if (1)
-    {
-      static int _startup_ms = 0;
-
-      if (_startup_ms < 500)
-      {
-        _startup_ms ++;
-      }
-      if (_startup_ms >= 500)
-      {
-        _startup_ms ++;
-        print_flag = true;
-      }
-      if (_startup_ms > 505)
-      {
-        _startup_ms = 0;
-        print_flag = 0;
-      }
-	  }
-
-    if (print_flag)
-    {
-      printf ("%s\n", send_buf1);
-    }
-    
+    printf("%s\n", send_buf);
 #endif
 
     if (write(fd, send_buf, strlen(send_buf)) <= 0)
     {
       printf("Send Data Error\n");
-    }
-
-    if (write(fd, send_buf1, strlen(send_buf1)) <= 0)
-    {
-      printf("Send Data1 Error\n");
     }
 
     if (fd)
