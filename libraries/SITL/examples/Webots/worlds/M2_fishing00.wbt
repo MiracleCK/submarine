@@ -15,8 +15,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 0.493810613326332 0.8694449242477357 0.014717400114183992 5.2513502900936695
-  position -8.856763591174733 7.777795432728089 7.280485283342507
+  orientation 0.6702550091921883 0.7419750745485505 -0.015205637160361296 5.392581891561038
+  position -7.047218274726511 8.369633161616221 8.474127551048833
   followType "Mounted Shot"
 }
 TexturedBackground {
@@ -66,17 +66,26 @@ DEF ROV Robot {
     DEF IMU_Transform Transform {
       rotation 0 1 0 -1.5708
       children [
-        Transform {
+        DEF inertial_unit Transform {
+          rotation 0 1 0 1.573
+          children [
+            InertialUnit {
+              name "inertial_unit"
+            }
+          ]
+        }
+        DEF IMU Transform {
           rotation 1 0 0 0
           children [
+            Compass {
+              rotation 1 0 0 0
+              name "compass1"
+            }
             Accelerometer {
               name "accelerometer1"
             }
             Gyro {
               name "gyro1"
-            }
-            InertialUnit {
-              name "inertial_unit"
             }
           ]
         }
@@ -112,10 +121,6 @@ DEF ROV Robot {
     }
     GPS {
       name "gps1"
-    }
-    Compass {
-      rotation 1 0 0 3.1415926
-      name "compass1"
     }
     Camera {
       translation 0 0.12 0
