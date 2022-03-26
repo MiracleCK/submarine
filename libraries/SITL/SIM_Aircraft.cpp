@@ -99,6 +99,8 @@ void Aircraft::set_start_location(const Location &start_loc, const float start_y
     ground_level = home.alt * 0.01f;
 
     dcm.from_euler(0.0f, 0.0f, radians(home_yaw));
+    // printf("---111-------set_start_location------radians(home_yaw):----%f\n",radians(home_yaw));
+
 }
 
 /*
@@ -453,6 +455,7 @@ void Aircraft::update_model(const struct sitl_input &input)
 void Aircraft::update_dynamics(const Vector3f &rot_accel)
 {
     const float delta_time = frame_time_us * 1.0e-6f;
+    printf("---222-------update_dynamics----------\n");
 
     // update rotational rates in body frame
     gyro += rot_accel * delta_time;

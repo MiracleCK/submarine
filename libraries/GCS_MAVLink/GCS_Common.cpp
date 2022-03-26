@@ -2698,7 +2698,7 @@ float GCS_MAVLINK::vfr_hud_climbrate() const
 
 float GCS_MAVLINK::vfr_hud_alt() const
 {
-    printf("global_position_current_loc.alt: %d\n", global_position_current_loc.alt);
+    // printf("global_position_current_loc.alt: %d\n", global_position_current_loc.alt);
     return global_position_current_loc.alt * 0.00f; // cm -> m
 }
 
@@ -2717,8 +2717,8 @@ void GCS_MAVLINK::send_vfr_hud()
         abs(vfr_hud_throttle()),
         0*vfr_hud_alt(),
         0*vfr_hud_climbrate());
-    printf("global_position_current_loc.alt111: %f\n", vfr_hud_alt());    
-    printf("global_position_current_loc.vfr_hud_climbrate: %f\n", vfr_hud_climbrate());    
+    // printf("global_position_current_loc.alt111: %f\n", vfr_hud_alt());    
+    // printf("global_position_current_loc.vfr_hud_climbrate: %f\n", vfr_hud_climbrate());    
 
 }
 
@@ -4422,8 +4422,7 @@ void GCS_MAVLINK::send_global_position_int()
         vel.y * 100,                     // Y speed cm/s (+ve East)
         vel.z * 100,                     // Z speed cm/s (+ve Down)
         ahrs.yaw_sensor);                // compass heading in 1/100 degree
-    printf("global_position_int_relative_alt(): %d\n", global_position_int_relative_alt());
-
+        // printf("global_position_int_relative_alt(): %d\n", global_position_int_relative_alt());
 }
 
 void GCS_MAVLINK::send_gimbal_report() const
