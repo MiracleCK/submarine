@@ -26,6 +26,7 @@
 #include <AP_Module/AP_Module.h>
 #include <AP_GPS/AP_GPS.h>
 #include <AP_Baro/AP_Baro.h>
+#include <cstdio>
 
 #if AP_AHRS_NAVEKF_AVAILABLE
 
@@ -45,7 +46,7 @@ AP_AHRS_NavEKF::AP_AHRS_NavEKF(NavEKF2 &_EKF2,
 {
 #if APM_BUILD_TYPE(APM_BUILD_ArduCopter) || APM_BUILD_TYPE(APM_BUILD_ArduSub)
     // Copter and Sub force the use of EKF
-    _ekf_flags |= AP_AHRS_NavEKF::FLAG_ALWAYS_USE_EKF;
+    // _ekf_flags |= AP_AHRS_NavEKF::FLAG_ALWAYS_USE_EKF;
 #endif
     _dcm_matrix.identity();
 }
@@ -54,6 +55,7 @@ AP_AHRS_NavEKF::AP_AHRS_NavEKF(NavEKF2 &_EKF2,
 const Vector3f &AP_AHRS_NavEKF::get_gyro(void) const
 {
     if (!active_EKF_type()) {
+        // printf("====================!active_EKF_type()============================\n");    
         return AP_AHRS_DCM::get_gyro();
     }
     return _gyro_estimate;
@@ -234,6 +236,9 @@ void AP_AHRS_NavEKF::update_EKF2(void)
 
 void AP_AHRS_NavEKF::update_EKF3(void)
 {
+    // printf("==========================================================================\r\n");
+    // printf("===================================_ekf3_started=============================\r\n");
+    // printf("==========================================================================\r\n");        
     if (!_ekf3_started) {
         // wait 1 second for DCM to output a valid tilt error estimate
         if (start_time_ms == 0) {

@@ -573,9 +573,9 @@ void NavEKF3_core::CovarianceInit()
 // Update Filter States - this should be called whenever new IMU data is available
 void NavEKF3_core::UpdateFilter(bool predict)
 {
-    printf("==========================================================================\r\n");
-    printf("==========================NavEKF3_core::UpdateFilter==============================\r\n");
-    printf("==========================================================================\r\n");
+    // printf("==========================================================================\r\n");
+    // printf("==========================NavEKF3_core::UpdateFilter==============================\r\n");
+    // printf("==========================================================================\r\n");
     // Set the flag to indicate to the filter that the front-end has given permission for a new state prediction cycle to be started
     startPredictEnabled = predict;
 
@@ -602,9 +602,9 @@ void NavEKF3_core::UpdateFilter(bool predict)
 
     // Run the EKF equations to estimate at the fusion time horizon if new IMU data is available in the buffer
     if (runUpdates) {
-        printf("==========================================================================\r\n");
-        printf("===================================runUpdates=============================\r\n");
-        printf("==========================================================================\r\n");
+        // printf("==========================================================================\r\n");
+        // printf("===================================runUpdates=============================\r\n");
+        // printf("==========================================================================\r\n");
         // Predict states using IMU data from the delayed time horizon
         UpdateStrapdownEquationsNED();
 
