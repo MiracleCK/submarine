@@ -154,10 +154,10 @@ float AC_PID::update_all(float target, float measurement, bool limit)
     _pid_info.P = P_out;
     _pid_info.D = D_out;
 
-    // if (is_dbg_printf){
+    if (is_dbg_printf){
         printf("=========AC_PID::update_all=====P_out + _integrator + D_out %f==============\r\n",P_out + _integrator + D_out);
         is_dbg_printf = false;
-    // }
+    }
 
     return P_out + _integrator + D_out;
 }
