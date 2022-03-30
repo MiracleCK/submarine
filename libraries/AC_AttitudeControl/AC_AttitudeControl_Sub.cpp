@@ -337,10 +337,10 @@ void AC_AttitudeControl_Sub::rate_controller_run()
 
     Vector3f gyro_latest = _ahrs.get_gyro_latest();
     _motors.set_roll(get_rate_roll_pid().update_all(_rate_target_ang_vel.x, gyro_latest.x, _motors.limit.roll));
-    // printf("=========111==========AC_AttitudeControl_Sub::rate_controller_run==================");
+    // printf("=========111==========AC_AttitudeControl_Sub::rate_controller_run================== \r\n");
     _motors.set_pitch(get_rate_pitch_pid().update_all(_rate_target_ang_vel.y, gyro_latest.y, _motors.limit.pitch));
-    // printf("AC_AttitudeControl_Sub::rate_controller_run()===== _motors.set_pitch %2.4f _pitch_in_ff %2.4f\r\n", _pitch_in, _pitch_in_ff);
-    // printf("=========222==========AC_AttitudeControl_Sub::rate_controller_run==================");
+    // printf("AC_AttitudeControl_Sub::rate_controller_run()===== get_rate_pitch_pid().update_all(_rate_target_ang_vel.y, gyro_latest.y, _motors.limit.pitch) %2.4f \r\n", get_rate_pitch_pid().update_all(_rate_target_ang_vel.y, gyro_latest.y, _motors.limit.pitch));
+    // printf("=========222==========AC_AttitudeControl_Sub::rate_controller_run================== \r\n");
     _motors.set_yaw(get_rate_yaw_pid().update_all(_rate_target_ang_vel.z, gyro_latest.z, _motors.limit.yaw));
 
     control_monitor_update();

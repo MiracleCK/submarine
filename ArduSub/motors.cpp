@@ -3,6 +3,7 @@
 // enable_motor_output() - enable and output lowest possible value to motors
 void Sub::enable_motor_output()
 {
+    // printf("\r\n----------------------enable_motor_output::output_min()-----------------\r\n");
     motors.output_min();
 }
 
@@ -93,6 +94,7 @@ bool Sub::handle_do_motor_test(mavlink_command_long_t command) {
                 tLastInitializationFailed = AP_HAL::millis();
                 return false; // init fail
             }
+            
         } else {
             return false;
         }

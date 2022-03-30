@@ -20,6 +20,7 @@
 #include <AP_BattMonitor/AP_BattMonitor.h>
 #include <AP_HAL/AP_HAL.h>
 #include "AP_Motors6DOF.h"
+#include <cstdio>
 
 extern const AP_HAL::HAL& hal;
 
@@ -381,6 +382,8 @@ void AP_Motors6DOF::output_to_motors()
         }
         break;
     }
+
+    // printf("\r\n----------------------SpoolState::SPOOLING_DOWN-----------------\r\n");
 
 	int16_t motor_buf[AP_MOTORS_MAX_NUM_MOTORS] = {0}; 
     // send output to each motor

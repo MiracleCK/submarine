@@ -22,6 +22,7 @@
 #include "AP_MotorsMulticopter.h"
 #include <AP_HAL/AP_HAL.h>
 #include <AP_BattMonitor/AP_BattMonitor.h>
+#include <cstdio>
 
 extern const AP_HAL::HAL& hal;
 
@@ -516,6 +517,7 @@ void AP_MotorsMulticopter::update_throttle_hover(float dt)
 // run spool logic
 void AP_MotorsMulticopter::output_logic()
 {
+    // printf("===================AP_MotorsMulticopter::output_logic()==================\r\n");
     if (_flags.armed) {
         if (_disarm_disable_pwm && (_disarm_safe_timer < _safe_time)) {
             _disarm_safe_timer += 1.0f/_loop_rate;
@@ -548,6 +550,7 @@ void AP_MotorsMulticopter::output_logic()
         limit.yaw = true;
         limit.throttle_lower = true;
         limit.throttle_upper = true;
+        // printf("===================AP_MotorsMulticopter::case SpoolState::SHUT_DOWN:()==================\r\n");
 
         // make sure the motors are spooling in the correct direction
         if (_spool_desired != DesiredSpoolState::SHUT_DOWN && _disarm_safe_timer >= _safe_time.get()) {

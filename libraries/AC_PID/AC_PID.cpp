@@ -133,6 +133,7 @@ float AC_PID::update_all(float target, float measurement, bool limit)
         float error_last = _error;
         _target += get_filt_T_alpha() * (target - _target);
         _error += get_filt_E_alpha() * ((_target - measurement) - _error);
+        // printf("=========AC_PID::update_all=====_error %f==============\r\n",_error);
 
         // calculate and filter derivative
         if (_dt > 0.0f) {
@@ -154,10 +155,10 @@ float AC_PID::update_all(float target, float measurement, bool limit)
     _pid_info.P = P_out;
     _pid_info.D = D_out;
 
-    if (is_dbg_printf){
-        printf("=========AC_PID::update_all=====P_out + _integrator + D_out %f==============\r\n",P_out + _integrator + D_out);
-        is_dbg_printf = false;
-    }
+    // if (is_dbg_printf){
+    //     printf("=========AC_PID::update_all=====P_out + _integrator + D_out %f==============\r\n",P_out + _integrator + D_out);
+    //     is_dbg_printf = false;
+    // }
 
     return P_out + _integrator + D_out;
 }
