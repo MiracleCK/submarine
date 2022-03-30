@@ -3,6 +3,7 @@
 
 #include <AP_Math/AP_Math.h>
 #include "AC_PID.h"
+#include <cstdio>
 
 const AP_Param::GroupInfo AC_PID::var_info[] = {
     // @Param: P
@@ -138,6 +139,7 @@ float AC_PID::update_all(float target, float measurement, bool limit)
         }
     }
 
+    printf("=========AC_PID::update_all=====limit %d==============\r\n",limit);
     // update I term
     update_i(limit);
 
@@ -204,10 +206,12 @@ float AC_PID::update_error(float error, bool limit)
 void AC_PID::update_i(bool limit)
 {
     if (!is_zero(_ki) && is_positive(_dt)) {
+        // printf("=========AC_PID::update_i=====limit:%d==============\r\n",limit);
         // Ensure that integrator can only be reduced if the output is saturated
         if (!limit || ((is_positive(_integrator) && is_negative(_error)) || (is_negative(_integrator) && is_positive(_error)))) {
             _integrator += ((float)_error * _ki) * _dt;
             _integrator = constrain_float(_integrator, -_kimax, _kimax);
+            printf("=========AC_PID::update_i=====_integrator:%f==============\r\n",_integrator);
         }
     } else {
         _integrator = 0.0f;

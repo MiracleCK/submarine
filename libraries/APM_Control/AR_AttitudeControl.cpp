@@ -17,6 +17,7 @@
 #include <AP_HAL/AP_HAL.h>
 #include "AR_AttitudeControl.h"
 #include <AP_GPS/AP_GPS.h>
+#include <cstdio>
 
 extern const AP_HAL::HAL& hal;
 
@@ -429,6 +430,7 @@ float AR_AttitudeControl::get_steering_out_rate(float desired_rate, bool motor_l
     // set PID's dt
     _steer_rate_pid.set_dt(dt);
 
+    printf("=========111==========AR_AttitudeControl::get_steering_out_rate==================");
     float output = _steer_rate_pid.update_all(_desired_turn_rate, _ahrs.get_yaw_rate_earth(), (motor_limit_left || motor_limit_right));
     output += _steer_rate_pid.get_ff();
     // constrain and return final output
@@ -518,6 +520,7 @@ float AR_AttitudeControl::get_throttle_out_speed(float desired_speed, bool motor
     }
 
     // calculate final output
+    printf("=========222==========AR_AttitudeControl::get_throttle_out_speed==================");
     float throttle_out = _throttle_speed_pid.update_all(desired_speed, speed, (_throttle_limit_low || _throttle_limit_high));
     throttle_out += _throttle_speed_pid.get_ff();
     throttle_out += throttle_base;
@@ -605,6 +608,8 @@ float AR_AttitudeControl::get_throttle_out_from_pitch(float desired_pitch, float
 
     // add feed forward from speed
     float output = vehicle_speed_pct * 0.01f * _pitch_to_throttle_speed_ff;
+
+    printf("=========333==========AR_AttitudeControl::get_throttle_out_from_pitch==================");
     output += _pitch_to_throttle_pid.update_all(desired_pitch, _ahrs.pitch, (motor_limit_low || motor_limit_high));
     output += _pitch_to_throttle_pid.get_ff();
 
@@ -641,6 +646,7 @@ float AR_AttitudeControl::get_sail_out_from_heel(float desired_heel, float dt)
     // set PID's dt
     _sailboat_heel_pid.set_dt(dt);
 
+    printf("=========444==========AR_AttitudeControl::get_sail_out_from_heel==================");
     _sailboat_heel_pid.update_all(desired_heel, fabsf(_ahrs.roll));
 
     // get feed-forward

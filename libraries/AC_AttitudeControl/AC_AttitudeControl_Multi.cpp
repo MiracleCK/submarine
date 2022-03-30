@@ -1,6 +1,8 @@
 #include "AC_AttitudeControl_Multi.h"
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Math/AP_Math.h>
+#include <cstdio>
+
 
 // table of user settable parameters
 const AP_Param::GroupInfo AC_AttitudeControl_Multi::var_info[] = {

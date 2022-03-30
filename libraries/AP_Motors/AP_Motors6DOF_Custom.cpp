@@ -88,7 +88,7 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
         throttle_thrust = _throttle_in_bf;
     }
 
-    if(0) {
+    if(1) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {
@@ -144,6 +144,16 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
     if (throttle_thrust >= _throttle_thrust_max) {
         throttle_thrust = _throttle_thrust_max;
         limit.throttle_upper = true;
+    }
+
+    // sanity check pitch is above zero and below current limited throttle
+    if (pitch_thrust <= -1) {
+        pitch_thrust = -1;
+        limit.pitch = true;
+    }
+    if (pitch_thrust >= 1) {
+        pitch_thrust = 1;
+        limit.pitch = true;
     }
 
     if(0) {

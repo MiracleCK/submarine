@@ -1221,6 +1221,7 @@ void SITL_State::_update_gps(double latitude, double longitude, float altitude,
     d.speedD = speedD;
     d.have_lock = have_lock;
 
+    // printf("************************SITL_State::_update_gps**********\r \n");
     // correct the latitude, longitude, hiehgt and NED velocity for the offset between
     // the vehicle c.g. and GPs antenna
     Vector3f posRelOffsetBF = _sitl->gps_pos_offset;
@@ -1231,7 +1232,6 @@ void SITL_State::_update_gps(double latitude, double longitude, float altitude,
 
         // rotate the antenna offset into the earth frame
         Vector3f posRelOffsetEF = rotmat * posRelOffsetBF;
-
         // Add the offset to the latitude, longitude and height using a spherical earth approximation
         double const earth_rad_inv = 1.569612305760477e-7; // use Authalic/Volumetric radius
         double lng_scale_factor = earth_rad_inv / cos(radians(d.latitude));
@@ -1291,6 +1291,7 @@ void SITL_State::_update_gps(double latitude, double longitude, float altitude,
     d2.latitude += glitch_offsets.x;
     d2.longitude += glitch_offsets.y;
     d2.altitude += glitch_offsets.z;
+    // printf("===========d===x=%.2f y=%.2f z=%.2f=========\n",d.latitude,d.longitude,d.altitude);
 
     if (gps_state.gps_fd != 0) {
         _update_gps_instance((SITL::SITL::GPSType)_sitl->gps_type.get(), &d, 0);

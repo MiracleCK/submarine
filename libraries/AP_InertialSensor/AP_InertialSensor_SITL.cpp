@@ -148,6 +148,11 @@ void AP_InertialSensor_SITL::generate_accel(uint8_t instance)
             zAccel = sitl->accel_fail;
         }
 
+        //cancel accel noise--by ck
+        xAccel = sitl->state.xAccel;
+        yAccel = sitl->state.yAccel;
+        zAccel = sitl->state.zAccel;
+
         Vector3f accel = Vector3f(xAccel, yAccel, zAccel);
 
         _rotate_and_correct_accel(accel_instance[instance], accel);
@@ -219,6 +224,11 @@ void AP_InertialSensor_SITL::generate_gyro(uint8_t instance)
                 r += sinf(phase) * calculate_noise(gyro_noise, noise_variation);
             }
         }
+        
+        //cancel gyro noise--by ck
+        p = radians(sitl->state.rollRate); 
+        q = radians(sitl->state.pitchRate);
+        r = radians(sitl->state.yawRate);
 
         Vector3f gyro = Vector3f(p, q, r);
 

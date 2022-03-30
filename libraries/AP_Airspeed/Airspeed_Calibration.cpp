@@ -12,6 +12,7 @@
 #include <AP_Baro/AP_Baro.h>
 
 #include "AP_Airspeed.h"
+#include <cstdio>
 
 extern const AP_HAL::HAL& hal;
 
