@@ -55,6 +55,7 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
     throttle_thrust = get_throttle_bidirectional();
     forward_thrust = _forward_in;
     lateral_thrust = _lateral_in;
+    // printf("pitch_thrust: _pitch_in %2.4f _pitch_in_ff %2.4f\r\n", _pitch_in, _pitch_in_ff);
 
     // test real data
     // roll_thrust = 0.04;

@@ -618,9 +618,9 @@ void AC_PosControl::run_z_controller(float alt_feed)
         }
         thr_out = POSCONTROL_VIBE_COMP_P_GAIN * thr_per_accelz_cmss * _accel_target.z + _pid_accel_z.get_i() * 0.001f;
     } else {
-        printf("====111=====AC_PosControl::run_z_controller=====_pid_accel_z.update_all=====\r\n");
+        // printf("====111=====AC_PosControl::run_z_controller=====_pid_accel_z.update_all=====\r\n");
         thr_out = _pid_accel_z.update_all(_accel_target.z, z_accel_meas, (_motors.limit.throttle_lower || _motors.limit.throttle_upper)) * 0.001f;
-        printf("====222=====AC_PosControl::run_z_controller=====_pid_accel_z.update_all=====\r\n");
+        // printf("====222=====AC_PosControl::run_z_controller=====_pid_accel_z.update_all=====\r\n");
     }
     thr_out += _motors.get_throttle_hover();
 

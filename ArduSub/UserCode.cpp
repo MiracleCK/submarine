@@ -1,5 +1,7 @@
 #include "Sub.h"
 
+bool is_dbg_printf;
+
 #ifdef USERHOOK_INIT
 void Sub::userhook_init()
 {
@@ -41,5 +43,6 @@ void Sub::userhook_SuperSlowLoop()
 {
     // put your 1Hz code here
     distance_control.distance_work_1hz();
+    is_dbg_printf = true;
 }
 #endif

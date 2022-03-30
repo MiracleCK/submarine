@@ -5,6 +5,8 @@
 #include "AC_PID.h"
 #include <cstdio>
 
+extern bool is_dbg_printf;
+
 const AP_Param::GroupInfo AC_PID::var_info[] = {
     // @Param: P
     // @DisplayName: PID Proportional Gain
@@ -139,7 +141,7 @@ float AC_PID::update_all(float target, float measurement, bool limit)
         }
     }
 
-    printf("=========AC_PID::update_all=====limit %d==============\r\n",limit);
+    // printf("=========AC_PID::update_all=====limit %d==============\r\n",limit);
     // update I term
     update_i(limit);
 
@@ -151,6 +153,11 @@ float AC_PID::update_all(float target, float measurement, bool limit)
     _pid_info.error = _error;
     _pid_info.P = P_out;
     _pid_info.D = D_out;
+
+    // if (is_dbg_printf){
+        printf("=========AC_PID::update_all=====P_out + _integrator + D_out %f==============\r\n",P_out + _integrator + D_out);
+        is_dbg_printf = false;
+    // }
 
     return P_out + _integrator + D_out;
 }
@@ -211,7 +218,7 @@ void AC_PID::update_i(bool limit)
         if (!limit || ((is_positive(_integrator) && is_negative(_error)) || (is_negative(_integrator) && is_positive(_error)))) {
             _integrator += ((float)_error * _ki) * _dt;
             _integrator = constrain_float(_integrator, -_kimax, _kimax);
-            printf("=========AC_PID::update_i=====_integrator:%f==============\r\n",_integrator);
+            // printf("=========AC_PID::update_i=====_integrator:%f==============\r\n",_integrator);
         }
     } else {
         _integrator = 0.0f;
