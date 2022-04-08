@@ -106,9 +106,11 @@ void AP_AHRS_NavEKF::update(bool skip_ins_update)
         _ekf_type.set(2);
     }
 
+    // printf("************************update_DCM(skip_ins_update)**********\r \n");
     update_DCM(skip_ins_update);
 
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+    // printf("************************CONFIG_HAL_BOARD == HAL_BOARD_SITL**********\r \n");
     update_SITL();
 #endif
 
@@ -325,7 +327,7 @@ void AP_AHRS_NavEKF::update_SITL(void)
     const AP_InertialSensor &_ins = AP::ins();
 
     if (active_EKF_type() == EKF_TYPE_SITL) {
-
+        // printf("===================================EKF_TYPE_SITL=============================\r\n");
         fdm.quaternion.rotation_matrix(_dcm_matrix);
         _dcm_matrix = _dcm_matrix * get_rotation_vehicle_body_to_autopilot_body();
         _dcm_matrix.to_euler(&roll, &pitch, &yaw);
@@ -382,6 +384,7 @@ const Vector3f &AP_AHRS_NavEKF::get_accel_ef(uint8_t i) const
 const Vector3f &AP_AHRS_NavEKF::get_accel_ef_blended(void) const
 {
     if (active_EKF_type() == EKF_TYPE_NONE) {
+        
         return AP_AHRS_DCM::get_accel_ef_blended();
     }
     return _accel_ef_ekf_blended;
@@ -913,6 +916,7 @@ bool AP_AHRS_NavEKF::get_relative_position_D_origin(float &posD) const
 {
     switch (active_EKF_type()) {
     case EKF_TYPE_NONE:
+        // printf("************************EKF_TYPE_NONE**********\r \n");
         return false;
 
     case EKF_TYPE2:

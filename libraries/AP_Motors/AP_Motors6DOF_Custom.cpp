@@ -98,6 +98,7 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
 
 		if(AP_HAL::millis() - _startup_ms > 1000) {
 			_startup_ms = AP_HAL::millis();
+            hal.console->printf("******before********limited throttle output*************\n");
 			hal.console->printf("roll_thrust %.02f\n", roll_thrust);
 			hal.console->printf("pitch_thrust %.02f\n", pitch_thrust);
 			hal.console->printf("yaw_thrust %.02f\n", yaw_thrust);
@@ -154,7 +155,7 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
     }
     if (pitch_thrust >= 1) {
         pitch_thrust = 1;
-        limit.pitch = true;
+        // limit.pitch = true;
     }
 
     if(1) {
@@ -166,6 +167,7 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
 
 		if(AP_HAL::millis() - _startup_ms > 1000) {
 			_startup_ms = AP_HAL::millis();
+            hal.console->printf("*****************limited throttle output*************\n");
 			hal.console->printf("roll_thrust %.02f\n", roll_thrust);
 			hal.console->printf("pitch_thrust %.02f\n", pitch_thrust);
 			hal.console->printf("yaw_thrust %.02f\n", yaw_thrust);
