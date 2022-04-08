@@ -7,6 +7,7 @@
 #include <AP_Module/AP_Module.h>
 #include <stdio.h>
 #endif
+#include <cstdio>
 
 #define SENSOR_RATE_DEBUG 0
 
@@ -158,6 +159,7 @@ void AP_InertialSensor_Backend::_notify_new_gyro_raw_sample(uint8_t instance,
                                                             const Vector3f &gyro,
                                                             uint64_t sample_us)
 {
+    // printf("***************AP_InertialSensor_Backend::_notify_new_gyro_raw_sample**********\r \n");
     if ((1U<<instance) & _imu.imu_kill_mask) {
         return;
     }

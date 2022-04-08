@@ -319,6 +319,7 @@ double Aircraft::rand_normal(double mean, double stddev)
 */
 void Aircraft::fill_fdm(struct sitl_fdm &fdm)
 {
+    // printf("-----Aircraft::fill_fdm(use_smoothing) %d------\n",use_smoothing);
     if (use_smoothing) {
         smooth_sensors();
     }
@@ -366,6 +367,7 @@ void Aircraft::fill_fdm(struct sitl_fdm &fdm)
     fdm.scanner.ranges = scanner.ranges;
 
     if (smoothing.enabled) {
+        printf("************************Aircraft::smoothing.enabled**********\r \n");\
         fdm.xAccel = smoothing.accel_body.x;
         fdm.yAccel = smoothing.accel_body.y;
         fdm.zAccel = smoothing.accel_body.z;
@@ -382,6 +384,7 @@ void Aircraft::fill_fdm(struct sitl_fdm &fdm)
 
     if (ahrs_orientation != nullptr) {
         enum Rotation imu_rotation = (enum Rotation)ahrs_orientation->get();
+        // printf("************************ahrs_orientation != nullptr*********\r \n");\
 
         if (imu_rotation != last_imu_rotation) {
             ahrs_rotation_inv.from_rotation(imu_rotation);
@@ -457,123 +460,123 @@ void Aircraft::update_model(const struct sitl_input &input)
  */
 void Aircraft::update_dynamics(const Vector3f &rot_accel)
 {
-    const float delta_time = frame_time_us * 1.0e-6f;
+//     const float delta_time = frame_time_us * 1.0e-6f;
 
-    // update rotational rates in body frame
-    gyro += rot_accel * delta_time;
+//     // update rotational rates in body frame
+//     gyro += rot_accel * delta_time;
 
-    gyro.x = constrain_float(gyro.x, -radians(2000.0f), radians(2000.0f));
-    gyro.y = constrain_float(gyro.y, -radians(2000.0f), radians(2000.0f));
-    gyro.z = constrain_float(gyro.z, -radians(2000.0f), radians(2000.0f));
+//     gyro.x = constrain_float(gyro.x, -radians(2000.0f), radians(2000.0f));
+//     gyro.y = constrain_float(gyro.y, -radians(2000.0f), radians(2000.0f));
+//     gyro.z = constrain_float(gyro.z, -radians(2000.0f), radians(2000.0f));
 
-    // estimate angular acceleration using a first order difference calculation
-    // TODO the simulator interface should provide the angular acceleration
-    ang_accel = (gyro - gyro_prev) / delta_time;
-    gyro_prev = gyro;
+//     // estimate angular acceleration using a first order difference calculation
+//     // TODO the simulator interface should provide the angular acceleration
+//     ang_accel = (gyro - gyro_prev) / delta_time;
+//     gyro_prev = gyro;
 
-    // update attitude
-    dcm.rotate(gyro * delta_time);
-    dcm.normalize();
+//     // update attitude
+//     dcm.rotate(gyro * delta_time);
+//     dcm.normalize();
 
-    Vector3f accel_earth = dcm * accel_body;
-    accel_earth += Vector3f(0.0f, 0.0f, GRAVITY_MSS);
+//     Vector3f accel_earth = dcm * accel_body;
+//     accel_earth += Vector3f(0.0f, 0.0f, GRAVITY_MSS);
 
-    // if we're on the ground, then our vertical acceleration is limited
-    // to zero. This effectively adds the force of the ground on the aircraft
-    if (on_ground() && accel_earth.z > 0) {
-        accel_earth.z = 0;
-    }
+//     // if we're on the ground, then our vertical acceleration is limited
+//     // to zero. This effectively adds the force of the ground on the aircraft
+//     if (on_ground() && accel_earth.z > 0) {
+//         accel_earth.z = 0;
+//     }
 
-    // work out acceleration as seen by the accelerometers. It sees the kinematic
-    // acceleration (ie. real movement), plus gravity
-    accel_body = dcm.transposed() * (accel_earth + Vector3f(0.0f, 0.0f, -GRAVITY_MSS));
+//     // work out acceleration as seen by the accelerometers. It sees the kinematic
+//     // acceleration (ie. real movement), plus gravity
+//     accel_body = dcm.transposed() * (accel_earth + Vector3f(0.0f, 0.0f, -GRAVITY_MSS));
 
-    // new velocity vector
-    velocity_ef += accel_earth * delta_time;
+//     // new velocity vector
+//     velocity_ef += accel_earth * delta_time;
 
-    const bool was_on_ground = on_ground();
-    // new position vector
-    position += velocity_ef * delta_time;
+//     const bool was_on_ground = on_ground();
+//     // new position vector
+//     position += velocity_ef * delta_time;
 
-    // velocity relative to air mass, in earth frame
-    velocity_air_ef = velocity_ef + wind_ef;
+//     // velocity relative to air mass, in earth frame
+//     velocity_air_ef = velocity_ef + wind_ef;
 
-    // velocity relative to airmass in body frame
-    velocity_air_bf = dcm.transposed() * velocity_air_ef;
+//     // velocity relative to airmass in body frame
+//     velocity_air_bf = dcm.transposed() * velocity_air_ef;
 
-    // airspeed
-    airspeed = velocity_air_ef.length();
+//     // airspeed
+//     airspeed = velocity_air_ef.length();
 
-    // airspeed as seen by a fwd pitot tube (limited to 120m/s)
-    airspeed_pitot = constrain_float(velocity_air_bf * Vector3f(1.0f, 0.0f, 0.0f), 0.0f, 120.0f);
+//     // airspeed as seen by a fwd pitot tube (limited to 120m/s)
+//     airspeed_pitot = constrain_float(velocity_air_bf * Vector3f(1.0f, 0.0f, 0.0f), 0.0f, 120.0f);
 
-    // constrain height to the ground
-    if (on_ground()) {
-        if (!was_on_ground && AP_HAL::millis() - last_ground_contact_ms > 1000) {
-            gcs().send_text(MAV_SEVERITY_INFO, "Hit ground at %f m/s", velocity_ef.z);
-            last_ground_contact_ms = AP_HAL::millis();
-        }
-        position.z = -(ground_level + frame_height - home.alt * 0.01f + ground_height_difference());
+//     // constrain height to the ground
+//     if (on_ground()) {
+//         if (!was_on_ground && AP_HAL::millis() - last_ground_contact_ms > 1000) {
+//             gcs().send_text(MAV_SEVERITY_INFO, "Hit ground at %f m/s", velocity_ef.z);
+//             last_ground_contact_ms = AP_HAL::millis();
+//         }
+//         position.z = -(ground_level + frame_height - home.alt * 0.01f + ground_height_difference());
 
-        switch (ground_behavior) {
-        case GROUND_BEHAVIOR_NONE:
-            break;
-        case GROUND_BEHAVIOR_NO_MOVEMENT: {
-            // zero roll/pitch, but keep yaw
-            float r, p, y;
-            dcm.to_euler(&r, &p, &y);
-            dcm.from_euler(0.0f, 0.0f, y);
-            // no X or Y movement
-            velocity_ef.x = 0.0f;
-            velocity_ef.y = 0.0f;
-            if (velocity_ef.z > 0.0f) {
-                velocity_ef.z = 0.0f;
-            }
-            gyro.zero();
-            use_smoothing = true;
-            break;
-        }
-        case GROUND_BEHAVIOR_FWD_ONLY: {
-            // zero roll/pitch, but keep yaw
-            float r, p, y;
-            dcm.to_euler(&r, &p, &y);
-            if (velocity_ef.length() < 5) {
-                // at high speeds don't constrain pitch, otherwise we
-                // can get stuck in takeoff
-                p = 0;
-            } else {
-                p = MAX(p, 0);
-            }
-            dcm.from_euler(0.0f, p, y);
-            // only fwd movement
-            Vector3f v_bf = dcm.transposed() * velocity_ef;
-            v_bf.y = 0.0f;
-            if (v_bf.x < 0.0f) {
-                v_bf.x = 0.0f;
-            }
-            velocity_ef = dcm * v_bf;
-            if (velocity_ef.z > 0.0f) {
-                velocity_ef.z = 0.0f;
-            }
-            gyro.zero();
-            use_smoothing = true;
-            break;
-        }
-        case GROUND_BEHAVIOR_TAILSITTER: {
-            // point straight up
-            float r, p, y;
-            dcm.to_euler(&r, &p, &y);
-            dcm.from_euler(0.0f, radians(90), y);
-            // no movement
-            if (accel_earth.z > -1.1*GRAVITY_MSS) {
-                velocity_ef.zero();
-            }
-            gyro.zero();
-            use_smoothing = true;
-            break;
-        }
-        }
-    }
+//         switch (ground_behavior) {
+//         case GROUND_BEHAVIOR_NONE:
+//             break;
+//         case GROUND_BEHAVIOR_NO_MOVEMENT: {
+//             // zero roll/pitch, but keep yaw
+//             float r, p, y;
+//             dcm.to_euler(&r, &p, &y);
+//             dcm.from_euler(0.0f, 0.0f, y);
+//             // no X or Y movement
+//             velocity_ef.x = 0.0f;
+//             velocity_ef.y = 0.0f;
+//             if (velocity_ef.z > 0.0f) {
+//                 velocity_ef.z = 0.0f;
+//             }
+//             gyro.zero();
+//             use_smoothing = true;
+//             break;
+//         }
+//         case GROUND_BEHAVIOR_FWD_ONLY: {
+//             // zero roll/pitch, but keep yaw
+//             float r, p, y;
+//             dcm.to_euler(&r, &p, &y);
+//             if (velocity_ef.length() < 5) {
+//                 // at high speeds don't constrain pitch, otherwise we
+//                 // can get stuck in takeoff
+//                 p = 0;
+//             } else {
+//                 p = MAX(p, 0);
+//             }
+//             dcm.from_euler(0.0f, p, y);
+//             // only fwd movement
+//             Vector3f v_bf = dcm.transposed() * velocity_ef;
+//             v_bf.y = 0.0f;
+//             if (v_bf.x < 0.0f) {
+//                 v_bf.x = 0.0f;
+//             }
+//             velocity_ef = dcm * v_bf;
+//             if (velocity_ef.z > 0.0f) {
+//                 velocity_ef.z = 0.0f;
+//             }
+//             gyro.zero();
+//             use_smoothing = true;
+//             break;
+//         }
+//         case GROUND_BEHAVIOR_TAILSITTER: {
+//             // point straight up
+//             float r, p, y;
+//             dcm.to_euler(&r, &p, &y);
+//             dcm.from_euler(0.0f, radians(90), y);
+//             // no movement
+//             if (accel_earth.z > -1.1*GRAVITY_MSS) {
+//                 velocity_ef.zero();
+//             }
+//             gyro.zero();
+//             use_smoothing = true;
+//             break;
+//         }
+//         }
+//     }
 }
 
 /*
@@ -581,15 +584,15 @@ void Aircraft::update_dynamics(const Vector3f &rot_accel)
 */
 void Aircraft::update_wind(const struct sitl_input &input)
 {
-    printf("************************Aircraft::update_wind**********\r \n");
+    // printf("************************Aircraft::update_wind**********\r \n");
     // wind vector in earth frame
     wind_ef = Vector3f(cosf(radians(input.wind.direction))*cosf(radians(input.wind.dir_z)), 
                        sinf(radians(input.wind.direction))*cosf(radians(input.wind.dir_z)), 
                        sinf(radians(input.wind.dir_z))) * input.wind.speed;
 
-    printf("************************wind_ef.x:%f**********\r \n",wind_ef.x);
-    printf("************************wind_ef.y:%f**********\r \n",wind_ef.y);
-    printf("************************wind_ef.z:%f**********\r \n",wind_ef.z);
+    // printf("************************wind_ef.x:%f**********\r \n",wind_ef.x);
+    // printf("************************wind_ef.y:%f**********\r \n",wind_ef.y);
+    // printf("************************wind_ef.z:%f**********\r \n",wind_ef.z);
 
     const float wind_turb = input.wind.turbulence * 10.0f;  // scale input.wind.turbulence to match standard deviation when using iir_coef=0.98
     const float iir_coef = 0.98f;  // filtering high frequencies from turbulence

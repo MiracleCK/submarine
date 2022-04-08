@@ -64,7 +64,7 @@ const Vector3f &AP_AHRS_NavEKF::get_gyro(void) const
 const Matrix3f &AP_AHRS_NavEKF::get_rotation_body_to_ned(void) const
 {
     if (!active_EKF_type()) {
-        printf("====================!active_EKF_ype()============================\n");    
+        // printf("====================!active_EKF_ype()============================\n");    
         return AP_AHRS_DCM::get_rotation_body_to_ned();
     }
     return _dcm_matrix;
@@ -943,7 +943,7 @@ bool AP_AHRS_NavEKF::get_relative_position_D_origin(float &posD) const
         // printf("************************fdm.altitude: %f **********\r \n",fdm.altitude);
         // printf("************************get_home().alt: %d **********\r \n",get_home().alt);
         posD = -(fdm.altitude - get_home().alt*0.01f);
-        posD = -(fdm.altitude);
+        posD = (fdm.altitude - 3.0);
         // printf("************************posD: %f **********\r \n",posD);
         return true;
     }
@@ -964,7 +964,7 @@ void AP_AHRS_NavEKF::get_relative_position_D_home(float &posD) const
     }
 
     posD = originD - ((originLLH.alt - _home.alt) * 0.01f);
-    // printf("************************posD: %f **********\r \n",posD);
+    // printf("************get_relative_position_D_home************posD: %f **********\r \n",posD);
     return;
 }
 /*
