@@ -563,6 +563,7 @@ void Webots::output (const struct sitl_input &input)
  */
 void Webots::update(const struct sitl_input &input)
 {   
+// printf("----------Webots::update(const struct sitl_input &input)----------\n");
 #if 1    
     if (!connect_sockets()) {
         return;

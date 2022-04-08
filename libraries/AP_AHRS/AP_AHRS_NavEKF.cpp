@@ -64,6 +64,7 @@ const Vector3f &AP_AHRS_NavEKF::get_gyro(void) const
 const Matrix3f &AP_AHRS_NavEKF::get_rotation_body_to_ned(void) const
 {
     if (!active_EKF_type()) {
+        printf("====================!active_EKF_ype()============================\n");    
         return AP_AHRS_DCM::get_rotation_body_to_ned();
     }
     return _dcm_matrix;
@@ -357,8 +358,9 @@ void AP_AHRS_NavEKF::update_SITL(void)
             _last_body_odm_update_ms = timeStamp_ms;
             timeStamp_ms -= (timeStamp_ms - _last_body_odm_update_ms)/2; // correct for first order hold average delay
             Vector3f delAng = _ins.get_gyro();
-            
+
             delAng *= delTime;
+
             // rotate earth velocity into body frame and calculate delta position
             Matrix3f Tbn;
             Tbn.from_euler(radians(fdm.rollDeg),radians(fdm.pitchDeg),radians(fdm.yawDeg));
@@ -519,6 +521,7 @@ bool AP_AHRS_NavEKF::use_compass(void)
 
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
     case EKF_TYPE_SITL:
+        // printf("************************HAL_BOARD_SITL**********\r \n");
         return true;
 #endif
     }
@@ -932,11 +935,16 @@ bool AP_AHRS_NavEKF::get_relative_position_D_origin(float &posD) const
 
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
     case EKF_TYPE_SITL: {
+        // printf("************************EKF_TYPE_SITL**********\r \n");
         if (!_sitl) {
             return false;
         }
         const struct SITL::sitl_fdm &fdm = _sitl->state;
+        // printf("************************fdm.altitude: %f **********\r \n",fdm.altitude);
+        // printf("************************get_home().alt: %d **********\r \n",get_home().alt);
         posD = -(fdm.altitude - get_home().alt*0.01f);
+        posD = -(fdm.altitude);
+        // printf("************************posD: %f **********\r \n",posD);
         return true;
     }
 #endif
@@ -956,6 +964,7 @@ void AP_AHRS_NavEKF::get_relative_position_D_home(float &posD) const
     }
 
     posD = originD - ((originLLH.alt - _home.alt) * 0.01f);
+    // printf("************************posD: %f **********\r \n",posD);
     return;
 }
 /*
@@ -1020,6 +1029,7 @@ AP_AHRS_NavEKF::EKF_TYPE AP_AHRS_NavEKF::active_EKF_type(void) const
         
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
     case EKF_TYPE_SITL:
+        // printf("*********************active_EKF_type***EKF_TYPE_SITL**********\r \n");
         ret = EKF_TYPE_SITL;
         break;
 #endif

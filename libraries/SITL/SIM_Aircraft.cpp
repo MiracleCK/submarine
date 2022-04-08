@@ -99,7 +99,7 @@ void Aircraft::set_start_location(const Location &start_loc, const float start_y
     ground_level = home.alt * 0.01f;
 
     dcm.from_euler(0.0f, 0.0f, radians(home_yaw));
-    // printf("---111-------set_start_location------radians(home_yaw):----%f\n",radians(home_yaw));
+    // printf("---000-------set_start_location------radians(home_yaw):----%f\n",radians(home_yaw));
 
 }
 
@@ -147,6 +147,7 @@ void Aircraft::update_position(void)
     location.offset(position.x, position.y);
 
     location.alt  = static_cast<int32_t>(home.alt - position.z * 100.0f);
+    // printf("************************position.z: %f **********\r \n",position.z);
 
 #if 0
     // logging of raw sitl data
@@ -358,6 +359,7 @@ void Aircraft::fill_fdm(struct sitl_fdm &fdm)
     fdm.range = range;
     memcpy(fdm.rcin, rcin, rcin_chan_count * sizeof(float));
     fdm.bodyMagField = mag_bf;
+    // printf("************************Aircraft::fill_fdm**********\r \n");
 
     // copy laser scanner results
     fdm.scanner.points = scanner.points;
@@ -389,7 +391,6 @@ void Aircraft::fill_fdm(struct sitl_fdm &fdm)
         if (imu_rotation != ROTATION_NONE) {
             Matrix3f m = dcm;
             m = m * ahrs_rotation_inv;
-
             m.to_euler(&r, &p, &y);
             fdm.rollDeg  = degrees(r);
             fdm.pitchDeg = degrees(p);
@@ -446,7 +447,9 @@ void Aircraft::update_model(const struct sitl_input &input)
         set_start_location(loc, sitl->opos.hdg.get());
         printf("RAW loc.alt:%d\n", loc.alt);
     }
+    // printf("---111-------update_model----------\n");
     update(input);
+    // printf("---222-------update_model----------\n");
 }
 
 /*
@@ -455,7 +458,6 @@ void Aircraft::update_model(const struct sitl_input &input)
 void Aircraft::update_dynamics(const Vector3f &rot_accel)
 {
     const float delta_time = frame_time_us * 1.0e-6f;
-    printf("---222-------update_dynamics----------\n");
 
     // update rotational rates in body frame
     gyro += rot_accel * delta_time;
@@ -579,10 +581,15 @@ void Aircraft::update_dynamics(const Vector3f &rot_accel)
 */
 void Aircraft::update_wind(const struct sitl_input &input)
 {
+    printf("************************Aircraft::update_wind**********\r \n");
     // wind vector in earth frame
     wind_ef = Vector3f(cosf(radians(input.wind.direction))*cosf(radians(input.wind.dir_z)), 
                        sinf(radians(input.wind.direction))*cosf(radians(input.wind.dir_z)), 
                        sinf(radians(input.wind.dir_z))) * input.wind.speed;
+
+    printf("************************wind_ef.x:%f**********\r \n",wind_ef.x);
+    printf("************************wind_ef.y:%f**********\r \n",wind_ef.y);
+    printf("************************wind_ef.z:%f**********\r \n",wind_ef.z);
 
     const float wind_turb = input.wind.turbulence * 10.0f;  // scale input.wind.turbulence to match standard deviation when using iir_coef=0.98
     const float iir_coef = 0.98f;  // filtering high frequencies from turbulence
@@ -734,6 +741,9 @@ void Aircraft::extrapolate_sensors(float delta_time)
     // new velocity and position vectors
     velocity_ef += accel_earth * delta_time;
     position += velocity_ef * delta_time;
+    // printf("************************position.x: %f **********\r \n",position.y);
+    // printf("************************position.y: %f **********\r \n",position.y);
+    // printf("************************position.z: %f **********\r \n",position.z);
     velocity_air_ef = velocity_ef + wind_ef;
     velocity_air_bf = dcm.transposed() * velocity_air_ef;
 }

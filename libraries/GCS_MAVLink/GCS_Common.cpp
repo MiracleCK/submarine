@@ -2440,7 +2440,7 @@ void GCS_MAVLINK::send_home_position() const
         q,
         0.0f, 0.0f, 0.0f,
         AP_HAL::micros64());
-    printf("home.alt: %d\n", home.alt);
+    // printf("home.alt: %d\n", home.alt);
 
 }
 
