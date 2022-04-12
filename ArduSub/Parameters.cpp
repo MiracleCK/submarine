@@ -819,11 +819,11 @@ void Sub::load_parameters()
 
     ///////////////////////////////////////////////////////////////
     // z controller
-    AP_Param::set_default_by_name("PSC_POSZ_P", 20);
-    AP_Param::set_default_by_name("PSC_VELZ_P", 10);
-    AP_Param::set_default_by_name("PSC_ACCZ_P", 0.5);
-    AP_Param::set_default_by_name("PSC_ACCZ_I", 0.1);
-    AP_Param::set_default_by_name("PSC_ACCZ_D", 0);    
+    AP_Param::set_default_by_name("PSC_POSZ_P", 8);
+    AP_Param::set_default_by_name("PSC_VELZ_P", 16);
+    AP_Param::set_default_by_name("PSC_ACCZ_P", 2);
+    AP_Param::set_default_by_name("PSC_ACCZ_I", 3);
+    AP_Param::set_default_by_name("PSC_ACCZ_D", 0.5);    
 
     ///////////////////////////////////////////////////////////////
     // pilot input pitch/roll/yaw rot rate

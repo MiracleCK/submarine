@@ -952,8 +952,8 @@ DEF ROV Robot {
     ImmersionProperties {
       fluidName "fluid"
       referenceArea "xyz-projection"
-      dragForceCoefficients 1 0 0
-      dragTorqueCoefficients 0.1 0 0
+      dragForceCoefficients 1 1 1
+      dragTorqueCoefficients 0.1 0.1 0.1
       viscousResistanceForceCoefficient 0.3
       viscousResistanceTorqueCoefficient 0.5
     }
