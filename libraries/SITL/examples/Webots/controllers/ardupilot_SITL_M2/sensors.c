@@ -82,6 +82,8 @@ void getGPS (const WbDeviceTag gps, const double *northDirection, char *buf)
     else
     {
       sprintf(buf,"\"x\": %f,\"y\": %f,\"z\": %f", north3D[2], -north3D[0], north3D[1]);
+      printf("===========getGPS============\n");
+      printf("%s\n", buf);
     }
     
 
@@ -125,8 +127,8 @@ void getGyro (const WbDeviceTag gyro, const double *northDirection, char *buf)
     else
     {
       sprintf(buf,"[%f, %f, %f]",g[0], g[2], g[1]);
-      printf("===========getGyro============\n");
-      printf("%s\n", buf);
+      // printf("===========getGyro============\n");
+      // printf("%s\n", buf);
     }
     
     return ;

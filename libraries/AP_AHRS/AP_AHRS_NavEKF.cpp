@@ -961,6 +961,8 @@ void AP_AHRS_NavEKF::get_relative_position_D_home(float &posD) const
         !get_origin(originLLH)) {
         posD = -AP::baro().get_altitude();
         return;
+        // printf("************!get_relative_position_D_home**********************\r \n");
+
     }
 
     posD = originD - ((originLLH.alt - _home.alt) * 0.01f);
