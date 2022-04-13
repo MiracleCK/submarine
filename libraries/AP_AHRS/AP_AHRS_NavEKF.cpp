@@ -944,7 +944,8 @@ bool AP_AHRS_NavEKF::get_relative_position_D_origin(float &posD) const
         // printf("************************get_home().alt: %d **********\r \n",get_home().alt);
         posD = -(fdm.altitude - get_home().alt*0.01f);
         posD = (fdm.altitude - 3.0);
-        // printf("************************posD: %f **********\r \n",posD);
+
+        printf("************************posD: %f **********\r \n",posD);
         return true;
     }
 #endif

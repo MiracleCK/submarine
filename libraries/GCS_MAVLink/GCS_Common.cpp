@@ -4398,6 +4398,7 @@ int32_t GCS_MAVLINK::global_position_int_relative_alt() const {
     float posD;
     AP::ahrs().get_relative_position_D_home(posD);
     posD *= 100000.0f; // change from down to up and metres to millimeters
+    printf("************global_position_int_relative_alt************posD: %f **********\r \n",posD);
     return posD;
 }
 void GCS_MAVLINK::send_global_position_int()
