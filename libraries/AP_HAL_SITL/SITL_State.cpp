@@ -474,6 +474,7 @@ void SITL_State::_fdm_input_local(void)
 
     // construct servos structure for FDM
     _simulator_servos(input);
+    // printf("************************SITL_State::_fdm_input_local _simulator_servos **********\r \n");
 
     // update the model
     sitl_model->update_model(input);
@@ -568,7 +569,7 @@ void SITL_State::_fdm_input_local(void)
 void SITL_State::_simulator_servos(struct sitl_input &input)
 {
     static uint32_t last_update_usec;
-
+    
     /* this maps the registers used for PWM outputs. The RC
      * driver updates these whenever it wants the channel output
      * to change */

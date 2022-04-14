@@ -23,12 +23,12 @@
 #include <AP_HAL/AP_HAL.h>
 #include <SRV_Channel/SRV_Channel.h>
 #include <GCS_MAVLink/GCS.h>
+#include <cstdio>
 
 extern const AP_HAL::HAL& hal;
 
 // singleton instance
 AP_Motors *AP_Motors::_singleton;
-
 // Constructor
 AP_Motors::AP_Motors(uint16_t loop_rate, uint16_t speed_hz) :
     _loop_rate(loop_rate),

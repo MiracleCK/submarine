@@ -694,7 +694,7 @@ public:
     // when in BODY
     // 1) coordinate was clear when z-axis thrust changed by pilot
     // 2) coordinate was restored when pilot release
-    // Coordinate should alse be check when mode switch
+    // Coordinate should else be check when mode switch
     // only stabilize and alt hold support NED, other mode should clear it
     enum pilot_axis_t : uint8_t {
         AXIS_CLEARD,

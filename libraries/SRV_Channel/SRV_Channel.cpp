@@ -22,6 +22,7 @@
 #include <AP_Vehicle/AP_Vehicle.h>
 #include <AP_Math/AP_Math.h>
 #include "SRV_Channel.h"
+#include <cstdio>
 
 extern const AP_HAL::HAL& hal;
 
@@ -125,6 +126,7 @@ void SRV_Channel::calc_pwm(int16_t output_scaled)
         pwm = pwm_from_range(output_scaled);
     }
     set_output_pwm(pwm);
+    // printf("************************SRV_Channel::set_output_pwm**********\r \n");
 }
 
 void SRV_Channel::set_output_pwm(uint16_t pwm)

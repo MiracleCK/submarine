@@ -20,6 +20,7 @@
  */
 #include <AP_HAL/AP_HAL.h>
 #include "AP_MotorsMatrix.h"
+#include <cstdio>
 
 extern const AP_HAL::HAL& hal;
 
@@ -72,7 +73,6 @@ void AP_MotorsMatrix::set_frame_class_and_type(motor_frame_class frame_class, mo
 void AP_MotorsMatrix::output_to_motors()
 {
     int8_t i;
-
     switch (_spool_state) {
         case SpoolState::SHUT_DOWN: {
             // no output
@@ -342,6 +342,7 @@ void AP_MotorsMatrix::output_armed_stabilizing()
 //   sets _motor_lost_index to index of failed motor
 void AP_MotorsMatrix::check_for_failed_motor(float throttle_thrust_best_plus_adj)
 {
+    printf("*******************AP_MotorsMatrix::check_for_failed_motor**********\r \n");
     // record filtered and scaled thrust output for motor loss monitoring purposes
     float alpha = 1.0f / (1.0f + _loop_rate * 0.5f);
     for (uint8_t i = 0; i < AP_MOTORS_MAX_NUM_MOTORS; i++) {

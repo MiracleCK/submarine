@@ -502,6 +502,7 @@ void AP_MotorsMulticopter::set_throttle_range(int16_t radio_min, int16_t radio_m
         _pwm_max.set(2000);
     }
 
+    // printf("===================AP_MotorsMulticopter::set_throttle_range()==================\r\n");
     hal.rcout->set_esc_scaling(get_pwm_output_min(), get_pwm_output_max());
 }
 
@@ -735,6 +736,7 @@ void AP_MotorsMulticopter::set_throttle_passthrough_for_esc_calibration(float th
 // the range 0 to 1
 void AP_MotorsMulticopter::output_motor_mask(float thrust, uint8_t mask, float rudder_dt)
 {
+    printf("************************AP_MotorsMulticopter::output_motor_mask**********\r \n");
     for (uint8_t i = 0; i < AP_MOTORS_MAX_NUM_MOTORS; i++) {
         if (motor_enabled[i]) {
             if (mask & (1U << i)) {

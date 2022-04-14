@@ -142,7 +142,7 @@ float AC_PID::update_all(float target, float measurement, bool limit)
         }
     }
 
-    printf("=========AC_PID::update_all=====limit %d==============\r\n",limit);
+    // printf("=========AC_PID::update_all=====limit %d==============\r\n",limit);
     // update I term
     update_i(limit);
 

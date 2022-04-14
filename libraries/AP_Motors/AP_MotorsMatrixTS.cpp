@@ -20,6 +20,7 @@
 #include <AP_BattMonitor/AP_BattMonitor.h>
 #include <AP_HAL/AP_HAL.h>
 #include "AP_MotorsMatrixTS.h"
+#include <cstdio>
 
 extern const AP_HAL::HAL& hal;
 
