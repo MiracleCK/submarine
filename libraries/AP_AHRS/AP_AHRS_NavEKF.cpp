@@ -932,7 +932,8 @@ bool AP_AHRS_NavEKF::get_relative_position_D_origin(float &posD) const
             return false;
         }
         const struct SITL::sitl_fdm &fdm = _sitl->state;
-        posD = -(fdm.altitude - get_home().alt*0.01f);
+        // posD = -(fdm.altitude - get_home().alt*0.01f);
+        posD = -(fdm.altitude);
         return true;
     }
 #endif

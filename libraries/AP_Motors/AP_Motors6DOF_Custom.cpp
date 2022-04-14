@@ -148,9 +148,19 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
     }
 
     // sanity check pitch is above zero and below current limited throttle
+    if (roll_thrust <= -1) {
+        roll_thrust = -1;
+        limit.roll = true;
+    }
+    if (roll_thrust >= 1) {
+        roll_thrust = 1;
+        limit.roll = true;
+    }
+
+    // sanity check pitch is above zero and below current limited throttle
     if (pitch_thrust <= -1) {
         pitch_thrust = -1;
-        // limit.pitch = true;
+        limit.pitch = true;
     }
     if (pitch_thrust >= 1) {
         pitch_thrust = 1;

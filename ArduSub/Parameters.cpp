@@ -892,7 +892,7 @@ void Sub::load_parameters()
 
     ///////////////////////////////////////////////////////////////
     // to fix pitch overshoot issue
-    AP_Param::set_default_by_name("AHRS_EKF_TYPE", 0);
+    AP_Param::set_default_by_name("AHRS_EKF_TYPE", 10);
     AP_Param::set_default_by_name("EK3_ENABLE", 1);
     // AP_Param::set_default_by_name("EK2_ENABLE", 0);
     AP_Param::set_default_by_name("INS_POS1_X", 0.093);
