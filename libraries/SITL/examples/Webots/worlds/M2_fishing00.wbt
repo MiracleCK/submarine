@@ -61,7 +61,7 @@ Fluid {
 }
 DEF ROV Robot {
   translation 2.6832912713978645e-10 1.2999215196354772 0.1367869995323204
-  rotation 0 0 1 1.573
+  rotation 0 0 1 0
   children [
     DEF IMU_Transform Transform {
       rotation 0 1 0 -1.5708
