@@ -4,6 +4,8 @@
 #include <AP_Logger/AP_Logger.h>
 #include <cstdio>
 
+extern bool is_dbg_printf;
+
 extern const AP_HAL::HAL& hal;
 
 #if APM_BUILD_TYPE(APM_BUILD_ArduPlane)
@@ -593,7 +595,11 @@ void AC_PosControl::run_z_controller(float alt_feed)
     _accel_target.z = _p_vel_z.get_p(_vel_error.z);
 
     _accel_target.z += _accel_desired.z;
-
+    if (is_dbg_printf)
+    {
+        printf("=========AC_PosControl::run_z_controller=====_p_vel_z.get_p(_vel_error.z):%f=====\r\n",_p_vel_z.get_p(_vel_error.z));
+        // printf("=========AC_PosControl::run_z_controller=====_accel_desired.z:%f=====\r\n",_accel_desired.z);
+    }
 
     // the following section calculates a desired throttle needed to achieve the acceleration target
     float z_accel_meas;         // actual acceleration
@@ -607,6 +613,11 @@ void AC_PosControl::run_z_controller(float alt_feed)
     }
 
     float thr_out;
+    if (is_dbg_printf)
+    {
+        printf("=========AC_PosControl::run_z_controller=====_accel_target.z:%f=====\r\n",_accel_target.z);
+        printf("=========AC_PosControl::run_z_controller=====z_accel_meas:%f=====\r\n",z_accel_meas);
+    }
     if (_vibe_comp_enabled) {
         _flags.freeze_ff_z = true;
         _accel_desired.z = 0.0f;
@@ -640,6 +651,11 @@ void AC_PosControl::run_z_controller(float alt_feed)
         control_log_start = false;
     }
 
+    if (is_dbg_printf)
+    {
+        printf("=========AC_PosControl::run_z_controller=====thr_out:%f=====\r\n",thr_out);
+        is_dbg_printf = false;
+    }
     // send throttle to attitude controller with angle boost
     _attitude_control.set_throttle_out(thr_out, true, POSCONTROL_THROTTLE_CUTOFF_FREQ);
 

@@ -155,7 +155,7 @@ void AP_InertialSensor_SITL::generate_accel(uint8_t instance)
 
         Vector3f accel = Vector3f(xAccel, yAccel, zAccel);
 
-        _rotate_and_correct_accel(accel_instance[instance], accel);
+        // _rotate_and_correct_accel(accel_instance[instance], accel);
         _notify_new_accel_sensor_rate_sample(instance, accel);
 
         accel_accum += accel;
