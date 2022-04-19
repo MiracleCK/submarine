@@ -75,7 +75,7 @@ DEF ROV Robot {
           ]
         }
         DEF IMU Transform {
-          rotation 1 0 0 1.5732
+          rotation 1 0 0 -1.5732
           children [
             Compass {
               rotation 1 0 0 0

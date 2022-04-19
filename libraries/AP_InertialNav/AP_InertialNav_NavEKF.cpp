@@ -1,6 +1,7 @@
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Baro/AP_Baro.h>
 #include "AP_InertialNav.h"
+#include <cstdio>
 
 #if AP_AHRS_NAVEKF_AVAILABLE
 
@@ -40,6 +41,7 @@ void AP_InertialNav_NavEKF::update(bool high_vibes)
         }
         _velocity_cm = velNED * 100; // convert to cm/s
         _velocity_cm.z = -_velocity_cm.z; // convert from NED to NEU
+        // printf("**********AP_InertialNav_NavEKF::update _velocity_cm.z:%f********\r \n",_velocity_cm.z);
     }
 }
 

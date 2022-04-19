@@ -82,8 +82,8 @@ void getGPS (const WbDeviceTag gps, const double *northDirection, char *buf)
     else
     {
       sprintf(buf,"\"x\": %f,\"y\": %f,\"z\": %f", north3D[2], -north3D[0], north3D[1]);
-      printf("===========getGPS============\n");
-      printf("%s\n", buf);
+      // printf("===========getGPS============\n");
+      // printf("%s\n", buf);
     }
     
 
@@ -147,6 +147,8 @@ void getLinearVelocity (WbNodeRef nodeRef, const double *northDirection,  char *
       else
       {
         sprintf (buf,"[%f, %f, %f]",  linear_velocity[2], -linear_velocity[0], linear_velocity[1]);
+        printf("===========getLinearVelocity============\n");
+        printf("%s\n", buf);
       } 
     }
     

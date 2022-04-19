@@ -756,6 +756,7 @@ bool AP_AHRS_NavEKF::get_vert_pos_rate(float &velocity) const
         if (_sitl) {
             const struct SITL::sitl_fdm &fdm = _sitl->state;
             velocity = fdm.speedD;
+            printf("*******************get_vert_pos_rate::EKF_TYPE_SITL velocity:%f**********\r \n",velocity);
             return true;
         } else {
             return false;

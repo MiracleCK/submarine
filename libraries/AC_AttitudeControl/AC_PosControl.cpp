@@ -515,6 +515,7 @@ void AC_PosControl::calc_leash_length_z()
 void AC_PosControl::run_z_controller(float alt_feed)
 {
     float curr_alt = _inav.get_altitude() + alt_feed;
+    printf("=========AC_PosControl::run_z_controller=====curr_alt:%f=====\r\n",curr_alt);
 
     // clear position limit flags
     _limit.pos_up = false;
@@ -522,6 +523,7 @@ void AC_PosControl::run_z_controller(float alt_feed)
 
     // calculate altitude error
     _pos_error.z = _pos_target.z - curr_alt;
+    printf("=========AC_PosControl::run_z_controller=====_pos_error.z:%f=====\r\n",_pos_error.z);
 
     // do not let target altitude get too far from current altitude
     if (_pos_error.z > _leash_up_z) {
@@ -559,6 +561,7 @@ void AC_PosControl::run_z_controller(float alt_feed)
     // the following section calculates acceleration required to achieve the velocity target
 
     const Vector3f& curr_vel = _inav.get_velocity();
+    // printf("=========AC_PosControl::run_z_controller=====curr_vel.z:%f=====\r\n",curr_vel.z);
 
     // TODO: remove velocity derivative calculation
     // reset last velocity target to current target
@@ -597,6 +600,7 @@ void AC_PosControl::run_z_controller(float alt_feed)
     _accel_target.z += _accel_desired.z;
     if (is_dbg_printf)
     {
+        is_dbg_printf = false;
         printf("=========AC_PosControl::run_z_controller=====_p_vel_z.get_p(_vel_error.z):%f=====\r\n",_p_vel_z.get_p(_vel_error.z));
         // printf("=========AC_PosControl::run_z_controller=====_accel_desired.z:%f=====\r\n",_accel_desired.z);
     }
