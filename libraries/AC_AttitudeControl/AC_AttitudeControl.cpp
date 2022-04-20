@@ -1,5 +1,6 @@
 #include "AC_AttitudeControl.h"
 #include <AP_HAL/AP_HAL.h>
+#include <cstdio>
 
 extern const AP_HAL::HAL& hal;
 
@@ -1052,6 +1053,7 @@ float AC_AttitudeControl::sqrt_controller(float error, float p, float second_ord
         } else {
             correction_rate = error * p;
         }
+        // printf("====3=====AC_AttitudeControl::sqrt_controller=====correction_rate:%f=====\r\n",correction_rate);
     }
     if (!is_zero(dt)) {
         // this ensures we do not get small oscillations by over shooting the error correction in the last time step.

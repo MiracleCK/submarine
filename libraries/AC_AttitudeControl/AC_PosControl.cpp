@@ -515,15 +515,16 @@ void AC_PosControl::calc_leash_length_z()
 void AC_PosControl::run_z_controller(float alt_feed)
 {
     float curr_alt = _inav.get_altitude() + alt_feed;
-    printf("=========AC_PosControl::run_z_controller=====curr_alt:%f=====\r\n",curr_alt);
 
     // clear position limit flags
     _limit.pos_up = false;
     _limit.pos_down = false;
 
+    // printf("=========AC_PosControl::run_z_controller=====_pos_target.z:%f=====\r\n",_pos_target.z);
+    // printf("=========AC_PosControl::run_z_controller=====curr_alt:%f=====\r\n",curr_alt);
     // calculate altitude error
     _pos_error.z = _pos_target.z - curr_alt;
-    printf("=========AC_PosControl::run_z_controller=====_pos_error.z:%f=====\r\n",_pos_error.z);
+    // printf("=========AC_PosControl::run_z_controller=====_pos_error.z:%f=====\r\n",_pos_error.z);
 
     // do not let target altitude get too far from current altitude
     if (_pos_error.z > _leash_up_z) {
@@ -539,6 +540,7 @@ void AC_PosControl::run_z_controller(float alt_feed)
 
     // calculate _vel_target.z using from _pos_error.z using sqrt controller
     _vel_target.z = AC_AttitudeControl::sqrt_controller(_pos_error.z, _p_pos_z.kP(), _accel_z_cms, _dt);
+    // printf("=========AC_PosControl::run_z_controller=====_vel_target.z:%f=====\r\n",_vel_target.z);
 
     // check speed limits
     // To-Do: check these speed limits here or in the pos->rate controller
@@ -598,10 +600,10 @@ void AC_PosControl::run_z_controller(float alt_feed)
     _accel_target.z = _p_vel_z.get_p(_vel_error.z);
 
     _accel_target.z += _accel_desired.z;
+    // printf("=========AC_PosControl::run_z_controller=====_accel_target.z:%f=====\r\n",_accel_target.z);
     if (is_dbg_printf)
     {
-        is_dbg_printf = false;
-        printf("=========AC_PosControl::run_z_controller=====_p_vel_z.get_p(_vel_error.z):%f=====\r\n",_p_vel_z.get_p(_vel_error.z));
+        // is_dbg_printf = false;
         // printf("=========AC_PosControl::run_z_controller=====_accel_desired.z:%f=====\r\n",_accel_desired.z);
     }
 
@@ -655,9 +657,9 @@ void AC_PosControl::run_z_controller(float alt_feed)
         control_log_start = false;
     }
 
+    // printf("=========AC_PosControl::run_z_controller=====thr_out:%f=====\r\n",thr_out);
     if (is_dbg_printf)
     {
-        printf("=========AC_PosControl::run_z_controller=====thr_out:%f=====\r\n",thr_out);
         is_dbg_printf = false;
     }
     // send throttle to attitude controller with angle boost
