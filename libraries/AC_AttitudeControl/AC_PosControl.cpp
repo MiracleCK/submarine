@@ -514,17 +514,19 @@ void AC_PosControl::calc_leash_length_z()
 // vel_up_max, vel_down_max should have already been set before calling this method
 void AC_PosControl::run_z_controller(float alt_feed)
 {
+    printf("============================\r\n");
+    
     float curr_alt = _inav.get_altitude() + alt_feed;
 
     // clear position limit flags
     _limit.pos_up = false;
     _limit.pos_down = false;
 
-    // printf("=========AC_PosControl::run_z_controller=====_pos_target.z:%f=====\r\n",_pos_target.z);
-    // printf("=========AC_PosControl::run_z_controller=====curr_alt:%f=====\r\n",curr_alt);
     // calculate altitude error
     _pos_error.z = _pos_target.z - curr_alt;
-    // printf("=========AC_PosControl::run_z_controller=====_pos_error.z:%f=====\r\n",_pos_error.z);
+    printf("************AC_PosControl::run_z_controller::_pos_target.z:%f******\r \n",_pos_target.z);
+    printf("************AC_PosControl::run_z_controller::curr_alt:%f******\r \n",curr_alt);
+    printf("************AC_PosControl::run_z_controller::_pos_error.z:%f******\r \n",_pos_error.z);
 
     // do not let target altitude get too far from current altitude
     if (_pos_error.z > _leash_up_z) {
@@ -540,7 +542,7 @@ void AC_PosControl::run_z_controller(float alt_feed)
 
     // calculate _vel_target.z using from _pos_error.z using sqrt controller
     _vel_target.z = AC_AttitudeControl::sqrt_controller(_pos_error.z, _p_pos_z.kP(), _accel_z_cms, _dt);
-    // printf("=========AC_PosControl::run_z_controller=====_vel_target.z:%f=====\r\n",_vel_target.z);
+    printf("************AC_PosControl::run_z_controller::_vel_target.z:%f******\r \n",_vel_target.z);
 
     // check speed limits
     // To-Do: check these speed limits here or in the pos->rate controller
@@ -563,7 +565,6 @@ void AC_PosControl::run_z_controller(float alt_feed)
     // the following section calculates acceleration required to achieve the velocity target
 
     const Vector3f& curr_vel = _inav.get_velocity();
-    // printf("=========AC_PosControl::run_z_controller=====curr_vel.z:%f=====\r\n",curr_vel.z);
 
     // TODO: remove velocity derivative calculation
     // reset last velocity target to current target
@@ -574,7 +575,10 @@ void AC_PosControl::run_z_controller(float alt_feed)
     // feed forward desired acceleration calculation
     if (_dt > 0.0f) {
         if (!_flags.freeze_ff_z) {
+            // printf("************AC_PosControl::run_z_controller::_vel_target.z:%f******\r \n",_vel_target.z);
+            // printf("************AC_PosControl::run_z_controller::_vel_last.z:%f******\r \n",_vel_last.z);
             _accel_desired.z = (_vel_target.z - _vel_last.z) / _dt;
+            // printf("*******(_dt > 0.0f)*****AC_PosControl::run_z_controller::_accel_desired.z:%f******\r \n",_accel_desired.z);
         } else {
             // stop the feed forward being calculated during a known discontinuity
             _flags.freeze_ff_z = false;
@@ -594,24 +598,26 @@ void AC_PosControl::run_z_controller(float alt_feed)
         _flags.reset_rate_to_accel_z = false;
     } else {
         // calculate rate error and filter with cut off frequency of 2 Hz
+        // printf("*******else*****AC_PosControl::run_z_controller::_vel_target.z:%f******\r \n",_vel_target.z);
+        // printf("*******else*****AC_PosControl::run_z_controller::curr_vel.z:%f******\r \n",curr_vel.z);
         _vel_error.z = _vel_error_filter.apply(_vel_target.z - curr_vel.z, _dt);
+        // printf("*******else*****AC_PosControl::run_z_controller::_vel_error.z:%f******\r \n",_vel_error.z);
     }
 
     _accel_target.z = _p_vel_z.get_p(_vel_error.z);
 
+    // printf("*******************AC_PosControl::run_z_controller::_accel_desired.z:%f*********\r \n",_accel_desired.z);
     _accel_target.z += _accel_desired.z;
-    // printf("=========AC_PosControl::run_z_controller=====_accel_target.z:%f=====\r\n",_accel_target.z);
-    if (is_dbg_printf)
-    {
-        // is_dbg_printf = false;
-        // printf("=========AC_PosControl::run_z_controller=====_accel_desired.z:%f=====\r\n",_accel_desired.z);
-    }
+    printf("*******************AC_PosControl::run_z_controller::_accel_target.z:%f*********\r \n",_accel_target.z);
+
 
     // the following section calculates a desired throttle needed to achieve the acceleration target
     float z_accel_meas;         // actual acceleration
 
     // Calculate Earth Frame Z acceleration
     z_accel_meas = -(_ahrs.get_accel_ef_blended().z + GRAVITY_MSS) * 100.0f;
+    // printf("**************AC_PosControl::run_z_controller::_ahrs.get_accel_ef_blended().z:%f********* \n",_ahrs.get_accel_ef_blended().z);
+    // printf("*******************AC_PosControl::run_z_controller::z_accel_meas:%f*********\r \n",z_accel_meas);
 
     // ensure imax is always large enough to overpower hover throttle
     if (_motors.get_throttle_hover() * 1000.0f > _pid_accel_z.imax()) {
@@ -619,11 +625,6 @@ void AC_PosControl::run_z_controller(float alt_feed)
     }
 
     float thr_out;
-    if (is_dbg_printf)
-    {
-        printf("=========AC_PosControl::run_z_controller=====_accel_target.z:%f=====\r\n",_accel_target.z);
-        printf("=========AC_PosControl::run_z_controller=====z_accel_meas:%f=====\r\n",z_accel_meas);
-    }
     if (_vibe_comp_enabled) {
         _flags.freeze_ff_z = true;
         _accel_desired.z = 0.0f;
@@ -635,11 +636,13 @@ void AC_PosControl::run_z_controller(float alt_feed)
         }
         thr_out = POSCONTROL_VIBE_COMP_P_GAIN * thr_per_accelz_cmss * _accel_target.z + _pid_accel_z.get_i() * 0.001f;
     } else {
-        // printf("====111=====AC_PosControl::run_z_controller=====_pid_accel_z.update_all=====\r\n");
         thr_out = _pid_accel_z.update_all(_accel_target.z, z_accel_meas, (_motors.limit.throttle_lower || _motors.limit.throttle_upper)) * 0.001f;
-        // printf("====222=====AC_PosControl::run_z_controller=====_pid_accel_z.update_all=====\r\n");
+        // printf("******111.2*************AC_PosControl::run_z_controller::_motors.thr_out:%f*********\r \n",thr_out);
     }
+
+    // printf("*******************AC_PosControl::run_z_controller::_motors.get_throttle_hover:%f*********\r \n",_motors.get_throttle_hover());
     thr_out += _motors.get_throttle_hover();
+    // printf("******222*************AC_PosControl::run_z_controller::_motors.thr_out:%f*********\r \n",thr_out);
 
     if (control_log_start) {
         AP::logger().Write("CTLZ", "TimeUS,POS_T,POS_A,POS_E,VEL_T,VEL_A,VEL_E,ACC_T,ACC_A,THR_OUT", "Qfffffffff", 
@@ -657,13 +660,11 @@ void AC_PosControl::run_z_controller(float alt_feed)
         control_log_start = false;
     }
 
-    // printf("=========AC_PosControl::run_z_controller=====thr_out:%f=====\r\n",thr_out);
-    if (is_dbg_printf)
-    {
-        is_dbg_printf = false;
-    }
+    // thr_out = 0;
+
     // send throttle to attitude controller with angle boost
     _attitude_control.set_throttle_out(thr_out, true, POSCONTROL_THROTTLE_CUTOFF_FREQ);
+    // printf("*******************AC_PosControl::run_z_controller::_attitude_control.set_throttle_out:%f*********\r \n",thr_out);
 
     // _speed_down_cms is checked to be non-zero when set
     float error_ratio = _vel_error.z/_speed_down_cms;
