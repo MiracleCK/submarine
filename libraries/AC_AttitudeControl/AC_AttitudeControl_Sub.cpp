@@ -284,6 +284,7 @@ void AC_AttitudeControl_Sub::set_throttle_out(float throttle_in, bool apply_angl
         // Clear angle_boost for logging purposes
         _angle_boost = 0.0f;
     }
+    // printf("************AC_AttitudeControl_Sub::update_althold_lean_angle_max::throttle_in:%f**********\r \n",throttle_in);
     _motors.set_throttle(throttle_in);
     _motors.set_throttle_avg_max(get_throttle_avg_max(MAX(throttle_in, _throttle_in)));
 }

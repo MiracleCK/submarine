@@ -697,6 +697,7 @@ void AP_MotorsMulticopter::output_logic()
         // set and increment ramp variables
         _spin_up_ratio = 1.0f;
         _throttle_thrust_max -= 1.0f / (_spool_up_time * _loop_rate);
+        printf("************SpoolState::SPOOLING_DOWN _throttle_thrust_max:%f**********\r \n",_throttle_thrust_max);
 
         // constrain ramp value and update mode
         if (_throttle_thrust_max <= 0.0f) {

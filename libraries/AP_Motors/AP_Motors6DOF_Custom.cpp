@@ -66,7 +66,7 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
     // corrected_roll = 0;
 
     // if (is_param_print() && is_dbg_motor) {
-    if(0) {
+    if(1) {
         printf("============================\r\n");
         // printf("thrust: roll %2.4f pitch %2.4f yaw %2.4f\r\n", roll_thrust, pitch_thrust, yaw_thrust);
         printf("thurst: forward = %2.4f lateral = %2.4f throttle = %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
@@ -82,7 +82,8 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
         lateral_thrust = thrusts_decomped.y;
         throttle_thrust = thrusts_decomped.z;
 
-        if (is_param_print() && is_dbg_motor) {
+        // if (is_param_print() && is_dbg_motor) {
+        if(1) {
             printf("thrust decomposition: degree roll %4.2f pitch %4.2f \r\n", ToDeg(euler_rad.x), ToDeg(euler_rad.y));
             printf("thrust decomposition: forward %2.4f lateral %2.4f throttle %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
         }
@@ -100,12 +101,12 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
 		if(AP_HAL::millis() - _startup_ms > 1000) {
 			_startup_ms = AP_HAL::millis();
             hal.console->printf("******before********limited throttle output*************\n");
-			hal.console->printf("roll_thrust %.02f\n", roll_thrust);
-			hal.console->printf("pitch_thrust %.02f\n", pitch_thrust);
-			hal.console->printf("yaw_thrust %.02f\n", yaw_thrust);
-			hal.console->printf("throttle_thrust %.02f\n", throttle_thrust);
-			hal.console->printf("forward_thrust %.02f\n", forward_thrust);
-			hal.console->printf("lateral_thrust %.02f\n", lateral_thrust);
+			hal.console->printf("roll_thrust %.03f\n", roll_thrust);
+			hal.console->printf("pitch_thrust %.03f\n", pitch_thrust);
+			hal.console->printf("yaw_thrust %.03f\n", yaw_thrust);
+			hal.console->printf("throttle_thrust %.03f\n", throttle_thrust);
+			hal.console->printf("forward_thrust %.03f\n", forward_thrust);
+			hal.console->printf("lateral_thrust %.03f\n", lateral_thrust);
 		}
 	}
 
@@ -179,12 +180,12 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
 		if(AP_HAL::millis() - _startup_ms > 1000) {
 			_startup_ms = AP_HAL::millis();
             hal.console->printf("*******after**********limited throttle output*************\n");
-			hal.console->printf("roll_thrust %.02f\n", roll_thrust);
-			hal.console->printf("pitch_thrust %.02f\n", pitch_thrust);
-			hal.console->printf("yaw_thrust %.02f\n", yaw_thrust);
-			hal.console->printf("throttle_thrust %.02f\n", throttle_thrust);
-			hal.console->printf("forward_thrust %.02f\n", forward_thrust);
-			hal.console->printf("lateral_thrust %.02f\n", lateral_thrust);
+			hal.console->printf("roll_thrust %.03f\n", roll_thrust);
+			hal.console->printf("pitch_thrust %.03f\n", pitch_thrust);
+			hal.console->printf("yaw_thrust %.03f\n", yaw_thrust);
+			hal.console->printf("throttle_thrust %.03f\n", throttle_thrust);
+			hal.console->printf("forward_thrust %.03f\n", forward_thrust);
+			hal.console->printf("lateral_thrust %.03f\n", lateral_thrust);
 		}
 	}
 
@@ -226,7 +227,7 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
 
 			for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
 		        if (motor_enabled[i]) {
-		            hal.console->printf("_thrust_rpyt_out %d: %.02f\n", i, _thrust_rpyt_out[i]);
+		            hal.console->printf("_thrust_rpyt_out %d: %.03f\n", i, _thrust_rpyt_out[i]);
 		        }
 		    }
 		}

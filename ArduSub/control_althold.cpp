@@ -432,6 +432,7 @@ void Sub::althold_run_rate()
 	        }
 
 	        pos_control.update_z_controller();
+			// printf("************Sub::althold_run_rate::} else { // hold z**********\r \n");
 	    }
 	}
 
