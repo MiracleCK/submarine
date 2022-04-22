@@ -43,6 +43,9 @@ void getInertia (const WbDeviceTag inertialUnit, const double *northDirection, c
   else
   {
     sprintf(buf,"\"roll\": %f,\"pitch\": %f,\"yaw\": %f",inertial_directions[1], -inertial_directions[0], inertial_directions[2]);
+    // sprintf(buf,"[%f, %f, %f]",0.01, 0.01, 0.01);
+    printf("===========getInertia============\n");
+    printf("%s\n", buf);
   }
   
     return ;
@@ -127,6 +130,7 @@ void getGyro (const WbDeviceTag gyro, const double *northDirection, char *buf)
     else
     {
       sprintf(buf,"[%f, %f, %f]",g[0], g[2], g[1]);
+      // sprintf(buf,"[%f, %f, %f]",0.0, 0.0, 0.0);
       // printf("===========getGyro============\n");
       // printf("%s\n", buf);
     }
@@ -147,8 +151,8 @@ void getLinearVelocity (WbNodeRef nodeRef, const double *northDirection,  char *
       else
       {
         sprintf (buf,"[%f, %f, %f]",  linear_velocity[2], -linear_velocity[0], linear_velocity[1]);
-        printf("===========getLinearVelocity============\n");
-        printf("%s\n", buf);
+        // printf("===========getLinearVelocity============\n");
+        // printf("%s\n", buf);
       } 
     }
     

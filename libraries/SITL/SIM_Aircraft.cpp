@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <unistd.h>
-
+#include <iostream>
 
 #if defined(__CYGWIN__) || defined(__CYGWIN64__)
 #include <windows.h>
@@ -98,8 +98,8 @@ void Aircraft::set_start_location(const Location &start_loc, const float start_y
     location = home;
     ground_level = home.alt * 0.01f;
 
-    dcm.from_euler(0.0f, 0.0f, radians(home_yaw));
-    // printf("---000-------set_start_location------radians(home_yaw):----%f\n",radians(home_yaw));
+    // dcm.from_euler(0.0f, 0.0f, radians(home_yaw));
+    printf("---000-------set_start_location------radians(home_yaw):----%f\n",radians(home_yaw));
 
 }
 
@@ -319,7 +319,7 @@ double Aircraft::rand_normal(double mean, double stddev)
 */
 void Aircraft::fill_fdm(struct sitl_fdm &fdm)
 {
-    // printf("-----Aircraft::fill_fdm(use_smoothing) %d------\n",use_smoothing);
+    // printf("***************Aircraft::fill_fdm**********\r \n");
     if (use_smoothing) {
         smooth_sensors();
     }
@@ -342,6 +342,9 @@ void Aircraft::fill_fdm(struct sitl_fdm &fdm)
     fdm.rollRate  = degrees(gyro.x);
     fdm.pitchRate = degrees(gyro.y);
     fdm.yawRate   = degrees(gyro.z);
+    // printf("***********Aircraft::fill_fdm fdm.rollRate:%f**********\r \n",fdm.rollRate);
+    // printf("***********Aircraft::fill_fdm fdm.pitchRate:%f**********\r \n",fdm.pitchRate);
+    // printf("***********Aircraft::fill_fdm fdm.yawRate:%f**********\r \n",fdm.yawRate);
     fdm.angAccel.x = degrees(ang_accel.x);
     fdm.angAccel.y = degrees(ang_accel.y);
     fdm.angAccel.z = degrees(ang_accel.z);
@@ -360,7 +363,6 @@ void Aircraft::fill_fdm(struct sitl_fdm &fdm)
     fdm.range = range;
     memcpy(fdm.rcin, rcin, rcin_chan_count * sizeof(float));
     fdm.bodyMagField = mag_bf;
-    // printf("************************Aircraft::fill_fdm**********\r \n");
 
     // copy laser scanner results
     fdm.scanner.points = scanner.points;
@@ -734,9 +736,18 @@ void Aircraft::extrapolate_sensors(float delta_time)
     Vector3f accel_earth = dcm * accel_body;
     accel_earth.z += GRAVITY_MSS;
 
-    dcm.rotate(gyro * delta_time);
-    dcm.normalize();
-
+    // printf("************Aircraft::extrapolate_sensors**********\r \n");
+    // printf("************dcm[]:**********\r \n");
+    // for (size_t i = 0; i < 3; i++)
+    // {
+    //         printf("************%f %f %f**********\r \n",dcm[i][0], dcm[i][1], dcm[i][2]);
+    // }    
+    // dcm.rotate(gyro * delta_time);
+    // printf("********************************************************************\r \n");
+    // printf("***********Aircraft::extrapolate_sensors gyro.x:%f**********\r \n",gyro.x);
+    // printf("***********Aircraft::extrapolate_sensors gyro.y:%f**********\r \n",gyro.y);
+    // printf("***********Aircraft::extrapolate_sensors gyro.z:%f**********\r \n",gyro.z);
+    // dcm.normalize();
     // work out acceleration as seen by the accelerometers. It sees the kinematic
     // acceleration (ie. real movement), plus gravity
     accel_body = dcm.transposed() * (accel_earth + Vector3f(0,0,-GRAVITY_MSS));

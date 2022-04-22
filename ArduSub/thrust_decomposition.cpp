@@ -261,6 +261,13 @@ Vector3f Sub::thrust_decomposition_ned(Vector3f& euler_rad, Vector3f thrusts, fl
     Matrix3f rot_yaw = Matrix3f(cy, -sy, 0, sy, cy, 0, 0, 0, 1);
 
     rot = rot.transposed() * rot_yaw;
+    // rot = Matrix3f(1, 0, 0, 0, 1, 0, 0, 0, 1);
+    // printf("************Sub::thrust_decomposition_ned**********\r \n");
+    // printf("************rot[]:**********\r \n");
+    // for (size_t i = 0; i < 3; i++)
+    // {
+    //         printf("************%f %f %f**********\r \n",rot[i][0], rot[i][1], rot[i][2]);
+    // }    
 
     thrusts.z += throttle_bf;
     return thrust_decomp_ned(rot, thrusts);

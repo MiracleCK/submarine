@@ -43,6 +43,7 @@ gimbal_mode_t SoloGimbal::get_mode()
 
 void SoloGimbal::receive_feedback(mavlink_channel_t chan, const mavlink_message_t &msg)
 {
+    printf("************SoloGimbal::receive_feedback**********\r \n");
     mavlink_gimbal_report_t report_msg;
     mavlink_msg_gimbal_report_decode(&msg, &report_msg);
     uint32_t tnow_ms = AP_HAL::millis();

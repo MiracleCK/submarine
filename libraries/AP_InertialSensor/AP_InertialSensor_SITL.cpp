@@ -237,7 +237,10 @@ void AP_InertialSensor_SITL::generate_gyro(uint8_t instance)
         gyro.x *= (1 + scale.x * 0.01f);
         gyro.y *= (1 + scale.y * 0.01f);
         gyro.z *= (1 + scale.z * 0.01f);
-
+        
+        // printf("***********AP_InertialSensor_SITL::generate_gyro gyro.x:%f**********\r \n",gyro.x);
+        // printf("***********AP_InertialSensor_SITL::generate_gyro gyro.y:%f**********\r \n",gyro.y);
+        // printf("***********AP_InertialSensor_SITL::generate_gyro gyro.z:%f**********\r \n",gyro.z);
         _rotate_and_correct_gyro(gyro_instance[instance], gyro);
         gyro_accum += gyro;
         _notify_new_gyro_sensor_rate_sample(instance, gyro);

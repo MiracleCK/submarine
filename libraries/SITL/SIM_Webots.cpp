@@ -634,6 +634,7 @@ void Webots::update(const struct sitl_input &input)
 
         // convert from state variables to ardupilot conventions
         dcm.from_euler(state.pose.roll, state.pose.pitch, -state.pose.yaw);
+        // dcm.from_euler(0,0,0);
         // printf("-----dcm.from_euler(state.pose.roll, state.pose.pitch, -state.pose.yaw)------\n");
 
         gyro = Vector3f(state.imu.angular_velocity[0] ,

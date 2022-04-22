@@ -377,6 +377,14 @@ void SITL_State::_parse_command_line(int argc, char * const argv[])
     }
 
     for (uint8_t i=0; i < ARRAY_SIZE(model_constructors); i++) {
+        // sitl_model = model_constructors[i].constructor(model_str);
+        // printf("************SITL_cmdline::model_constructors[i].name %s*********\r \n",model_constructors[i].name);
+        // printf("************SITL_cmdline::model_constructors**********\r \n");
+        // printf("************dcm[]:**********\r \n");
+        // for (size_t j = 0; j < 3; j++)
+        // {
+        //     printf("************%f %f %f**********\r \n",sitl_model->dcm[j][0], sitl_model->dcm[j][1], sitl_model->dcm[j][2]);
+        // }    
         if (strncasecmp(model_constructors[i].name, model_str, strlen(model_constructors[i].name)) == 0) {
             // printf("Creating model %f,%f,%f,%f at speed %.1f\n", opos.lat, opos.lng, opos.alt, opos.hdg, speedup);
             sitl_model = model_constructors[i].constructor(model_str);

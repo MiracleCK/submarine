@@ -686,6 +686,7 @@ void AC_AttitudeControl::input_angle_step_bf_roll_pitch_yaw(float roll_angle_ste
 // Calculates the body frame angular velocities to follow the target attitude
 void AC_AttitudeControl::attitude_controller_run_quat()
 {
+    // printf("************AC_AttitudeControl::attitude_controller_run_quat**********\r \n");
     // Retrieve quaternion vehicle attitude
     Quaternion attitude_vehicle_quat;
     _ahrs.get_quat_body_to_ned(attitude_vehicle_quat);
@@ -744,6 +745,7 @@ void AC_AttitudeControl::attitude_controller_run_quat()
 // The first rotation corrects the thrust vector and the second rotation corrects the heading vector.
 void AC_AttitudeControl::thrust_heading_rotation_angles(Quaternion& att_to_quat, const Quaternion& att_from_quat, Vector3f& att_diff_angle, float& thrust_vec_dot)
 {
+    // printf("************AC_AttitudeControl::thrust_heading_rotation_angles******arm****\r \n");    
     Matrix3f att_to_rot_matrix; // rotation from the target body frame to the inertial frame.
     att_to_quat.rotation_matrix(att_to_rot_matrix);
     Vector3f att_to_thrust_vec = att_to_rot_matrix * Vector3f(0.0f, 0.0f, 1.0f);
