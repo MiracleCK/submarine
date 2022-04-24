@@ -98,7 +98,6 @@ void Sub::althold_run()
         last_pilot_yaw_input_ms = tnow; // time when pilot last changed heading
 
     } else { // hold current heading
-
         // this check is required to prevent bounce back after very fast yaw maneuvers
         // the inertia of the vehicle causes the heading to move slightly past the point when pilot input actually stopped
         if (tnow < last_pilot_yaw_input_ms + 250) { // give 250ms to slow down, then set target heading

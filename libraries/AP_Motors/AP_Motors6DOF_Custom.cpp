@@ -55,7 +55,7 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
     throttle_thrust = get_throttle_bidirectional();
     forward_thrust = _forward_in;
     lateral_thrust = _lateral_in;
-    // printf("pitch_thrust: _pitch_in %2.4f _pitch_in_ff %2.4f\r\n", _pitch_in, _pitch_in_ff);
+    // printf("pitch_thrust: _pitch_in %2.5f _pitch_in_ff %2.5f\r\n", _pitch_in, _pitch_in_ff);
 
     // test real data
     // roll_thrust = 0.00;
@@ -66,10 +66,10 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
     // corrected_roll = 0;
 
     // if (is_param_print() && is_dbg_motor) {
-    if(1) {
+    if(0) {
         printf("============================\r\n");
         printf("thrust: roll %2.4f pitch %2.4f yaw %2.4f\r\n", roll_thrust, pitch_thrust, yaw_thrust);
-        printf("thurst: forward = %2.4f lateral = %2.4f throttle = %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
+        // printf("thurst: forward = %2.4f lateral = %2.4f throttle = %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
     }
 
     Vector3f thrusts(forward_thrust, lateral_thrust, throttle_thrust);
@@ -83,15 +83,15 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
         throttle_thrust = thrusts_decomped.z;
 
         // if (is_param_print() && is_dbg_motor) {
-        if(1) {
+        if(0) {
             printf("thrust decomposition: degree roll %4.2f pitch %4.2f \r\n", ToDeg(euler_rad.x), ToDeg(euler_rad.y));
-            printf("thrust decomposition: forward %2.4f lateral %2.4f throttle %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
+            // printf("thrust decomposition: forward %2.4f lateral %2.4f throttle %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
         }
     } else {
         throttle_thrust = _throttle_in_bf;
     }
 
-    if(1) {
+    if(0) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {

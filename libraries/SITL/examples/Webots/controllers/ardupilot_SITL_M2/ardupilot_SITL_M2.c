@@ -213,20 +213,44 @@ void update_controls()
     LINEAR_THRUST
       we also want throttle to be linear with thrust so we use sqrt to calculate omega from input.
    */
-  static float factor = 1.0 / 2200 * 1.0f;
+  static float factor = 1.0 / 90 * 1.0f;
   // printf("Motors factor %f \n", factor );
   static float offset = 0.0f;
   static float v[MOTOR_NUM];
+  int vf[MOTOR_NUM];
 
 #ifdef LINEAR_THRUST
-  v[0] = sqrt(state.motors.w) * factor + offset;
-  v[1] = sqrt(state.motors.x) * factor + offset;
-  v[2] = sqrt(state.motors.y) * factor + offset;
-  v[3] = sqrt(state.motors.z) * factor + offset;
-  v[4] = sqrt(state.motors.a) * factor + offset;
-  v[5] = sqrt(state.motors.b) * factor + offset;
-  v[6] = sqrt(state.motors.c) * factor + offset;
-  v[7] = sqrt(state.motors.d) * factor + offset;
+  // v[0] = sqrt(state.motors.w) * factor + offset;
+  // v[1] = sqrt(state.motors.x) * factor + offset;
+  // v[2] = sqrt(state.motors.y) * factor + offset;
+  // v[3] = sqrt(state.motors.z) * factor + offset;
+  // v[4] = sqrt(state.motors.a) * factor + offset;
+  // v[5] = sqrt(state.motors.b) * factor + offset;
+  // v[6] = sqrt(state.motors.c) * factor + offset;
+  // v[7] = sqrt(state.motors.d) * factor + offset;
+  v[0] = -1 * (state.motors.w);
+  v[1] =  1 * (state.motors.x);
+  v[2] = -1 * (state.motors.y);
+  v[3] =  1 * (state.motors.z);
+  v[4] = -1 * (state.motors.a);
+  v[5] =  1 * (state.motors.b);
+  v[6] =  1 * (state.motors.c);
+  v[7] = -1 * (state.motors.d);
+
+  for (int i = 0; i < MOTOR_NUM; i++)
+  {
+    vf[i] = 1;
+    if (v[i] < 0)
+    {
+      v[i] = -v[i];
+      vf[i] = -1;
+    }    
+  }
+  
+  for (int i = 0; i < MOTOR_NUM; i++)
+  {
+    v[i] = vf[i] * sqrt(v[i]) * factor + offset;
+  }
 #else
   v[0] = -1 * (state.motors.w) * factor + offset;
   v[1] =  1 * (state.motors.x) * factor + offset;

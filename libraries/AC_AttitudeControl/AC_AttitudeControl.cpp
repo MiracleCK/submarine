@@ -239,6 +239,7 @@ void AC_AttitudeControl::input_quaternion(Quaternion attitude_desired_quat)
 // Command an euler roll and pitch angle and an euler yaw rate with angular velocity feedforward and smoothing
 void AC_AttitudeControl::input_euler_angle_roll_pitch_euler_rate_yaw(float euler_roll_angle_cd, float euler_pitch_angle_cd, float euler_yaw_rate_cds)
 {
+    printf("************AC_AttitudeControl::input_euler_angle_roll_pitch_euler_rate_yaw**********\r \n");
     // Convert from centidegrees on public interface to radians
     float euler_roll_angle = radians(euler_roll_angle_cd * 0.01f);
     float euler_pitch_angle = radians(euler_pitch_angle_cd * 0.01f);

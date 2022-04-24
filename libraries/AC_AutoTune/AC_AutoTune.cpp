@@ -1,6 +1,7 @@
 #include "AC_AutoTune.h"
 #include <GCS_MAVLink/GCS.h>
 #include <AP_Scheduler/AP_Scheduler.h>
+#include <cstdio>
 
 /*
  * autotune support for multicopters
@@ -342,6 +343,7 @@ void AC_AutoTune::do_gcs_announcements()
 // should be called at 100hz or more
 void AC_AutoTune::run()
 {
+    printf("************AC_AutoTune::run**********\r \n");
     // initialize vertical speeds and acceleration
     init_z_limits();
 
