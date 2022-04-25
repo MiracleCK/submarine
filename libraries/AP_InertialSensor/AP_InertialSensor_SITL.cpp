@@ -172,6 +172,7 @@ void AP_InertialSensor_SITL::generate_accel(uint8_t instance)
  */
 void AP_InertialSensor_SITL::generate_gyro(uint8_t instance)
 {
+    printf("=======================AP_InertialSensor_SITL::generate_gyro=======================\r \n");
     Vector3f gyro_accum;
     uint8_t nsamples = enable_fast_sampling(gyro_instance[instance]) ? 8 : 1;
     for (uint8_t j = 0; j < nsamples; j++) {
@@ -237,7 +238,7 @@ void AP_InertialSensor_SITL::generate_gyro(uint8_t instance)
         gyro.x *= (1 + scale.x * 0.01f);
         gyro.y *= (1 + scale.y * 0.01f);
         gyro.z *= (1 + scale.z * 0.01f);
-        
+         
         // printf("***********AP_InertialSensor_SITL::generate_gyro gyro.x:%f**********\r \n",gyro.x);
         // printf("***********AP_InertialSensor_SITL::generate_gyro gyro.y:%f**********\r \n",gyro.y);
         // printf("***********AP_InertialSensor_SITL::generate_gyro gyro.z:%f**********\r \n",gyro.z);
@@ -246,6 +247,7 @@ void AP_InertialSensor_SITL::generate_gyro(uint8_t instance)
         _notify_new_gyro_sensor_rate_sample(instance, gyro);
     }
     gyro_accum /= nsamples;
+    printf("************generate_gyro:gyro_accum:[%f %f %f]**********\r \n", gyro_accum.x, gyro_accum.y, gyro_accum.z);
     _notify_new_gyro_raw_sample(gyro_instance[instance], gyro_accum);
 }
 

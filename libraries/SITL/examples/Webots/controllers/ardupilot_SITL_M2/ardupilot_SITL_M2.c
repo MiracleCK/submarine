@@ -574,7 +574,7 @@ void initialize(int argc, char *argv[])
   WbFieldRef children, field;
   int n, i;
   root = wb_supervisor_node_get_root();
-  children = wb_supervisor_node_get_field(root, "children");
+  children = wb_supervisor_node_get_field(root, "children");    //查找WbFieldRef在指定的节点中
   n = wb_supervisor_field_get_count(children);
   printf("This world contains %d nodes:\n", n);
   for (i = 0; i < n; i++)
@@ -589,7 +589,7 @@ void initialize(int argc, char *argv[])
 
   node = wb_supervisor_field_get_mf_node(children, 0);
   field = wb_supervisor_node_get_field(node, "northDirection");
-  northDirection = wb_supervisor_field_get_sf_vec3f(field);
+  northDirection = wb_supervisor_field_get_sf_vec3f(field);     //用于读取指定字段的最新值
 
   if (northDirection[0] == 1)
   {

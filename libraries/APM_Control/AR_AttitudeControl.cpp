@@ -607,10 +607,10 @@ float AR_AttitudeControl::get_throttle_out_from_pitch(float desired_pitch, float
     // add feed forward from speed
     float output = vehicle_speed_pct * 0.01f * _pitch_to_throttle_speed_ff;
 
-    printf("=========333==========AR_AttitudeControl::get_throttle_out_from_pitch==================");
     output += _pitch_to_throttle_pid.update_all(desired_pitch, _ahrs.pitch, (motor_limit_low || motor_limit_high));
     output += _pitch_to_throttle_pid.get_ff();
-
+    printf("************AR_AttitudeControl::get_throttle_out_from_pitch**********\r \n");
+    
     // constrain and return final output
     return output;
 }
@@ -644,7 +644,6 @@ float AR_AttitudeControl::get_sail_out_from_heel(float desired_heel, float dt)
     // set PID's dt
     _sailboat_heel_pid.set_dt(dt);
 
-    printf("=========444==========AR_AttitudeControl::get_sail_out_from_heel==================");
     _sailboat_heel_pid.update_all(desired_heel, fabsf(_ahrs.roll));
 
     // get feed-forward

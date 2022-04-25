@@ -270,6 +270,7 @@ void AC_AttitudeControl_Sub::update_althold_lean_angle_max(float throttle_in)
 
     float althold_lean_angle_max = acosf(constrain_float(_throttle_in/(AC_ATTITUDE_CONTROL_ANGLE_LIMIT_THROTTLE_MAX * thr_max), 0.0f, 1.0f));
     _althold_lean_angle_max = _althold_lean_angle_max + (_dt/(_dt+_angle_limit_tc))*(althold_lean_angle_max-_althold_lean_angle_max);
+    // printf("************AC_AttitudeControl_Sub::update_althold_lean_angle_max _althold_lean_angle_max:%f**********\r \n", _althold_lean_angle_max);
 }
 
 void AC_AttitudeControl_Sub::set_throttle_out(float throttle_in, bool apply_angle_boost, float filter_cutoff)
@@ -339,6 +340,8 @@ void AC_AttitudeControl_Sub::rate_controller_run()
     Vector3f gyro_latest = _ahrs.get_gyro_latest();
     _motors.set_roll(get_rate_roll_pid().update_all(_rate_target_ang_vel.x, gyro_latest.x, _motors.limit.roll));
     // printf("=========111==========AC_AttitudeControl_Sub::rate_controller_run================== \r\n");
+    // printf("************AC_AttitudeControl_Sub::rate_controller_run _rate_target_ang_vel.y:%f**********\r \n", _rate_target_ang_vel.y);
+    // printf("************AC_AttitudeControl_Sub::rate_controller_run gyro_latest.y:%f**********\r \n", gyro_latest.y);
     _motors.set_pitch(get_rate_pitch_pid().update_all(_rate_target_ang_vel.y, gyro_latest.y, _motors.limit.pitch));
     // printf("AC_AttitudeControl_Sub::rate_controller_run()===== get_rate_pitch_pid().update_all(_rate_target_ang_vel.y, gyro_latest.y, _motors.limit.pitch) %2.4f \r\n", get_rate_pitch_pid().update_all(_rate_target_ang_vel.y, gyro_latest.y, _motors.limit.pitch));
     // printf("=========222==========AC_AttitudeControl_Sub::rate_controller_run================== \r\n");

@@ -239,7 +239,7 @@ void AC_AttitudeControl::input_quaternion(Quaternion attitude_desired_quat)
 // Command an euler roll and pitch angle and an euler yaw rate with angular velocity feedforward and smoothing
 void AC_AttitudeControl::input_euler_angle_roll_pitch_euler_rate_yaw(float euler_roll_angle_cd, float euler_pitch_angle_cd, float euler_yaw_rate_cds)
 {
-    printf("************AC_AttitudeControl::input_euler_angle_roll_pitch_euler_rate_yaw**********\r \n");
+    // printf("************AC_AttitudeControl::input_euler_angle_roll_pitch_euler_rate_yaw**********\r \n");
     // Convert from centidegrees on public interface to radians
     float euler_roll_angle = radians(euler_roll_angle_cd * 0.01f);
     float euler_pitch_angle = radians(euler_pitch_angle_cd * 0.01f);
@@ -687,7 +687,7 @@ void AC_AttitudeControl::input_angle_step_bf_roll_pitch_yaw(float roll_angle_ste
 // Calculates the body frame angular velocities to follow the target attitude
 void AC_AttitudeControl::attitude_controller_run_quat()
 {
-    // printf("************AC_AttitudeControl::attitude_controller_run_quat**********\r \n");
+    printf("=======================AC_AttitudeControl::attitude_controller_run_quat=======================\r \n");
     // Retrieve quaternion vehicle attitude
     Quaternion attitude_vehicle_quat;
     _ahrs.get_quat_body_to_ned(attitude_vehicle_quat);
@@ -703,6 +703,9 @@ void AC_AttitudeControl::attitude_controller_run_quat()
     // todo: this should probably be a matrix that couples yaw as well.
     _rate_target_ang_vel.x += constrain_float(attitude_error_vector.y, -M_PI / 4, M_PI / 4) * _ahrs.get_gyro().z;
     _rate_target_ang_vel.y += -constrain_float(attitude_error_vector.x, -M_PI / 4, M_PI / 4) * _ahrs.get_gyro().z;
+    // printf("************AC_AttitudeControl::attitude_controller_run_quat _rate_target_ang_vel.x:%f**********\r \n", _rate_target_ang_vel.x);
+    // printf("************AC_AttitudeControl::attitude_controller_run_quat _rate_target_ang_vel.y:%f**********\r \n", _rate_target_ang_vel.y);
+    // printf("************AC_AttitudeControl::attitude_controller_run_quat _rate_target_ang_vel.z:%f**********\r \n", _rate_target_ang_vel.z);
 
     ang_vel_limit(_rate_target_ang_vel, radians(_ang_vel_roll_max), radians(_ang_vel_pitch_max), radians(_ang_vel_yaw_max));
 
@@ -724,6 +727,7 @@ void AC_AttitudeControl::attitude_controller_run_quat()
     } else {
         _rate_target_ang_vel.x += desired_ang_vel_quat.q2;
         _rate_target_ang_vel.y += desired_ang_vel_quat.q3;
+        // printf("****else********AC_AttitudeControl::attitude_controller_run_quat _rate_target_ang_vel.y:%f**********\r \n", _rate_target_ang_vel.y);
         _rate_target_ang_vel.z += desired_ang_vel_quat.q4;
     }
 
@@ -740,6 +744,7 @@ void AC_AttitudeControl::attitude_controller_run_quat()
 
     // Record error to handle EKF resets
     _attitude_ang_error = attitude_vehicle_quat.inverse() * _attitude_target_quat;
+    // printf("************attitude_controller_run_quat::_attitude_ang_error:[%f %f %f %f]**********\r \n", _attitude_ang_error.q1, _attitude_ang_error.q2, _attitude_ang_error.q3, _attitude_ang_error.q4);
 }
 
 // thrust_heading_rotation_angles - calculates two ordered rotations to move the att_from_quat quaternion to the att_to_quat quaternion.
@@ -790,6 +795,7 @@ void AC_AttitudeControl::thrust_heading_rotation_angles(Quaternion& att_to_quat,
     // calculate the angle error in z (x and y should be zero here).
     yaw_vec_correction_quat.to_axis_angle(rotation);
     att_diff_angle.z = rotation.z;
+    printf("************AC_AttitudeControl::thrust_heading_rotation_angles******att_diff_angle[%f %f %f]****\r \n", att_diff_angle.x, att_diff_angle.y, att_diff_angle.z);    
 
     // Todo: Limit roll an pitch error based on output saturation and maximum error.
 

@@ -23,6 +23,7 @@
 #include "AP_InertialSensor_BMI055.h"
 #include "AP_InertialSensor_BMI088.h"
 #include "AP_InertialSensor_Invensensev2.h"
+#include <cstdio>
 
 /* Define INS_TIMING_DEBUG to track down scheduling issues with the main loop.
  * Output is on the debug console. */
@@ -1491,8 +1492,10 @@ check_sample:
  */
 bool AP_InertialSensor::get_delta_angle(uint8_t i, Vector3f &delta_angle) const
 {
+    // printf("************AP_InertialSensor::get_delta_angle uint8_t i:[%d]**********\r \n", i);
     if (_delta_angle_valid[i]) {
         delta_angle = _delta_angle[i];
+        // printf("************AP_InertialSensor::get_delta_angle Vector3f delta_angle:[%f %f %f]**********\r \n", delta_angle.x, delta_angle.y, delta_angle.z);
         return true;
     } else if (get_gyro_health(i)) {
         // provide delta angle from raw gyro, so we use the same code

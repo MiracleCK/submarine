@@ -232,6 +232,12 @@ void AP_InertialSensor_Backend::_notify_new_gyro_raw_sample(uint8_t instance,
         // referenced paper, but in simulation little difference was found between
         // integrating together and integrating separately (see examples/coning.py)
         _imu._delta_angle_acc[instance] += delta_angle + delta_coning;
+
+        printf("=======================AP_InertialSensor_Backend::_notify_new_gyro_raw_sample=======================\r \n");
+        // printf("************instance[%d]:**********\r \n", instance);
+        // printf("************_imu._delta_angle_acc[instance][%f %f %f]:**********\r \n", _imu._delta_angle_acc[instance].x, _imu._delta_angle_acc[instance].y, _imu._delta_angle_acc[instance].z);
+        printf("************delta_angle:[%f %f %f]:**********\r \n", delta_angle.x, delta_angle.y, delta_angle.z);
+        // printf("************delta_coning:[%f %f %f]:**********\r \n", delta_coning.x, delta_coning.y, delta_angle.z);
         _imu._delta_angle_acc_dt[instance] += dt;
 
         // save previous delta angle for coning correction

@@ -91,7 +91,7 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
         throttle_thrust = _throttle_in_bf;
     }
 
-    if(0) {
+    if(1) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {
@@ -100,7 +100,7 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
 
 		if(AP_HAL::millis() - _startup_ms > 1000) {
 			_startup_ms = AP_HAL::millis();
-            hal.console->printf("******before********limited throttle output*************\n");
+            hal.console->printf("******_thrust_decomposition_callback********limited throttle output*************\n");
 			hal.console->printf("roll_thrust %.03f\n", roll_thrust);
 			hal.console->printf("pitch_thrust %.03f\n", pitch_thrust);
 			hal.console->printf("yaw_thrust %.03f\n", yaw_thrust);

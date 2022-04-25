@@ -25,6 +25,7 @@
 #include <GCS_MAVLink/GCS.h>
 #include <AP_GPS/AP_GPS.h>
 #include <AP_Baro/AP_Baro.h>
+#include <cstdio>
 
 extern const AP_HAL::HAL& hal;
 
@@ -165,6 +166,7 @@ AP_AHRS_DCM::matrix_update(float _G_Dt)
         _omega = delta_angle / _G_Dt;
         _omega += _omega_I;
         _dcm_matrix.rotate((_omega + _omega_P + _omega_yaw_P) * _G_Dt);
+        // printf("************AP_AHRS_DCM::matrix_update::_dcm_matrix.rotate**********\r \n");
     }
 }
 
@@ -249,6 +251,7 @@ void AP_AHRS_DCM::reset_attitude(const float &_roll, const float &_pitch, const 
 void
 AP_AHRS_DCM::check_matrix(void)
 {
+    // printf("************AP_AHRS_DCM::check_matrix**********\r \n");
     if (_dcm_matrix.is_nan()) {
         //Serial.printf("ERROR: DCM matrix NAN\n");
         AP_AHRS_DCM::reset(true);
@@ -1013,6 +1016,7 @@ void AP_AHRS_DCM::estimate_wind(void)
 void
 AP_AHRS_DCM::euler_angles(void)
 {
+    // printf("************AP_AHRS_DCM::euler_angles**********\r \n");
     _body_dcm_matrix = _dcm_matrix * get_rotation_vehicle_body_to_autopilot_body();
     _body_dcm_matrix.to_euler(&roll, &pitch, &yaw);
 

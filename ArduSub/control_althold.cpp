@@ -42,6 +42,7 @@ void Sub::althold_run()
         return;
     }
 
+	use_angle_rate = false;
     if (use_angle_rate) {
         althold_run_rate();
         return;
@@ -81,6 +82,7 @@ void Sub::althold_run()
         target_roll = degrees(target_roll);
         target_pitch = degrees(target_pitch);
         target_yaw = degrees(target_yaw);
+		printf("***1*********Sub::althold_run call attitude controller target_pitch:%f**********\r \n", target_pitch);
 
         attitude_control.input_euler_angle_roll_pitch_yaw(target_roll * 1e2f, target_pitch * 1e2f, target_yaw * 1e2f, true);
         return;
@@ -91,6 +93,7 @@ void Sub::althold_run()
     // get pilot's desired yaw rate
     float target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
 
+	// printf("************Sub::althold_run call attitude controller**********\r \n");
     // call attitude controller
     if (!is_zero(target_yaw_rate)) { // call attitude controller with rate yaw determined by pilot input
         attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate);
@@ -105,10 +108,12 @@ void Sub::althold_run()
 
             // call attitude controller with target yaw rate = 0 to decelerate on yaw axis
             attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate);
+			printf("***2*********Sub::althold_run input_euler_angle_roll_pitch_euler_rate_yaw target_pitch:%f**********\r \n", target_pitch);
             last_pilot_heading = ahrs.yaw_sensor; // update heading to hold
 
         } else { // call attitude controller holding absolute absolute bearing
             attitude_control.input_euler_angle_roll_pitch_yaw(target_roll, target_pitch, last_pilot_heading, true);
+			// printf("***3*********Sub::althold_run call attitude controller target_pitch:%f**********\r \n", target_pitch);
         }
     }
 
@@ -140,7 +145,6 @@ void Sub::althold_run()
         }
 
         pos_control.update_z_controller();
-		printf("motor:");// %s\n", buf);
     }
 
     motors.set_forward(channel_forward->norm_input());
@@ -153,13 +157,14 @@ void Sub::get_alt_hold_pilot_desired_angle_rates(int16_t roll_in, int16_t pitch_
 
     // apply circular limit to pitch and roll inputs
     float total_in = norm(pitch_in, roll_in);
+	// printf("************Sub::get_alt_hold_pilot_desired_angle_rates total_in:%f**********\r \n", total_in);
 
     if (total_in > ROLL_PITCH_INPUT_MAX) {
         float ratio = (float)ROLL_PITCH_INPUT_MAX / total_in;
         roll_in *= ratio;
         pitch_in *= ratio;
     }
-
+	// printf("************Sub::get_alt_hold_pilot_desired_angle_rates g.acro_expo:%f**********\r \n", float(g.acro_expo));
     // calculate roll, pitch rate requests
     if (g.acro_expo <= 0) {
         rate_bf_request.x = roll_in * g.acro_rp_p;
@@ -197,6 +202,14 @@ void Sub::get_alt_hold_pilot_desired_angle_rates(int16_t roll_in, int16_t pitch_
 
 bool Sub::attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int16_t yaw) {
     static bool is_reseting = false;
+	// static int i = 0;
+	// if (i <= 3)
+	// {
+	// 	/* code */
+	// 	printf("****0********Sub::attitude_control_rate::is_reseting:%d**********\r \n", is_reseting);
+	// 	i++;
+	// }
+	
 
     // get pilot desired lean angles
     float target_roll_rate, target_pitch_rate, target_yaw_rate;
@@ -220,6 +233,7 @@ bool Sub::attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int1
     }
 
     if (is_reseting) {
+		// printf("************Sub::attitude_control_rate::is_reseting**********\r \n");
         attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, target_yaw_rate);
     } else if (is_ned_pilot) {
         target_roll_rate *= 50;
@@ -297,6 +311,7 @@ void Sub::althold_run_rate()
 
     motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
     
+	// printf("************Sub::althold_run_rate::attitude_control_rate**********\r \n");
     attitude_control_rate(is_request_reset_rp, 
         	pilot_attitude_thrusts.x, pilot_attitude_thrusts.y, pilot_attitude_thrusts.z);
 	if (is_request_reset_rp) {
