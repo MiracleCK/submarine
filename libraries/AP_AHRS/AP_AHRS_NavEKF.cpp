@@ -543,6 +543,7 @@ bool AP_AHRS_NavEKF::get_secondary_attitude(Vector3f &eulers) const
     case EKF_TYPE3:
 
     default:
+        // printf("=======================AP_AHRS_NavEKF::get_secondary_attitude=======================\r \n");
         // DCM is secondary
         eulers = _dcm_attitude;
         return true;

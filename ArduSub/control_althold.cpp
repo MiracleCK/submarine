@@ -82,7 +82,7 @@ void Sub::althold_run()
         target_roll = degrees(target_roll);
         target_pitch = degrees(target_pitch);
         target_yaw = degrees(target_yaw);
-		printf("***1*********Sub::althold_run call attitude controller target_pitch:%f**********\r \n", target_pitch);
+		// printf("***1*********Sub::althold_run call attitude controller target_pitch:%f**********\r \n", target_pitch);
 
         attitude_control.input_euler_angle_roll_pitch_yaw(target_roll * 1e2f, target_pitch * 1e2f, target_yaw * 1e2f, true);
         return;
@@ -108,7 +108,7 @@ void Sub::althold_run()
 
             // call attitude controller with target yaw rate = 0 to decelerate on yaw axis
             attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate);
-			printf("***2*********Sub::althold_run input_euler_angle_roll_pitch_euler_rate_yaw target_pitch:%f**********\r \n", target_pitch);
+			// printf("***2*********Sub::althold_run input_euler_angle_roll_pitch_euler_rate_yaw target_pitch:%f**********\r \n", target_pitch);
             last_pilot_heading = ahrs.yaw_sensor; // update heading to hold
 
         } else { // call attitude controller holding absolute absolute bearing
@@ -233,13 +233,15 @@ bool Sub::attitude_control_rate(bool is_reset, int16_t roll, int16_t pitch, int1
     }
 
     if (is_reseting) {
-		// printf("************Sub::attitude_control_rate::is_reseting**********\r \n");
+		printf("****1********Sub::attitude_control_rate::is_reseting**********\r \n");
         attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, target_yaw_rate);
     } else if (is_ned_pilot) {
         target_roll_rate *= 50;
         target_pitch_rate *= 50;     
         attitude_control.input_euler_rate_roll_limited_pitch_yaw(target_roll_rate, target_pitch_rate, target_yaw_rate);
+		printf("****2********Sub::attitude_control_rate::is_ned_pilot**********\r \n");
     } else {
+		printf("****3********Sub::attitude_control_rate::else**********\r \n");
         attitude_control.input_rate_bf_roll_pitch_yaw(target_roll_rate, target_pitch_rate, target_yaw_rate);
     }
 
@@ -311,7 +313,7 @@ void Sub::althold_run_rate()
 
     motors.set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
     
-	// printf("************Sub::althold_run_rate::attitude_control_rate**********\r \n");
+	printf("************Sub::althold_run_rate::attitude_control_rate**********\r \n");
     attitude_control_rate(is_request_reset_rp, 
         	pilot_attitude_thrusts.x, pilot_attitude_thrusts.y, pilot_attitude_thrusts.z);
 	if (is_request_reset_rp) {

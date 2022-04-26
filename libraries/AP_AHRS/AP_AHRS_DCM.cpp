@@ -104,7 +104,7 @@ AP_AHRS_DCM::update(bool skip_ins_update)
     normalize();
 
     // Perform drift correction
-    drift_correction(delta_t);
+    // drift_correction(delta_t);
 
     // paranoid check for bad values in the DCM matrix
     check_matrix();
