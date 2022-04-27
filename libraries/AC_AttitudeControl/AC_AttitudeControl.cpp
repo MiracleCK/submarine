@@ -303,7 +303,7 @@ void AC_AttitudeControl::input_euler_angle_roll_pitch_yaw(float euler_roll_angle
     euler_roll_angle += get_roll_trim_rad();
 
     _rate_bf_ff_enabled = false;
-    printf("************AC_AttitudeControl::input_euler_angle_roll_pitch_yaw _rate_bf_ff_enabled:%d**********\r \n",int(_rate_bf_ff_enabled));
+    // printf("************AC_AttitudeControl::input_euler_angle_roll_pitch_yaw _rate_bf_ff_enabled:%d**********\r \n",int(_rate_bf_ff_enabled));
     if (_rate_bf_ff_enabled) {
         // printf("************AC_AttitudeControl::input_euler_angle_roll_pitch_yaw**********\r \n");
         // translate the roll pitch and yaw acceleration limits to the euler axis
@@ -339,7 +339,7 @@ void AC_AttitudeControl::input_euler_angle_roll_pitch_yaw(float euler_roll_angle
         }
         // Compute quaternion target attitude
         _attitude_target_quat.from_euler(_attitude_target_euler_angle.x, _attitude_target_euler_angle.y, _attitude_target_euler_angle.z);
-        printf("************AC_AttitudeControl::input_euler_angle_roll_pitch_yaw _attitude_target_euler_angle.[x y z]:[%f %f %f]**********\r \n", _attitude_target_euler_angle.x, _attitude_target_euler_angle.y, _attitude_target_euler_angle.z);
+        // printf("************AC_AttitudeControl::input_euler_angle_roll_pitch_yaw _attitude_target_euler_angle.[x y z]:[%f %f %f]**********\r \n", _attitude_target_euler_angle.x, _attitude_target_euler_angle.y, _attitude_target_euler_angle.z);
 
 
         // Set rate feedforward requests to zero
@@ -756,7 +756,7 @@ void AC_AttitudeControl::attitude_controller_run_quat()
 // The first rotation corrects the thrust vector and the second rotation corrects the heading vector.
 void AC_AttitudeControl::thrust_heading_rotation_angles(Quaternion& att_to_quat, const Quaternion& att_from_quat, Vector3f& att_diff_angle, float& thrust_vec_dot)
 {
-    printf("************AC_AttitudeControl::thrust_heading_rotation_angles******arm****\r \n");    
+    // printf("************AC_AttitudeControl::thrust_heading_rotation_angles******arm****\r \n");    
     Matrix3f att_to_rot_matrix; // rotation from the target body frame to the inertial frame.
     att_to_quat.rotation_matrix(att_to_rot_matrix);
     Vector3f att_to_thrust_vec = att_to_rot_matrix * Vector3f(0.0f, 0.0f, 1.0f);
@@ -800,7 +800,7 @@ void AC_AttitudeControl::thrust_heading_rotation_angles(Quaternion& att_to_quat,
     // calculate the angle error in z (x and y should be zero here).
     yaw_vec_correction_quat.to_axis_angle(rotation);
     att_diff_angle.z = rotation.z;
-    printf("************AC_AttitudeControl::thrust_heading_rotation_angles******att_diff_angle[%f %f %f](degrees)****\r \n", degrees(att_diff_angle.x), degrees(att_diff_angle.y), degrees(att_diff_angle.z));    
+    // printf("************AC_AttitudeControl::thrust_heading_rotation_angles******att_diff_angle[%f %f %f](degrees)****\r \n", degrees(att_diff_angle.x), degrees(att_diff_angle.y), degrees(att_diff_angle.z));    
 
     // Todo: Limit roll an pitch error based on output saturation and maximum error.
 

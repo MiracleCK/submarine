@@ -21,6 +21,7 @@
 #include <AP_GPS/AP_GPS.h>
 #include <AP_Baro/AP_Baro.h>
 #include <AP_NMEA_Output/AP_NMEA_Output.h>
+#include <cstdio>
 
 extern const AP_HAL::HAL& hal;
 
@@ -381,6 +382,7 @@ void AP_AHRS::update_cd_values(void)
     roll_sensor  = degrees(roll) * 100;
     pitch_sensor = degrees(pitch) * 100;
     yaw_sensor   = degrees(yaw) * 100;
+    // printf("************AP_AHRS::update_cd_values::rpy_sensor:[%d %d %d]**********\r \n", roll_sensor, pitch_sensor, yaw_sensor);
     if (yaw_sensor < 0)
         yaw_sensor += 36000;
 }

@@ -339,6 +339,9 @@ void Aircraft::fill_fdm(struct sitl_fdm &fdm)
     fdm.xAccel    = accel_body.x;
     fdm.yAccel    = accel_body.y;
     fdm.zAccel    = accel_body.z;
+    // printf("***********Aircraft::fill_fdm fdm.xAccel:%f**********\r \n",fdm.xAccel);
+    // printf("***********Aircraft::fill_fdm fdm.yAccel:%f**********\r \n",fdm.yAccel);
+    // printf("***********Aircraft::fill_fdm fdm.zAccel:%f**********\r \n",fdm.zAccel);
     fdm.rollRate  = degrees(gyro.x);
     fdm.pitchRate = degrees(gyro.y);
     fdm.yawRate   = degrees(gyro.z);
@@ -357,6 +360,12 @@ void Aircraft::fill_fdm(struct sitl_fdm &fdm)
     printf("***********Aircraft::fill_fdm fdm.pitchDeg:%f**********\r \n",fdm.pitchDeg);
     printf("***********Aircraft::fill_fdm fdm.yawDeg:%f**********\r \n",fdm.yawDeg);
     fdm.quaternion.from_rotation_matrix(dcm);
+    // printf("************Aircraft::fill_fdm**********\r \n");
+    // printf("************dcm[]:**********\r \n");
+    // for (size_t i = 0; i < 3; i++)
+    // {
+    //         printf("************%f %f %f**********\r \n",dcm[i][0], dcm[i][1], dcm[i][2]);
+    // } 
     fdm.airspeed = airspeed_pitot;
     fdm.battery_voltage = battery_voltage;
     fdm.battery_current = battery_current;
@@ -732,28 +741,31 @@ float Aircraft::filtered_servo_range(const struct sitl_input &input, uint8_t idx
     const float v = (input.servos[idx] - 1000)/1000.0f;
     return filtered_idx(v, idx);
 }
-
+    //推算传感器
 // extrapolate sensors by a given delta time in seconds
 void Aircraft::extrapolate_sensors(float delta_time)
 {
     Vector3f accel_earth = dcm * accel_body;
     accel_earth.z += GRAVITY_MSS;
 
-    printf("************Aircraft::extrapolate_sensors**********\r \n");
-    printf("************dcm[]:**********\r \n");
-    for (size_t i = 0; i < 3; i++)
-    {
-            printf("************%f %f %f**********\r \n",dcm[i][0], dcm[i][1], dcm[i][2]);
-    }    
-    // dcm.rotate(gyro * delta_time);
+    dcm.rotate(gyro * delta_time);
     // printf("********************************************************************\r \n");
     // printf("***********Aircraft::extrapolate_sensors gyro.x:%f**********\r \n",gyro.x);
     // printf("***********Aircraft::extrapolate_sensors gyro.y:%f**********\r \n",gyro.y);
     // printf("***********Aircraft::extrapolate_sensors gyro.z:%f**********\r \n",gyro.z);
-    // dcm.normalize();
+    dcm.normalize();
+    // printf("************Aircraft::extrapolate_sensors**********\r \n");
+    // printf("************dcm[]:**********\r \n");
+    // for (size_t i = 0; i < 3; i++)
+    // {
+    //         printf("************%f %f %f**********\r \n",dcm[i][0], dcm[i][1], dcm[i][2]);
+    // }    
     // work out acceleration as seen by the accelerometers. It sees the kinematic
     // acceleration (ie. real movement), plus gravity
     accel_body = dcm.transposed() * (accel_earth + Vector3f(0,0,-GRAVITY_MSS));
+    // printf("***********Aircraft::extrapolate_sensors accel_body.x:%f**********\r \n",accel_body.x);
+    // printf("***********Aircraft::extrapolate_sensors accel_body.y:%f**********\r \n",accel_body.y);
+    // printf("***********Aircraft::extrapolate_sensors accel_body.z:%f**********\r \n",accel_body.z);
 
     // new velocity and position vectors
     velocity_ef += accel_earth * delta_time;

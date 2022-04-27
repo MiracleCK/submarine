@@ -85,6 +85,7 @@ Webots::Webots(const char *frame_str) :
 {
     use_time_sync = true;
     rate_hz = 4000;
+    // printf("=======================Webots::Webots rate_hz:%f=======================\r \n",rate_hz);
     
     char *saveptr = nullptr;
     char *s = strdup(frame_str);
@@ -610,6 +611,8 @@ void Webots::update(const struct sitl_input &input)
         // extrapolated_s duration is safe. keep on extrapolation.
         time_now_us += delta_time * 1.0e6;
         extrapolate_sensors(delta_time);
+        // printf("***********Webots::update delta_time:%f**********\r \n",delta_time);
+
         update_position();
 
         //update body magnetic field from position and rotation
@@ -644,6 +647,9 @@ void Webots::update(const struct sitl_input &input)
         accel_body = Vector3f(+state.imu.linear_acceleration[0],
                             +state.imu.linear_acceleration[1],
                             -state.imu.linear_acceleration[2]);
+        // printf("***********Webots::update accel_body.x:%f**********\r \n",accel_body.x);
+        // printf("***********Webots::update accel_body.y:%f**********\r \n",accel_body.y);
+        // printf("***********Webots::update accel_body.z:%f**********\r \n",accel_body.z);
 
         velocity_ef = Vector3f(+state.velocity.world_linear_velocity[0],
                             +state.velocity.world_linear_velocity[1],
