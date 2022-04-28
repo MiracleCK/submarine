@@ -253,7 +253,7 @@ Vector3f Sub::thrust_decomposition_ned(Vector3f& euler_rad, Vector3f thrusts, fl
     euler_rad.x = ahrs.get_roll();
     euler_rad.y = ahrs.get_pitch();
     euler_rad.z = ahrs.get_yaw();
-    // printf("Sub::thrust_decomposition_ned: degree roll %2.4f pitch %2.4f \r\n", ToDeg(euler_rad.x), ToDeg(euler_rad.y));
+    printf("Sub::thrust_decomposition_ned: degree roll %3.6f pitch %3.6f \r\n", ToDeg(euler_rad.x), ToDeg(euler_rad.y));
 
     Matrix3f rot = ahrs.get_rotation_body_to_ned();
 
@@ -261,14 +261,14 @@ Vector3f Sub::thrust_decomposition_ned(Vector3f& euler_rad, Vector3f thrusts, fl
     float sy = sinf(euler_rad.z);
     Matrix3f rot_yaw = Matrix3f(cy, -sy, 0, sy, cy, 0, 0, 0, 1);
 
-    rot = rot.transposed() * rot_yaw;
-    // rot = Matrix3f(1, 0, 0, 0, 1, 0, 0, 0, 1);
     // printf("************Sub::thrust_decomposition_ned**********\r \n");
     // printf("************rot[]:**********\r \n");
     // for (size_t i = 0; i < 3; i++)
     // {
     //         printf("************%f %f %f**********\r \n",rot[i][0], rot[i][1], rot[i][2]);
     // }    
+    rot = rot.transposed() * rot_yaw;
+    // rot = Matrix3f(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
     thrusts.z += throttle_bf;
     return thrust_decomp_ned(rot, thrusts);

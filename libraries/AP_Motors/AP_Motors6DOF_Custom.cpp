@@ -83,8 +83,8 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
         throttle_thrust = thrusts_decomped.z;
 
         // if (is_param_print() && is_dbg_motor) {
-        if(1) {
-            printf("thrust decomposition: degree roll %2.4f pitch %2.4f \r\n", ToDeg(euler_rad.x), ToDeg(euler_rad.y));
+        if(0) {
+            printf("thrust decomposition: degree roll %2.6f pitch %2.6f \r\n", ToDeg(euler_rad.x), ToDeg(euler_rad.y));
             // printf("thrust decomposition: forward %2.4f lateral %2.4f throttle %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
         }
     } else {

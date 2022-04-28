@@ -356,9 +356,7 @@ void Aircraft::fill_fdm(struct sitl_fdm &fdm)
     fdm.rollDeg  = degrees(r);
     fdm.pitchDeg = degrees(p);
     fdm.yawDeg   = degrees(y);
-    printf("***********Aircraft::fill_fdm fdm.rollDeg:%f**********\r \n",fdm.rollDeg);
-    printf("***********Aircraft::fill_fdm fdm.pitchDeg:%f**********\r \n",fdm.pitchDeg);
-    printf("***********Aircraft::fill_fdm fdm.yawDeg:%f**********\r \n",fdm.yawDeg);
+    // printf("***********Aircraft::fill_fdm fdm.rollpitchyawDeg:%f %f %f**********\r \n",fdm.rollDeg,fdm.pitchDeg,fdm.yawDeg);
     fdm.quaternion.from_rotation_matrix(dcm);
     // printf("************Aircraft::fill_fdm**********\r \n");
     // printf("************dcm[]:**********\r \n");
