@@ -332,7 +332,7 @@ void AP_AHRS_NavEKF::update_SITL(void)
         fdm.quaternion.rotation_matrix(_dcm_matrix);
         _dcm_matrix = _dcm_matrix * get_rotation_vehicle_body_to_autopilot_body();
         _dcm_matrix.to_euler(&roll, &pitch, &yaw);
-        printf("AP_AHRS_NavEKF::update_SITL: degree roll %3.6f pitch %3.6f \r\n", ToDeg(roll), ToDeg(pitch));
+        // printf("AP_AHRS_NavEKF::update_SITL: degree roll %3.6f pitch %3.6f \r\n", ToDeg(roll), ToDeg(pitch));
 
         // printf("************AP_AHRS_NavEKF::update_SITL**********\r \n");
         // printf("************_dcm_matrix[]:**********\r \n");

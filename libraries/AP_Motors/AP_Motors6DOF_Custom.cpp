@@ -56,6 +56,7 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
     forward_thrust = _forward_in;
     lateral_thrust = _lateral_in;
     // printf("pitch_thrust: _pitch_in %2.5f _pitch_in_ff %2.5f\r\n", _pitch_in, _pitch_in_ff);
+    printf("pitch_thrust: _forward_in %2.5f \r\n", _forward_in);
 
     // test real data
     // roll_thrust = 0.00;
@@ -85,11 +86,12 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
         // if (is_param_print() && is_dbg_motor) {
         if(0) {
             printf("thrust decomposition: degree roll %2.6f pitch %2.6f \r\n", ToDeg(euler_rad.x), ToDeg(euler_rad.y));
-            // printf("thrust decomposition: forward %2.4f lateral %2.4f throttle %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
+            printf("thrust decomposition: forward %2.4f lateral %2.4f throttle %2.4f\r\n", forward_thrust, lateral_thrust, throttle_thrust);
         }
     } else {
         throttle_thrust = _throttle_in_bf;
     }
+    printf("1throttle_thrust %.03f\n", throttle_thrust);
 
     if(1) {
 		static uint32_t _startup_ms = 0;
@@ -169,8 +171,9 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
         pitch_thrust = 1;
         // limit.pitch = true;
     }
+    printf("2throttle_thrust %.03f\n", throttle_thrust);
 
-    if(0) {
+    if(1) {
 		static uint32_t _startup_ms = 0;
 
 		if(_startup_ms == 0) {
@@ -195,8 +198,10 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
             rpy_out[i] = roll_thrust * _roll_factor[i] +
                             pitch_thrust * _pitch_factor[i] +
                             yaw_thrust * _yaw_factor[i];
+            // printf("===================output_armed_stabilizing_custom i=[%d] _yaw_factor[i]:%f============\r \n", i, _yaw_factor[i]);
         }
     }
+    // printf("===================output_armed_stabilizing_custom i=[2] rpy_out[2]:%f============\r \n", rpy_out[2]);
 
     // calculate linear command for each motor
     // linear factors should be 0.0 or 1.0 for now
@@ -205,8 +210,10 @@ void AP_Motors6DOF::output_armed_stabilizing_custom()
             linear_out[i] = throttle_thrust * _throttle_factor[i] +
                             forward_thrust * _forward_factor[i] +
                             lateral_thrust * _lateral_factor[i];
+            // printf("===================output_armed_stabilizing_custom i=[%d] _lateral_factor[i]:%f============\r \n", i, _lateral_factor[i]);
         }
     }
+    // printf("===================output_armed_stabilizing_custom i=[2] linear_out[2]:%f============\r \n", linear_out[2]);
 
     // Calculate final output for each motor
     for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {

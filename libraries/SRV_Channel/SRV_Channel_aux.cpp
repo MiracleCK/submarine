@@ -21,6 +21,8 @@
 #include <AP_HAL/AP_HAL.h>
 #include <RC_Channel/RC_Channel.h>
 #include <AP_RCMapper/AP_RCMapper.h>
+#include <cstdio>
+
 
 extern const AP_HAL::HAL& hal;
 
@@ -228,6 +230,7 @@ void SRV_Channels::set_output_pwm(SRV_Channel::Aux_servo_function_t function, ui
     for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++) {
         if (channels[i].function.get() == function) {
             channels[i].set_output_pwm(value);
+            // printf("************set_output_pwm::i:[%d] value:%d**********\r \n", i, value);
             channels[i].output_ch();
         }
     }

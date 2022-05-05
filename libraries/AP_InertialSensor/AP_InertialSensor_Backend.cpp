@@ -264,6 +264,7 @@ void AP_InertialSensor_Backend::_notify_new_gyro_raw_sample(uint8_t instance,
             _imu._gyro_harmonic_notch_filter[instance].reset();
         } else {
             _imu._gyro_filtered[instance] = gyro_filtered;
+            // printf("=======================AP_InertialSensor_Backend::_notify_new_gyro_raw_sample  _imu._gyro_filtered[instance]=======================\r \n");
         }
 
         _imu._new_gyro_data[instance] = true;

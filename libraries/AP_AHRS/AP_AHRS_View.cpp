@@ -86,9 +86,9 @@ void AP_AHRS_View::update(bool skip_ins_update)
 // return a smoothed and corrected gyro vector using the latest ins data (which may not have been consumed by the EKF yet)
 Vector3f AP_AHRS_View::get_gyro_latest(void) const {
     Vector3f gyro_latest = ahrs.get_gyro_latest();
-    // printf("************AP_AHRS_View::get_gyro_latest gyro_latest.x:%f gyro_latest.y:%f gyro_latest.z:%f**********\r \n",gyro_latest.x,gyro_latest.y,gyro_latest.z);
+    // printf("****1********AP_AHRS_View::get_gyro_latest gyro_latest.x:%f gyro_latest.y:%f gyro_latest.z:%f**********\r \n",gyro_latest.x,gyro_latest.y,gyro_latest.z);
     gyro_latest.rotate(rotation);
-    // printf("************AP_AHRS_View::get_gyro_latest gyro_latest.x:%f gyro_latest.y:%f gyro_latest.z:%f**********\r \n",gyro_latest.x,gyro_latest.y,gyro_latest.z);
+    // printf("****2********AP_AHRS_View::get_gyro_latest gyro_latest.x:%f gyro_latest.y:%f gyro_latest.z:%f**********\r \n",gyro_latest.x,gyro_latest.y,gyro_latest.z);
     return gyro_latest;
 }
 

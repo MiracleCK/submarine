@@ -378,11 +378,12 @@ void AP_Motors6DOF::output_to_motors()
             if (motor_enabled[i]) {
                 set_actuator_with_slew(_actuator[i], (_thrust_rpyt_out[i]+1)/2);
                 motor_out[i] = calc_thrust_to_pwm(2*_actuator[i] - 1);
+                // printf("************SpoolState::SPOOLING_DOWN _thrust_rpyt_out[i]:%f**********\r \n", _thrust_rpyt_out[i]);
+                // printf("************SpoolState::SPOOLING_DOWN motor_out[i]:%d**********\r \n", motor_out[i]);
             }
         }
         break;
     }
-
     // printf("\r\n----------------------SpoolState::SPOOLING_DOWN-----------------\r\n");
 
 	int16_t motor_buf[AP_MOTORS_MAX_NUM_MOTORS] = {0}; 

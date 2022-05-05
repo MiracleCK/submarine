@@ -434,6 +434,7 @@ bool AP_MotorsMatrix::output_test_num(uint8_t output_channel, int16_t pwm)
 // add_motor
 void AP_MotorsMatrix::add_motor_raw(int8_t motor_num, float roll_fac, float pitch_fac, float yaw_fac, uint8_t testing_order)
 {
+    printf("=======================AP_MotorsMatrix::add_motor_raw=======================\r \n");
     // ensure valid motor number is provided
     if (motor_num >= 0 && motor_num < AP_MOTORS_MAX_NUM_MOTORS) {
 

@@ -643,6 +643,9 @@ void Webots::update(const struct sitl_input &input)
         gyro = Vector3f(state.imu.angular_velocity[0] ,
                         state.imu.angular_velocity[1] ,
                         -state.imu.angular_velocity[2] ); 
+        // printf("***********Webots::update gyro.x:%f**********\r \n",gyro.x);
+        // printf("***********Webots::update gyro.y:%f**********\r \n",gyro.y);
+        // printf("***********Webots::update gyro.z:%f**********\r \n",gyro.z);
         
         accel_body = Vector3f(+state.imu.linear_acceleration[0],
                             +state.imu.linear_acceleration[1],

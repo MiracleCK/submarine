@@ -391,6 +391,7 @@ bool SITL_State::_read_rc_sitl_input()
     struct pwm_packet {
         uint16_t pwm[16];
     } pwm_pkt;
+    // printf("=======================SITL_State::_read_rc_sitl_input=======================\r \n");
 
     const ssize_t size = _sitl_rc_in.recv(&pwm_pkt, sizeof(pwm_pkt), 0);
     switch (size) {
